@@ -93,6 +93,9 @@ class TiefenCamLogger(Logger):
         self.frames_dir.mkdir(parents=True, exist_ok=True)
         self.data = []
 
+        # Latenz Global in der Klasse bekannt machen (Wird gesetzt durch get_latency falls nicht standart 8ms)
+        self.mean_latency = 8000000
+
     def connect_camera(self) -> None:
         """
         Connects to the ToF camera and initializes it with the specified configuration.
@@ -144,6 +147,31 @@ class TiefenCamLogger(Logger):
         except Exception as e:
             print("TiefenCamLogger.start_sensor failed:", e)
             raise
+    
+    def get_latency(self, val_amount_mean_calc: int)-> None:
+        test_list = []
+        try: 
+            frame.tof.Frame()
+
+            # Für X wiederholungen den zeitstempel Vor und Nach dem holen des Frames abspeichern anhand daran die Durchschnittliche Latenz berechnen
+            for i in range(val_amount_mean_calc):   
+                ts_1 = time.time_ns()
+                status = self.camera.requestFrame(frame)
+                ts_2 = time.time_ns()
+
+                # Wenn der Frame OK dann Füge die Zeitdifferenz in die Liste hinzu
+                if status: 
+                    test_list.append(ts_2 - ts_1)
+
+                # Warten damit der Frame-Aufruf nicht Blockiert und so das Latenz Ergebnis verfälscht
+                time.sleep(0.5) 
+
+        except Exception as e:
+            print("Frame processing error:", e)
+
+        mean_val = np.mean(test_list)
+        self.mean_latency = mean_val / 2
+
 
     def start_logging(self, stop_event):
         """
@@ -165,12 +193,13 @@ class TiefenCamLogger(Logger):
             while self._running and not stop_event.is_set():
                 try:
                     frame = tof.Frame()
+        
                     status = self.camera.requestFrame(frame) # Ein Frame wird geholt
+                    ts = time.time_ns() - self.mean_latency
                     
                     if status:
                         # Daten aus dem Frame werden extrahiert
                         image = np.array(frame.getData("depth"), copy=False)
-                        ts = time.time() # Zeitstempel wird gesetzt (Warum hier?)
                         image_ab = np.array(frame.getData("ab"), copy=False)
 
                         q_tof = self.queues.get("tof")
