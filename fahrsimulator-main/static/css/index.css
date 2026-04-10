@@ -1,0 +1,93 @@
+
+    .body {
+        font-family: 'Roboto', sans-serif;
+    }
+    
+    .header {
+        position: relative;
+        display: flex;
+        justify-content: flex-start;
+        gap: 50px;
+        align-items: center;
+        padding: 20px;
+        background-color: #00a1ee;
+        color: #ffffff;
+        font-family: 'Roboto', sans-serif;
+        border-radius: 0px;
+        margin-left: -10px;
+        margin-right: -10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background-color: #00a1ee;
+        color: #ffffff;
+        font-family: 'Roboto', sans-serif;
+        border-radius: 0px;
+        margin-left: -10px;
+        margin-right: -10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        background-color: #dddddd;
+        color: #7B7B7B;
+        font-family: 'Roboto', sans-serif;
+        border-radius: 5px;
+        margin-left: 10px;
+        margin-right: 10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px 50px;
+        font-family: 'Roboto', sans-serif;
+        font-size: 20px;
+        border-radius: 6px;
+        border: none;
+        
+        color: white;
+        background: linear-gradient(180deg, #00a1ee 30%, #0055ee 100%);
+        background-origin_ border-box;
+        box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        cursor: pointer;
+    }
+    .button:focus {
+        box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 3.5px rgba(58, 108, 217, 0.5);
+        outline: 0;
+    }
+    .button:hover {
+        box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 3.5px rgba(58, 108, 217, 0.5);
+        outline: 0;
+    }
+    
+    
+
+
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .section { margin: 30px 0; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        input, select { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+        button { padding: 10px 20px; margin-top: 15px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        .message { margin-top: 10px; padding: 10px; border-radius: 3px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }

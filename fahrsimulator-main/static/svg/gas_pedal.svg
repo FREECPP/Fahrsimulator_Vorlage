@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="320" viewBox="0 0 160 320" aria-labelledby="title desc">
+  <title id="title">Gaspedal (SVG)</title>
+  <desc id="desc">Stilisiertes Gaspedal, dreh- und animierbar, weiße Konturen passend zum Lenkrad.</desc>
+
+  <!-- Hintergrundplatte -->
+  <rect x="8" y="8" width="144" height="304" rx="16" ry="16" fill="#141414" stroke="white" stroke-opacity="0.12" stroke-width="2"/>
+
+  <!-- Montageplatte (dunkler Rahmen innen) -->
+  <rect x="20" y="24" width="120" height="272" rx="12" ry="12" fill="#3e3e3e" stroke="white" stroke-opacity="0.08" stroke-width="1"/>
+
+  <!-- Pedal-Arm (leicht geneigt) -->
+  <g id="pedal-group" transform="translate(80,80) rotate(12)"> <!--Diese Werte müssen geändert werden für animation-->
+    <!-- Arm -->
+    <rect x="-10" y="-10" width="20" height="160" rx="6" ry="6" fill="#2b2b2b" stroke="white" stroke-opacity="0.12" stroke-width="1.5"/>
+    <!-- Pedal-Pad -->
+    <g id="pad" transform="translate(-30,80)">
+      <rect id="pad-rect" x="5" y="0" width="50" height="120" rx="10" ry="10" fill="url(#padGrad)" stroke="white" stroke-opacity="0.12" stroke-width="2"/>
+      <!-- Grip lines -->
+      <g opacity="0.14" stroke="white" stroke-linecap="round" stroke-width="5">
+        <line x1="16" y1="16" x2="44" y2="16" />
+        <line x1="16" y1="32" x2="44" y2="32" />
+        <line x1="16" y1="48" x2="44" y2="48" />
+        <line x1="16" y1="64" x2="44" y2="64" />
+        <line x1="16" y1="80" x2="44" y2="80" />
+      </g>
+    </g>
+  </g>
+
+  <!-- kleine Details / Schrauben -->
+  <circle cx="28" cy="36" r="3" fill="white" opacity="0.08"/>
+  <circle cx="132" cy="36" r="3" fill="white" opacity="0.08"/>
+
+  <!-- Gradient für Pedal-Pad -->
+  <defs>
+    <linearGradient id="padGrad" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#3a3a3a"/>
+      <stop offset="1" stop-color="#1f1f1f"/>
+    </linearGradient>
+
+    <!-- Filter leichtes inner shadow -->
+    <filter id="inset" x="-50%" y="-50%" width="200%" height="200%">
+      <feOffset dx="0" dy="2" result="off"/>
+      <feGaussianBlur in="off" stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="arithmetic" k2="-1" k3="1" result="inner"/>
+    </filter>
+  </defs>
+</svg>

@@ -1,0 +1,299 @@
+    .body {
+        font-family: 'Roboto', sans-serif;
+    }
+    
+    .header {
+        position: relative;
+        display: flex;
+        justify-content: flex-start;
+        gap: 50px;
+        align-items: center;
+        padding: 20px;
+        background-color: #00a1ee;
+        color: #ffffff;
+        font-family: 'Roboto', sans-serif;
+        border-radius: 0px;
+        margin-left: -10px;
+        margin-right: -10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background-color: #00a1ee;
+        color: #ffffff;
+        font-family: 'Roboto', sans-serif;
+        border-radius: 0px;
+        margin-left: -10px;
+        margin-right: -10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .outer-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0px;
+        background-color: #dddddd;
+        color: #7B7B7B;
+        font-family: 'Roboto', sans-serif;
+        border-radius: 5px;
+        margin-left: 10px;
+        margin-right: 10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        /*border-style: dashed;*/
+    }
+    
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    grid-template-rows: repeat(3, auto);
+    gap: 0px;    
+    /*border-style: dashed;
+    border-color: pink;*/
+}
+
+.inner-box {
+    background: #eeeeee;
+    padding: 0px;
+    
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    
+    border-style: double;
+    border-color: #333333;
+}
+    
+/* --- Pedale --- */
+.pedal-box {
+    display: flex;
+    flex-direction: column; /* Label unter Pedale */
+    align-items: center;
+}
+
+.pedal-inner {
+    display: flex;
+    gap: 0px;            /* Abstand zwischen Bar und SVG */
+    /*align-items: flex-end;  Bar und SVG unten ausrichten */
+    /*border-style: dashed;
+    border-color: yellow;*/
+    align-items: center;
+    justify-content: left;
+    text-align: left;
+}
+
+.label {
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* --- Balken für Pedale--- */    
+.bar {
+    width: 20px;
+    height: 180px;
+    background-color: #ccc;
+    position: relative;
+    border-style: double;
+    border-color: black;
+    border-radius: 5px;
+}
+
+.fill {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 50%; /* Beispiel Füllstand */
+    background-color: red;
+}
+
+.pedal-board {
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    /*border-style: dashed;
+    border-color: green;*/
+}
+
+/* --- steering-wheel--- */
+.steering-wheel {
+    margin-top: -20px;
+    /*border-style: dashed;
+    border-color: orange;*/
+}
+
+.svg_steering_wheel {
+    z-index: 2;
+}
+
+.steering-wheel-background {
+    width: 50%;
+    z-index: 1;
+    margin-bottom: -80px;
+    margin-top: -20px;
+}
+
+.steering-wheel-container {
+
+}
+
+#steerBar {
+    width: 300px;
+    height: 15px;
+    background: #444;
+    border-radius: 5px;
+    position: relative;
+    margin-top: 0px;
+    border-style: double;
+}
+
+.steerBar {    
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    /*border-style: dashed;
+    border-color: orange;*/
+    margin-bottom: -20px;
+}
+
+#steerCenter {
+    position: absolute;
+    left: 50%;
+    width: 2px;
+    height: 40px;
+    background: white;
+}
+
+#steerIndicator {
+    position: absolute;
+    width: 6px;
+    height: 20px;
+    background: red;
+    top: -5px;
+    border-radius: 3px;
+}
+
+    .button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px 50px;
+        font-family: 'Roboto', sans-serif;
+        font-size: 20px;
+        border-radius: 6px;
+        border: none;
+        
+        color: white;
+        background: linear-gradient(180deg, #00a1ee 30%, #0055ee 100%);
+        /*background-origin_ border-box;*/
+        background-origin: border-box;
+        box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        cursor: pointer;
+    }
+    .button:focus {
+        box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 3.5px rgba(58, 108, 217, 0.5);
+        outline: 0;
+    }
+    .button:hover {
+        box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 3.5px rgba(58, 108, 217, 0.5);
+        outline: 0;
+    }
+    .button:focus {
+        opacity: 0.5;
+    }
+    .button:disabed {
+        opacity: 0.1;
+        cursor: not-allowed;
+    }
+    
+    .dot {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+    .red { background: red; }
+    .white { background: white; border: 1px solid #000; }
+    .yellow { background: yellow; }
+    a {
+        color: inherit;
+        text-decoration: none;
+        font-weight: bold;
+    }
+.traffic-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 30px;
+}
+
+.fahr-traffic-layout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 30px;
+}
+
+/* Ampel größer */
+.traffic-light {
+    width: 80px;
+    height: 200px;
+    background: #222;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    padding: 15px;
+}
+
+.light {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #444;
+}
+
+.light.red.active {
+    background: red;
+}
+
+.light.green.active {
+    background: limegreen;
+}
+
+/* Text rechts zentriert */
+.traffic-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    line-height: 1.6;
+}
+
+/* Text rechts zentriert */
+.fahr-traffic-text {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: left;
+    line-height: 1.6;
+}

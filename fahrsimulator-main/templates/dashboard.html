@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Fahrsimulator - Dashboard</title>
+        <!-- CSS Styling -->
+        <link rel="stylesheet" href="../static/css/dashboard.css">
+        <!-- JavaScript Datei -->
+        <script defer src="../static/js/socket.io.min.js"></script>
+        <!--<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>-->
+        <script defer src="../static/js/chart.umd.js"></script>
+        <script defer src="../static/js/dashboard.js"></script>
+    </head>
+    
+    <body class="body">
+    
+        <header class="header">
+            <div>
+                <img src="/static/logo_white_mini.png" id="logo" alt="Logo">
+            </div>
+            <div>
+                <h1 style="margin: 0;"><a href="/">Fahrsimulator</a>  - Dashboard</h1>
+            </div>
+            <button class="button" id="toggle-btn" >Start</button>
+            <!--<button class="button" id="stop-btn" disabled>Stop</button>-->
+            
+            <div class="status stopped" id="statusDiv">
+                Status: <span id="statusText">Gestoppt</span>
+                <span id="statusSymbol" class="dot white"></span>
+            </div>
+
+        </header>
+        
+        <div class="outer-box">
+            
+            <div class="grid-container"> 
+                
+                <!-- Nr 1 TOF Video-Stream-->
+                <div class="inner-box">1 TOF<br>
+                    <img id="tof-stream" src="" alt="Live Stream">
+                    <!--<img src="static/tof_mockup.png" width="400" style="margin-bottom: 20px;">-->
+                </div>
+                <!-- Nr 2 Silab Video-Stream-->
+                <div class="inner-box">2 RGB Back<br>
+                    <!-- SILAB VideoStream -->
+                    <img id="rgb2-stream" src="" alt="Live Stream">
+                </div>
+                <!-- Nr 3 RGB Camera-Stream-->
+                <div class="inner-box">3 RGB Front<br>
+                    <img id="rgb-stream" src="" alt="Live Stream">
+                    <!--<img src="static/skeleton_mockup.png" width="400" style="margin-bottom: 20px;">-->
+                </div>
+                <!-- Nr 4 Fahranalyse-->
+                <div class="inner-box">4 Fahranalyse
+                    <div class="fahr-traffic-layout">
+
+                        <!-- Traffic light left -->
+                        <div class="traffic-light">
+                            <div id="fahr_light-red" class="light red"></div>
+                            <div id="fahr_light-green" class="light green"></div>
+                        </div>
+
+                        <!-- Text right -->
+                        <div class="fahr-traffic-text">
+                            <div>p(rasant): <span id="fahr_probText">-</span></div>
+                            <!--<div>n_frames: <span id="fahr_framesText">-</span></div>-->
+                        </div>
+
+                    </div>
+
+                </div>
+                <!-- Nr 5 Steering Wheel-->
+                <div class="inner-box">
+                    <!-- Steering wheel BAR-->
+                    <div class="steerBar">  
+                        <div id="steerBar">
+                            <div id="steerCenter"></div>
+                            <div id="steerIndicator"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="steering-wheel">
+                        <!-- Steering wheel -->
+                        <div class="steering-wheel-container">
+                            <!--<object type="image/svg+xml" data="static/svg/car_dashboard.svg" class="steering-wheel-background"></object>-->
+                            <object class="svg_steering_wheel" id="wheel" type="image/svg+xml" data="../static/svg/steering_wheel.svg" width="300" height="300"></object>
+                        </div>
+                    </div>
+                </div>
+                <!-- Nr 6 Traffic Light Distraction Model-->
+                <div class="inner-box traffic-box">6 distractionModel
+
+                    <div class="traffic-layout">
+
+                        <!-- Traffic light left -->
+                        <div class="traffic-light">
+                            <div id="light-red" class="light red"></div>
+                            <div id="light-green" class="light green"></div>
+                        </div>
+
+                        <!-- Text right -->
+                        <div class="traffic-text">
+                            <div>p(distracted): <span id="probText">-</span></div>
+                            <div>n_frames: <span id="framesText">-</span></div>
+                            <div>label: <span id="labelText">-</span></div>
+                        </div>
+
+                    </div>
+
+                </div>
+                <!-- Nr 7 Heart Rate-->
+                <div class="inner-box">Herzrate
+                    <canvas id="heartRateChart" width="400" height="200"></canvas>
+                </div>
+                <!-- Nr 8 Pedal-Board-->
+                <div class="inner-box">
+                    <div class="pedal-board">
+                            
+                            <!-- BRAKE PEDAL -->
+                            <div class="pedal-box">
+                                <div class="pedal-inner">
+                                    <div class="bar"><div id="brakeFill" class="fill"></div></div>
+                                    <object id="brake_pedal" type="image/svg+xml" data="../static/svg/brake_pedal.svg" width="100" height="200"></object>
+                                </div>    
+                                <object id="brake_bar" type="image/svg+xml" data="../static/svg/brake_bar.svg" width="120" height="40"></object>
+                                <!--<div class="label">Bremse</div>-->
+                            </div>   
+                            
+                            <!-- GASPEDAL -->
+                            <div class="pedal-box">
+                                <div class="pedal-inner">
+                                    <object id="gas_pedal" type="image/svg+xml" data="../static/svg/gas_pedal.svg" width="100" height="200"></object>
+                                    <div class="bar"><div id="gasFill" class="fill"></div></div>
+                                </div>
+                                <object id="gas_bar" type="image/svg+xml" data="../static/svg/gas_bar.svg" width="120" height="40"></object>
+                                <!--<div class="label">Gas</div>-->
+                            </div>
+                            
+                    </div>
+                </div>
+                <!-- Nr 9 Geschwindigkeit Chart-->
+                <div class="inner-box">9 Geschwindigkeit
+                    <canvas id="speedChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+
+                
+
+            
+        </div>
+        
+        <footer class="footer">
+            <h4><a href="../doku">Link zur Dokumentation</a> oder <a href="../docu">Link zur Dokumentation</a></h4>
+        </footer>    
+    
+    </body>
+</html>
+

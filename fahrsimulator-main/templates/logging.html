@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Fahrsimulator</title>
+    </head>
+    
+    <body class="body">
+    
+        <header class="header">
+            <div>
+                <img src="/static/logo_white_mini.png" id="logo" alt="Logo">
+            </div>
+            <div>
+                <h1 style="margin: 0;">Fahrsimulator</h1>
+            </div>
+        </header>
+    
+        <div class="button_box">
+                <table>
+                    <tr>
+                        <td>
+                            <form action="start_logging" method="POST">
+                                <label for="fname">First name:</label>
+                                <input type="text" id="fname" name="fname">
+                                    <br><br>
+                                <label for="lname">Last name:</label>
+                                <input type="text" id="lname" name="lname">
+                                <br><br>
+                                <button class="button" type="submit" value="Submit">Start</button>
+                            </form>
+
+                        </td>
+                    </tr>
+                    <tr>                        
+                        <td>
+                            <form action="stop_logging" method="POST">
+                                <button class="button" type="submit" value="Submit">Stop</button>
+                            </form>    
+                        </td>
+                    </tr>
+                </table>
+        </div>
+        
+        <div class="box">
+            <table>
+                <tr>
+                    <td>
+                        <div class="box">
+                            <h4 style="margin-bottom: 10px;">Vorschau</h4>
+                            <img src="{{ url_for('video_feed') }}" width="640">
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <h4>Geschwindigkeit über Zeit</h4>
+                            <canvas id="speedCanvas" width="640" height="480"></canvas>
+                            <button onclick="updatePlot()">Update</button>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        
+        
+ 
+
+    
+        <footer class="footer">
+            <h1>Footer</h1>
+        </footer>
+    
+    </body>
+
+</html>
+
+<style>
+    .body {
+        font-family: 'Roboto', sans-serif;
+    }
+    
+    .header {
+        position: relative;
+        display: flex;
+        justify-content: flex-start;
+        gap: 50px;
+        align-items: center;
+        padding: 20px;
+        background-color: #00a1ee;
+        color: #ffffff;
+        font-family: 'Roboto', sans-serif;
+        border-radius: 0px;
+        margin-left: -10px;
+        margin-right: -10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background-color: #00a1ee;
+        color: #ffffff;
+        font-family: 'Roboto', sans-serif;
+        border-radius: 0px;
+        margin-left: -10px;
+        margin-right: -10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        background-color: #dddddd;
+        color: #7B7B7B
+        font-family: 'Roboto', sans-serif;
+        border-radius: 5px;
+        margin-left: 10px;
+        margin-right: 10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .button_box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+        background-color: #dddddd;
+        color: #7B7B7B
+        font-family: 'Roboto', sans-serif;
+        border-radius: 5px;
+        margin-left: 10px;
+        margin-right: 10px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .button {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 15px 50px;
+        font-family: 'Roboto', sans-serif;
+        font-size: 20px;
+        border-radius: 6px;
+        border: none;
+        
+        color: white;
+        background: linear-gradient(180deg, #00a1ee 30%, #0055ee 100%);
+        background-origin_ border-box;
+        box-shadow: 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2);
+        user-select: none;
+        -webkit-user-select: none;
+        touch-action: manipulation;
+        cursor: pointer;
+    }
+    .button:focus {
+        box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 3.5px rgba(58, 108, 217, 0.5);
+        outline: 0;
+    }
+    .button:hover {
+        box-shadow: inset 0px 0.8px 0px -0.25px rgba(255, 255, 255, 0.2), 0px 0.5px 1.5px rgba(54, 122, 246, 0.25), 0px 0px 3.5px rgba(58, 108, 217, 0.5);
+        outline: 0;
+    }
+    
+    
+    
+</style>
+
+
+        
+<script>
+    const canvas = document.getElementById("speedCanvas");
+    const ctx = canvas.getContext("2d");
+    
+    function updatePlot() {
+        const img = new Image();
+        img.onload = function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // alten Plot löschen
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = "/plot.png?time=" + new Date().getTime(); // Cache umgehen
+    }
+    
+    // alle 2 Sekunden aktualisieren
+    setInterval(updatePlot, 100);
+    
+    // direkt beim Laden
+    updatePlot();
+    
+    socket.on("update", data => {
+        chart.data.datasets[0].data.push(data.gas);
+        chart.update();
+    });
+</script>
+
