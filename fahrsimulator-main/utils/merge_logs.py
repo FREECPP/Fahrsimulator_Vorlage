@@ -155,9 +155,12 @@ def merge_logs(session_dir: Path, keep_incomplete: bool = False) -> pd.DataFrame
     if not keep_incomplete:
         # Am Anfang der Aufnahme haben noch nicht alle Sensoren ihren ersten Wert geliefert.
         # Diese Zeilen haben nach dem Forward-Fill immer noch NaN-Werte und werden entfernt,
-        # da sie kein vollständiges Bild aller Sensoren darstellen.
+        # da sie kein vollständiges Bild aller aktiven Sensoren darstellen.
+        # Wichtig: Nur Spalten von Sensoren prüfen die tatsächlich Daten geliefert haben.
+        # Sensoren mit 0 Zeilen haben überall NaN — würden sonst alle Zeilen löschen.
+        active_check_cols = [c for c in fill_cols if combined[c].notna().any()]
         rows_before = len(combined)
-        combined.dropna(subset=fill_cols, inplace=True)
+        combined.dropna(subset=active_check_cols, inplace=True)
         combined.reset_index(drop=True, inplace=True)
         dropped = rows_before - len(combined)
         if dropped:

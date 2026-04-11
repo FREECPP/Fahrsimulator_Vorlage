@@ -27,14 +27,14 @@ import queue as _queue
 
 class TiefenCamLogger(Logger):
     CSV_FIELDS = [
-         "timestamp",
-         "frame_path"
+        "timestamp",
+        "frame_path"
     ]
-    
+
     PROJECT_ROOT = Path(__file__).resolve().parent.parent
     CAM_DIR = PROJECT_ROOT / "timeOfFlightCam" / "bin"
     CAM_DIR = str(CAM_DIR) + "/"
-    
+
     modemapping = {
         "lr-native": {"width": 1024, "height": 1024},
         "lr-qnative": {"width": 512, "height": 512},
@@ -43,19 +43,19 @@ class TiefenCamLogger(Logger):
         "sr-qnative": {"width": 512, "height": 512},
         "sr-mixed": {"width": 512, "height": 512},
     }
-    
+
     def __init__(
-            self, 
+            self,
             config: str = "config_adsd3500_adsd3100.json",
-            ip: str = "ip:10.43.0.1", 
-            mode: str = "lr-qnative", 
+            ip: str = "ip:10.43.0.1",
+            mode: str = "lr-qnative",
             output_dir: Optional[Path] = None,
             fps: float = 10.0,
-            log_path: Optional[Path] = None, 
-            raw_pixel_csv: bool = True,       
-            csv_compressed: bool = True, 
-            queues = None
-        ):
+            log_path: Optional[Path] = None,
+            raw_pixel_csv: bool = True,
+            csv_compressed: bool = True,
+            queues=None
+    ):
         """
         Initializes the TiefenCamLogger class.
 
@@ -74,7 +74,7 @@ class TiefenCamLogger(Logger):
         self.ip = ip
         self.fps = fps
         self.mode = mode
-        self.queues = queues or {} # Für Kommunikation mit anderen Prozessen/Threads
+        self.queues = queues or {}  # Für Kommunikation mit anderen Prozessen/Threads
         self.system = tof.System()
         self.cam_bin = Path(CAM_BIN_STR)
         self.camera = None
@@ -109,7 +109,7 @@ class TiefenCamLogger(Logger):
         # Kamera im Netzwerk suchen
         status = self.system.getCameraList(cameras, self.ip)
         print(cameras, self.ip)
-        if status: 
+        if status:
             print("TOF Camera found on network:", self.ip)
 
         # erste gefundene Kamera auswählen
@@ -118,22 +118,23 @@ class TiefenCamLogger(Logger):
         cam_bin = Path(CAM_BIN_STR)
         try:
             os.chdir(cam_bin)
-            self.camera.initialize(self.config_path) # Kamera initialisieren mit durch die Konfig-Datei
+            self.camera.initialize(self.config_path)  # Kamera initialisieren mit durch die Konfig-Datei
         except Exception as e:
             print("camera.initialize() failed:", e)
-     
+
         self.camera.getAvailableFrameTypes(types)
-        self.camera.setFrameType(self.mode) # Modus setzen
+        self.camera.setFrameType(self.mode)  # Modus setzen
 
         cam_details = tof.CameraDetails()
         status = self.camera.getDetails(cam_details)
         print("TOF Camera Details: .getDetails()", status)
         print("camera1 details:", "id:", cam_details.cameraId, "connection:", cam_details.connection)
-        status = self.camera.start() # Ab hier werden Frames geliefert
-        if status: 
+        status = self.camera.start()  # Ab hier werden Frames geliefert
+        if status:
             print("TOF Camera started")
 
-    def start_sensor(self) -> None: # Prüft ob Kamera gestartet ist, ansonsten wird die Funktion connect_camera() aufgerufen
+    def start_sensor(
+            self) -> None:  # Prüft ob Kamera gestartet ist, ansonsten wird die Funktion connect_camera() aufgerufen
         """
         Ensures the camera is connected and started. Implements the abstract Logger.start_sensor method.
 
@@ -147,31 +148,31 @@ class TiefenCamLogger(Logger):
         except Exception as e:
             print("TiefenCamLogger.start_sensor failed:", e)
             raise
-    
-    def get_latency(self, val_amount_mean_calc: int)-> None:
+
+    def get_latency(self, val_amount_mean_calc: int) -> None:
         test_list = []
-        try: 
+        try:
             frame = tof.Frame()
 
             # Für X wiederholungen den zeitstempel Vor und Nach dem holen des Frames abspeichern anhand daran die Durchschnittliche Latenz berechnen
-            for i in range(val_amount_mean_calc):   
+            for i in range(val_amount_mean_calc):
                 ts_1 = time.time_ns()
                 status = self.camera.requestFrame(frame)
                 ts_2 = time.time_ns()
 
                 # Wenn der Frame OK dann Füge die Zeitdifferenz in die Liste hinzu
-                if status: 
+                if status:
                     test_list.append(ts_2 - ts_1)
 
                 # Warten damit der Frame-Aufruf nicht Blockiert und so das Latenz Ergebnis verfälscht
-                time.sleep(0.5) 
+                time.sleep(0.5)
 
         except Exception as e:
             print("Frame processing error:", e)
 
         mean_val = np.mean(test_list)
         self.mean_latency = mean_val / 2
-
+        print(f"ToF-Latency:{self.mean_latency / 1e6}ms")
 
     def start_logging(self, stop_event):
         """
@@ -184,20 +185,20 @@ class TiefenCamLogger(Logger):
             Exception: If there is an error during frame processing.
         """
         super().start_logging()
-    
+
         self._video_file = Path(self.video_output_dir / "tof_recording.mp4")
         self._video_writer = imageio.get_writer(str(self._video_file), fps=self.fps, codec="libx264", quality=8)
         self._running = True
-        
-        try: 
+        self.get_latency(100)
+        try:
             while self._running and not stop_event.is_set():
                 try:
                     frame = tof.Frame()
-        
-                    status = self.camera.requestFrame(frame) # Ein Frame wird geholt
+
+                    status = self.camera.requestFrame(frame)  # Ein Frame wird geholt
                     # Korrigierter Aufnahmezeitpunkt in Sekunden: Empfangszeit minus gemessene Latenz
                     ts = time.time() - self.mean_latency / 1e9
-                    
+
                     if status:
                         # Daten aus dem Frame werden extrahiert
                         image = np.array(frame.getData("depth"), copy=False)
@@ -205,7 +206,7 @@ class TiefenCamLogger(Logger):
 
                         q_tof = self.queues.get("tof")
                         q_pose = self.queues.get("pose_queue")
-                        
+
                         # Daten werden in dict abgelegt
                         data_packet = {
                             "ts": ts,
@@ -217,13 +218,13 @@ class TiefenCamLogger(Logger):
                             put_latest(q_tof, (image, ts))
                         if q_pose is not None:
                             put_latest(q_pose, data_packet)
-                            
-                        time.sleep(0.05) # Dadurch gehen bewusst Frames verloren?
+
+                        time.sleep(0.05)  # Dadurch gehen bewusst Frames verloren?
 
                 except Exception as e:
                     print("Frame processing error:", e)
                     time.sleep(0.005)
-        finally: 
+        finally:
             pass
 
     def stop_logging(self):
@@ -240,7 +241,7 @@ class TiefenCamLogger(Logger):
                     self.camera.stop()
                 except Exception:
                     pass
-            
+
             if self._video_writer:
                 try:
                     self._video_writer.close()
@@ -248,7 +249,7 @@ class TiefenCamLogger(Logger):
                     pass
 
             try:
-                
+
                 frames_dir = None
                 if getattr(self, "frames_dir", None) is not None:
                     frames_dir = Path(self.frames_dir)
@@ -277,7 +278,8 @@ class TiefenCamLogger(Logger):
                     npz_gb = npz_bytes / (1024 ** 3)
                     csv_gb = csv_bytes / (1024 ** 3)
                     print(f"Frames directory: {frames_dir}")
-                    print(f"  files: {file_count}, total: {total_gb:.3f} GB (npz: {npz_gb:.3f} GB, csv: {csv_gb:.3f} GB)")
+                    print(
+                        f"  files: {file_count}, total: {total_gb:.3f} GB (npz: {npz_gb:.3f} GB, csv: {csv_gb:.3f} GB)")
                 else:
                     print("No frames directory found to compute sizes.")
             except Exception as e:
@@ -291,21 +293,22 @@ class TiefenCamLogger(Logger):
             self._video_file = None
             self._screen = None
 
+
 # Komponententests only
 if __name__ == "__main__":
     run_log_dir = Path("C:/Users/louis/fahrsimulator/logger/logfiles/tof_test2")
     logger1 = TiefenCamLogger(
-                config="config_adsd3500_adsd3030.json", 
-                mode="lr-qnative",
-                output_dir=run_log_dir,
-                fps=10.0,
-                ip = "ip:10.43.0.1", 
-                log_path=run_log_dir / "tof_camera_log.csv",
-                raw_pixel_csv=True,
-                csv_compressed=False,
-            )
+        config="config_adsd3500_adsd3030.json",
+        mode="lr-qnative",
+        output_dir=run_log_dir,
+        fps=10.0,
+        ip="ip:10.43.0.1",
+        log_path=run_log_dir / "tof_camera_log.csv",
+        raw_pixel_csv=True,
+        csv_compressed=False,
+    )
     logger1.start_sensor()
-    try: 
+    try:
         logger1.start_logging()
     except KeyboardInterrupt:
         logger1.stop_logging()
