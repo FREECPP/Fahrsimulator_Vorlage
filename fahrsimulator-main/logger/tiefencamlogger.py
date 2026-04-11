@@ -1,4 +1,4 @@
-from logger import Logger
+from logger.logger import Logger
 
 import numpy as np
 import imageio

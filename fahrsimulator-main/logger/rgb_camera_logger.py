@@ -7,7 +7,7 @@ import numpy as np
 import mediapipe as mp
 import sys 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from logger import Logger, LOG_TIME_KEY
+from logger.logger import Logger, LOG_TIME_KEY
 from queue import Empty
 
 from utils.queue_utils import put_latest

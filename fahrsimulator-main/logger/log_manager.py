@@ -7,6 +7,7 @@ from models.rasante_fahrweise.rasante_fahrweise_prediction_model import RasanteF
 from poseModel.merged_skelettDirekt_neuSegmentierung import DepthPoseClass
 from driverDistractionModel.model_train.distractionModel import distractionModel
 from utils.tof_csv_writer import FileWriter
+from utils.merge_logs import merge_logs
 
 
 class LogManager:
@@ -236,8 +237,17 @@ class LogManager:
         for p in self._process:
             p.join()
         self._process.clear()
-
         print("\nAll loggers stopped.")
+
+        # Sensor-Logs nach dem Stoppen automatisch zusammenführen
+        try:
+            print("\nFühre Sensor-Logs zusammen...")
+            combined = merge_logs(self.run_log_dir)
+            output_path = self.run_log_dir / "combined_log.csv"
+            combined.to_csv(output_path, index=False)
+            print(f"Combined log gespeichert: {output_path}")
+        except Exception as e:
+            print(f"Fehler beim Zusammenführen der Logs: {e}")
 
 def run_logger_process(logger_cls, kwargs, stop_event, queues):
     if isinstance(queues, dict):
