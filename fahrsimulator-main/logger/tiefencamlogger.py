@@ -151,7 +151,7 @@ class TiefenCamLogger(Logger):
     def get_latency(self, val_amount_mean_calc: int)-> None:
         test_list = []
         try: 
-            frame.tof.Frame()
+            frame = tof.Frame()
 
             # Für X wiederholungen den zeitstempel Vor und Nach dem holen des Frames abspeichern anhand daran die Durchschnittliche Latenz berechnen
             for i in range(val_amount_mean_calc):   
