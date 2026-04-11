@@ -7,7 +7,7 @@ import numpy as np
 import mediapipe as mp
 import sys 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from logger import Logger
+from logger import Logger, LOG_TIME_KEY
 from queue import Empty
 
 from utils.queue_utils import put_latest
@@ -66,6 +66,8 @@ class RgbCameraLogger(Logger):
 
         # Latenz Global in der Klasse bekannt machen (Wird gesetzt durch get_latency falls nicht standart 8ms)
         self.mean_latency = 8000000
+        # Korrigierter Aufnahmezeitpunkt im time.time()-Format, wird pro Frame aktualisiert
+        self.capture_time = None
 
 
     def start_sensor(self):
@@ -160,7 +162,8 @@ class RgbCameraLogger(Logger):
         try:
             while self._running.is_set() and not stop_event.is_set():
                 read_successful, frame = self._cam.read()
-                ts = time.time()
+                # Aufnahmezeitpunkt berechnen: Empfangszeit minus gemessene Latenz
+                self.capture_time = time.time() - self.mean_latency / 1e9
 
                 if (not read_successful) or frame is None or frame.size == 0:
                     time.sleep(0.01)
@@ -173,7 +176,7 @@ class RgbCameraLogger(Logger):
                     self.stop_logging()
                     break
                 
-                file = f"rgb_camera_{self._camera_index}_frame_{ts}.npy"
+                file = f"rgb_camera_{self._camera_index}_frame_{self.capture_time}.npy"
                 if self._camera_index == 0:
                     path = self.directory / "rgb_frames" / "rgb_camera_1_frames"
                 elif self._camera_index == 1:
@@ -242,6 +245,7 @@ class RgbCameraLogger(Logger):
 
         if not self.back_camera:
             self.write_row({
+                LOG_TIME_KEY: self.capture_time,  # Korrigierter Aufnahmezeitpunkt statt time.time()
                 "frame_nr": float(self._frame_count),
                 "mean_red": float(mean_r),
                 "mean_green": float(mean_g),
@@ -252,8 +256,9 @@ class RgbCameraLogger(Logger):
                 "mean_brightness": float(brightness),
                 "eyes_closed": self.eyes_closed
             })
-        else: 
+        else:
             self.write_row({
+                LOG_TIME_KEY: self.capture_time,  # Korrigierter Aufnahmezeitpunkt statt time.time()
                 "frame_nr": float(self._frame_count),
                 "mean_red": float(mean_r),
                 "mean_green": float(mean_g),

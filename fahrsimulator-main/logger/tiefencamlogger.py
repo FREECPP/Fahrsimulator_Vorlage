@@ -195,7 +195,8 @@ class TiefenCamLogger(Logger):
                     frame = tof.Frame()
         
                     status = self.camera.requestFrame(frame) # Ein Frame wird geholt
-                    ts = time.time_ns() - self.mean_latency
+                    # Korrigierter Aufnahmezeitpunkt in Sekunden: Empfangszeit minus gemessene Latenz
+                    ts = time.time() - self.mean_latency / 1e9
                     
                     if status:
                         # Daten aus dem Frame werden extrahiert
