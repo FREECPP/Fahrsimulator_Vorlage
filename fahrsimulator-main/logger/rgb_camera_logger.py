@@ -64,6 +64,9 @@ class RgbCameraLogger(Logger):
         self.live_view = live_view
         self.queues = queues or {}
 
+        # Latenz Global in der Klasse bekannt machen (Wird gesetzt durch get_latency falls nicht standart 8ms)
+        self.mean_latency = 8000000
+
 
     def start_sensor(self):
         super().start_sensor()
@@ -93,6 +96,28 @@ class RgbCameraLogger(Logger):
             min_tracking_confidence=0.5
         )
 
+    def get_latency(self, val_amount_mean_calc: int)-> None:
+        test_list = []
+        try: 
+            # Für X wiederholungen den zeitstempel Vor und Nach dem holen des Frames abspeichern anhand daran die Durchschnittliche Latenz berechnen
+            for i in range(val_amount_mean_calc):   
+                ts_1 = time.time_ns()
+                read_successful, frame = self._cam.read()
+                ts_2 = time.time_ns()
+
+                # Wenn der Frame OK dann Füge die Zeitdifferenz in die Liste hinzu
+                if read_successful: 
+                    test_list.append(ts_2 - ts_1)
+
+                # Warten damit der Frame-Aufruf nicht Blockiert und so das Latenz Ergebnis verfälscht
+                time.sleep(0.5) 
+
+        except Exception as e:
+            print("Frame processing error:", e)
+
+        mean_val = np.mean(test_list)
+        self.mean_latency = mean_val / 2
+    
     def start_logging(self, stop_event):
         super().start_logging()
         self._running.set()
