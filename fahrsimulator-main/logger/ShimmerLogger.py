@@ -81,6 +81,9 @@ class ShimmerLogger(Logger):
         print("Shimmer logger stopped.")
 
     def handler(self, pkt: DataPacket) -> None:
+
+        # Zeitstempel setzen um Systemzeit zu erhalten, wann Datum ankommt
+        ts = time.time_ns()
         channel_mapping = {
             EChannelType.TIMESTAMP: "shimmer_timestamp",
             EChannelType.ACCEL_LN_X: "accel_ln_x",
@@ -93,8 +96,18 @@ class ShimmerLogger(Logger):
         mapped_data = {}
         for channel, value in pkt._values.items():
             if channel in channel_mapping:
-                csv_field = channel_mapping[channel]
-                mapped_data[csv_field] = value
+                
+                # Aktuell wollen wir den Zeitstempel auf die Zeit setzen, wenn das Datum ankommt 
+                # -> noch ungenau aber besser als eine Zeiteinheit die nicht einzuschätzen ist
+                if channel != EChannelType.TIMESTAMP:
+                    csv_field = channel_mapping[channel]
+                    mapped_data[csv_field] = value
+
+                # Hier wird der Zeitstempel genommen der gesetzt wird, sobald der Handler aufgerufen wird
+                else:
+                    csv_field = channel_mapping[channel]
+                    mapped_data[csv_field] = ts # Hier muss der Zeitstempel rein
+  
         
         if self.shimmer_queue is not None:
             put_latest(self.shimmer_queue, mapped_data)
