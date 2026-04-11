@@ -1,6 +1,6 @@
 import time
 
-from logger.logger import Logger
+from logger.logger import Logger, LOG_TIME_KEY
 from pathlib import Path
 from typing import Optional, Union
 import socket
@@ -62,6 +62,7 @@ class SilabLogger(Logger):
             try:
                 data, addr = self._socket.recvfrom(1024)
                 parsed = parse_silab_data(data)
+                parsed[LOG_TIME_KEY] = parsed["sim_time"]
                 self.write_row(parsed)
 
                 if self.silab_queue is not None:
@@ -105,6 +106,7 @@ class SilabLogger(Logger):
                 try:
                     data, addr = self._socket.recvfrom(1024)
                     parsed = parse_silab_data(data)
+                    parsed[LOG_TIME_KEY] = parsed["sim_time"]
                     self.write_row(parsed)
                 
                     if self.silab_queue is not None:
