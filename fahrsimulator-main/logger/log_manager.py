@@ -235,7 +235,11 @@ class LogManager:
         print("\nStopping logger processes...")
         self.stop_event.set()
         for p in self._process:
-            p.join()
+            p.join(timeout=10)
+            if p.is_alive():
+                print(f"Prozess {p.name} hat nicht rechtzeitig beendet – wird zwangsbeendet.")
+                p.terminate()
+                p.join(timeout=3)
         self._process.clear()
         print("\nAll loggers stopped.")
 
