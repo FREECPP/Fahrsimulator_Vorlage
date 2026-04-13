@@ -32,6 +32,8 @@ host = "0.0.0.0"
 logging_manager = None
 BASE_DIR = None
 is_running = False
+stream_thread = None
+stream_stop_event = threading.Event()
 
 # ==================================================================================
 # Initialising Queue for Multiprocessing IPC
@@ -104,7 +106,7 @@ def handle_connect():
 # Start-Button handling on 'dashboard.html'
 @socketio.on('start_recording')
 def handle_start_recording():
-    global logging_manager, is_running
+    global logging_manager, is_running, stream_thread
     if is_running:
         socketio.emit('is_running', True)
         return
@@ -119,19 +121,31 @@ def handle_start_recording():
         logging_manager = LogManager(directory=project_path, data_queues=data_queues, timestamp=now)
         is_running = logging_manager.start_logging_async()
         socketio.emit('is_running', is_running)
-        threading.Thread(target=read_queue, args=(logging_manager, ), daemon=True).start()
+
+        stream_stop_event.clear()
+        stream_thread = threading.Thread(target=read_queue, args=(logging_manager, stream_stop_event), daemon=True)
+        stream_thread.start()
     except Exception as e:
         # If hardware/SDK dependencies are unavailable, run mock stream for UI preview.
         logging_manager = None
         is_running = True
         printlog(f"Fallback to mock sensor stream: {e}", "warning")
         socketio.emit('is_running', True)
-        threading.Thread(target=mock_sensor_stream, daemon=True).start()
+
+        stream_stop_event.clear()
+        stream_thread = threading.Thread(target=mock_sensor_stream, args=(stream_stop_event,), daemon=True)
+        stream_thread.start()
 
 # Stop-Button handling on 'dashboard.html'
 @socketio.on('stop_recording')
 def handle_stop_recording():
-    global logging_manager, is_running
+    global logging_manager, is_running, stream_thread
+    stream_stop_event.set()
+
+    if stream_thread and stream_thread.is_alive():
+        stream_thread.join(timeout=1.0)
+    stream_thread = None
+
     if logging_manager:
         logging_manager._stop_logger_processes()
         #logging_manager.stop_logging()
@@ -154,8 +168,24 @@ def encode_depth_to_jpg(depth: np.ndarray) -> Optional[str]:
         return None
     return base64.b64encode(buffer).decode()
 
+
+def encode_rgb_stream_frame(rgb_frame) -> Optional[str]:
+    if rgb_frame is None:
+        return None
+
+    if isinstance(rgb_frame, str):
+        return rgb_frame
+
+    if isinstance(rgb_frame, (bytes, bytearray, memoryview)):
+        return base64.b64encode(bytes(rgb_frame)).decode()
+
+    ok, buffer = cv2.imencode(".jpg", rgb_frame)
+    if not ok:
+        return None
+    return base64.b64encode(buffer.tobytes()).decode()
+
 # Main function to send data per 'socket.emit()' to the dashboard.html
-def read_queue(logging_manager):
+def read_queue(logging_manager, stop_event):
     tof_queue = logging_manager.data_queues.get("tof")
     rgb2_queue = logging_manager.data_queues.get("rgb2")
     rgb_queue = logging_manager.data_queues.get("rgb")
@@ -167,28 +197,33 @@ def read_queue(logging_manager):
     shimmer_queue = logging_manager.data_queues.get("shimmer_hrv")
     gaze_queue = logging_manager.data_queues.get("gaze_distribution_model")
 
-    while logging_manager:
-        sensor_data = {
-            "rgb_frame": None,
-            "tof_frame": None,
-            "pose_frame": None,   # optional debug
-            "eyetracker": None,
-            "silab": None, 
-            "rgb_frame2": None,  # optional second RGB
-            "tof_scelet": None,
-            "distraction": None,
-            "shimmer": None,
-            "gaze": None,
-            "fahrweise": None,
-        }
+    latest_sensor_data = {
+        "rgb_frame": None,
+        "tof_frame": None,
+        "pose_frame": None,
+        "eyetracker": None,
+        "silab": None,
+        "rgb_frame2": None,
+        "tof_scelet": None,
+        "distraction": None,
+        "shimmer": None,
+        "gaze": None,
+        "fahrweise": None,
+    }
+
+    last_emit_time = 0.0
+
+    while not stop_event.is_set():
+        has_update = False
 
         # RGB Data-Queue
         if rgb_queue is not None:
             try:
                 rgb_frame = rgb_queue.get_nowait()
-                ok, buffer = cv2.imencode(".jpg", rgb_frame)
-                if ok:
-                    sensor_data["rgb_frame"] = base64.b64encode(buffer.tobytes()).decode()
+                encoded = encode_rgb_stream_frame(rgb_frame)
+                if encoded is not None:
+                    latest_sensor_data["rgb_frame"] = encoded
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -199,8 +234,8 @@ def read_queue(logging_manager):
             try:
                 silab = silab_queue.get_nowait()
                 if silab is not None:
-                    sensor_data["silab"] = silab
-                    #print(sensor_data["silab"])
+                    latest_sensor_data["silab"] = silab
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -211,8 +246,8 @@ def read_queue(logging_manager):
             try:
                 fahrweise = rasante_fahrweise_model_queue.get_nowait()
                 if fahrweise is not None:
-                    sensor_data["fahrweise"] = fahrweise
-                    #print(f"fahrweise: {sensor_data['fahrweise']}")
+                    latest_sensor_data["fahrweise"] = fahrweise
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -232,7 +267,10 @@ def read_queue(logging_manager):
         if tof_scelet_queue is not None:
             try:
                 depth = tof_scelet_queue.get_nowait()
-                sensor_data["tof_scelet"] = encode_depth_to_jpg(depth)
+                encoded = encode_depth_to_jpg(depth)
+                if encoded is not None:
+                    latest_sensor_data["tof_scelet"] = encoded
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -242,9 +280,10 @@ def read_queue(logging_manager):
         if rgb2_queue is not None:
             try:
                 rgb_frame2 = rgb2_queue.get_nowait()
-                ok, buffer2 = cv2.imencode(".jpg", rgb_frame2)
-                # sensor_data["rgb_frame2"] = encode_depth_to_jpg(pose_depth)
-                sensor_data["rgb_frame2"] = base64.b64encode(buffer2.tobytes()).decode()
+                encoded = encode_rgb_stream_frame(rgb_frame2)
+                if encoded is not None:
+                    latest_sensor_data["rgb_frame2"] = encoded
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -254,7 +293,9 @@ def read_queue(logging_manager):
         if distraction_queue is not None:
             try:
                 d = distraction_queue.get_nowait()
-                sensor_data["distraction"] = d
+                if d is not None:
+                    latest_sensor_data["distraction"] = d
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -264,7 +305,9 @@ def read_queue(logging_manager):
         if shimmer_queue is not None:
             try:
                 data = shimmer_queue.get_nowait()
-                sensor_data["shimmer"] = data
+                if data is not None:
+                    latest_sensor_data["shimmer"] = data
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -275,14 +318,20 @@ def read_queue(logging_manager):
             try:
                 gaze_frame = gaze_queue.get_nowait()
                 ok, buffer2 = cv2.imencode(".jpg", gaze_frame)
-                sensor_data["gaze"] = base64.b64encode(buffer2.tobytes()).decode()
+                if ok:
+                    latest_sensor_data["gaze"] = base64.b64encode(buffer2.tobytes()).decode()
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
                 printlog(f"gaze queue error: {e}", "debug")
 
-        socketio.emit("sensor_update", sensor_data)
-        time.sleep(0.02)  # ~50 Hz updates
+        now = time.monotonic()
+        if has_update or (now - last_emit_time) >= 0.25:
+            socketio.emit("sensor_update", latest_sensor_data)
+            last_emit_time = now
+
+        time.sleep(0.01)
 
 
 def _mock_image_b64(label: str, t: float, width: int = 640, height: int = 360) -> str:
@@ -302,9 +351,9 @@ def _mock_image_b64(label: str, t: float, width: int = 640, height: int = 360) -
     return base64.b64encode(buffer.tobytes()).decode()
 
 
-def mock_sensor_stream():
+def mock_sensor_stream(stop_event):
     start_t = time.time()
-    while is_running and logging_manager is None:
+    while not stop_event.is_set() and is_running and logging_manager is None:
         t = time.time() - start_t
         speed_ms = max(0.0, 18.0 + 8.0 * math.sin(t * 0.6))
 

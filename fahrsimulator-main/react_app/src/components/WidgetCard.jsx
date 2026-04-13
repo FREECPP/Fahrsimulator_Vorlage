@@ -1,28 +1,34 @@
-import { useState } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import SpeedChart from "./SpeedChart"
 
 function WidgetCard({ widget, onDelete, onChangeView, sensorData, connected, running }) {
   const [imageSource, setImageSource] = useState("rgb_front")
+  const imageRef = useRef(null)
   const silab = sensorData?.silab
   const rgbFrame = sensorData?.rgb_frame
   const tofFrame = sensorData?.tof_scelet
   const rgbBackFrame = sensorData?.rgb_frame2
-  const gazeFrame = sensorData?.gaze
-  const distraction = sensorData?.distraction
-  const fahrweise = sensorData?.fahrweise
   const shimmer = sensorData?.shimmer
-  const eyetracker = sensorData?.eyetracker
-  const packetSummary = {
-    silab,
-    distraction,
-    fahrweise,
-    shimmer,
-    eyetracker,
-    rgb_frame: rgbFrame ? `[base64:${rgbFrame.length}]` : null,
-    rgb_frame2: rgbBackFrame ? `[base64:${rgbBackFrame.length}]` : null,
-    tof_scelet: tofFrame ? `[base64:${tofFrame.length}]` : null,
-    gaze: gazeFrame ? `[base64:${gazeFrame.length}]` : null,
-  }
+  const sdnn = Number(shimmer?.sdnn)
+  const rmssd = Number(shimmer?.rmssd)
+  const selectedImage =
+    widget.view === "image"
+      ? {
+          rgb_front: rgbFrame,
+          tof: tofFrame,
+          rgb_back: rgbBackFrame,
+        }[imageSource]
+      : null
+
+  useEffect(() => {
+    if (widget.view !== "image" || !imageRef.current) return
+
+    if (selectedImage) {
+      imageRef.current.src = `data:image/jpeg;base64,${selectedImage}`
+    } else {
+      imageRef.current.removeAttribute("src")
+    }
+  }, [selectedImage, widget.view])
 
   let body = <div className="placeholder">Unknown widget type.</div>
 
@@ -70,13 +76,6 @@ function WidgetCard({ widget, onDelete, onChangeView, sensorData, connected, run
   }
 
   if (widget.view === "image") {
-    const imageMap = {
-      rgb_front: rgbFrame,
-      tof: tofFrame,
-      rgb_back: rgbBackFrame,
-    }
-    const selectedImage = imageMap[imageSource]
-    
     body = (
       <div className="widget-stack image-widget">
         <div style={{ marginBottom: "8px" }}>
@@ -92,27 +91,10 @@ function WidgetCard({ widget, onDelete, onChangeView, sensorData, connected, run
           </select>
         </div>
         {selectedImage ? (
-          <img className="stream-image" src={`data:image/jpeg;base64,${selectedImage}`} alt="Live sensor stream" />
+          <img ref={imageRef} className="stream-image" alt="Live sensor stream" />
         ) : (
           <div className="placeholder">No frame yet for {imageSource.replace("_", " ")}. Start recording to receive frames.</div>
         )}
-      </div>
-    )
-  }
-
-  if (widget.view === "gaze") {
-    body = gazeFrame ? (
-      <img className="stream-image" src={`data:image/jpeg;base64,${gazeFrame}`} alt="Live gaze stream" />
-    ) : (
-      <div className="placeholder">No gaze frame available in the current sensor payload.</div>
-    )
-  }
-
-  if (widget.view === "text") {
-    body = (
-      <div className="widget-stack">
-        <h4>Notes</h4>
-        <p>Use this panel to keep task notes while validating your dashboard layout.</p>
       </div>
     )
   }
@@ -121,53 +103,7 @@ function WidgetCard({ widget, onDelete, onChangeView, sensorData, connected, run
     body = <SpeedChart sensorData={sensorData} />
   }
 
-  if (widget.view === "distraction") {
-    const prob = Number(distraction?.prob_distracted)
-    const label = Number(distraction?.label)
-    const frames = Number(distraction?.n_frames)
-    const isDistracted = Number.isFinite(label) && label === 1
-
-    body = (
-      <div className="widget-stack">
-        <div className="status-row">
-          <span>Distracted</span>
-          <strong className={isDistracted ? "bad" : "ok"}>{isDistracted ? "Yes" : "No"}</strong>
-        </div>
-        <div className="status-row">
-          <span>Probability</span>
-          <strong>{Number.isFinite(prob) ? prob.toFixed(3) : "-"}</strong>
-        </div>
-        <div className="status-row">
-          <span>Frames</span>
-          <strong>{Number.isFinite(frames) ? frames : "-"}</strong>
-        </div>
-      </div>
-    )
-  }
-
-  if (widget.view === "fahrweise") {
-    const prediction = fahrweise?.prediction
-    const confidence = Number(fahrweise?.confidence)
-    const isFast = prediction === "fast"
-
-    body = (
-      <div className="widget-stack">
-        <div className="status-row">
-          <span>Prediction</span>
-          <strong className={isFast ? "bad" : "ok"}>{prediction || "-"}</strong>
-        </div>
-        <div className="status-row">
-          <span>Confidence</span>
-          <strong>{Number.isFinite(confidence) ? confidence.toFixed(3) : "-"}</strong>
-        </div>
-      </div>
-    )
-  }
-
   if (widget.view === "shimmer") {
-    const sdnn = Number(shimmer?.sdnn)
-    const rmssd = Number(shimmer?.rmssd)
-
     body = (
       <div className="widget-stack">
         <h4>HRV (Shimmer)</h4>
@@ -183,23 +119,6 @@ function WidgetCard({ widget, onDelete, onChangeView, sensorData, connected, run
     )
   }
 
-  if (widget.view === "eyetracker") {
-    body = eyetracker ? (
-      <pre className="raw-payload">{JSON.stringify(eyetracker, null, 2)}</pre>
-    ) : (
-      <div className="placeholder">No eyetracker packet available in the current payload.</div>
-    )
-  }
-
-  if (widget.view === "raw") {
-    body = (
-      <div className="widget-stack">
-        <h4>Raw Sensor Packet</h4>
-        <pre className="raw-payload">{JSON.stringify(packetSummary, null, 2)}</pre>
-      </div>
-    )
-  }
-
   return (
     <article className="widget-card">
       <header className="widget-header">
@@ -209,14 +128,8 @@ function WidgetCard({ widget, onDelete, onChangeView, sensorData, connected, run
             <option value="status">Status</option>
             <option value="speed">Speed</option>
             <option value="image">Image</option>
-            <option value="gaze">Gaze</option>
-            <option value="text">Notes</option>
             <option value="chart">Chart</option>
-            <option value="distraction">Distraction</option>
-            <option value="fahrweise">Fahrweise</option>
             <option value="shimmer">Shimmer</option>
-            <option value="eyetracker">Eyetracker</option>
-            <option value="raw">Raw Packet</option>
           </select>
           <button className="danger" onClick={() => onDelete(widget.i)}>
             Remove
@@ -228,4 +141,53 @@ function WidgetCard({ widget, onDelete, onChangeView, sensorData, connected, run
   )
 }
 
-export default WidgetCard
+function hasSameWidgetIdentity(prevWidget, nextWidget) {
+  return (
+    prevWidget.i === nextWidget.i &&
+    prevWidget.view === nextWidget.view &&
+    prevWidget.title === nextWidget.title &&
+    prevWidget.x === nextWidget.x &&
+    prevWidget.y === nextWidget.y &&
+    prevWidget.w === nextWidget.w &&
+    prevWidget.h === nextWidget.h
+  )
+}
+
+function areWidgetPropsEqual(prevProps, nextProps) {
+  if (!hasSameWidgetIdentity(prevProps.widget, nextProps.widget)) return false
+  if (prevProps.connected !== nextProps.connected) return false
+  if (prevProps.running !== nextProps.running) return false
+
+  const view = nextProps.widget.view
+  const prevData = prevProps.sensorData || {}
+  const nextData = nextProps.sensorData || {}
+
+  if (view === "status") {
+    return prevData.silab?.speed === nextData.silab?.speed
+  }
+
+  if (view === "speed" || view === "chart") {
+    return (
+      prevData.silab?.speed === nextData.silab?.speed &&
+      prevData.silab?.steering === nextData.silab?.steering &&
+      prevData.silab?.acc_pedal === nextData.silab?.acc_pedal &&
+      prevData.silab?.brake_pedal === nextData.silab?.brake_pedal
+    )
+  }
+
+  if (view === "image") {
+    return (
+      prevData.rgb_frame === nextData.rgb_frame &&
+      prevData.tof_scelet === nextData.tof_scelet &&
+      prevData.rgb_frame2 === nextData.rgb_frame2
+    )
+  }
+
+  if (view === "shimmer") {
+    return prevData.shimmer === nextData.shimmer
+  }
+
+  return true
+}
+
+export default memo(WidgetCard, areWidgetPropsEqual)

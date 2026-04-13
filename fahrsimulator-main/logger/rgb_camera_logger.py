@@ -142,11 +142,24 @@ class RgbCameraLogger(Logger):
                     continue
                 frame = cv2.rotate(frame, cv2.ROTATE_180)
 
-                # Data-Queue here
-
                 if not read_successful:
                     self.stop_logging()
                     break
+
+                try:
+                    if self._camera_index == 0:
+                        rgb_queue = self.queues.get("rgb_frame")
+                    elif self._camera_index == 1:
+                        rgb_queue = self.queues.get("rgb_frame2")
+                    else:
+                        rgb_queue = None
+
+                    if rgb_queue is not None:
+                        ok, buffer = cv2.imencode(".jpg", frame)
+                        if ok:
+                            put_latest(rgb_queue, buffer.tobytes())
+                except Empty:
+                    pass
                 
                 file = f"rgb_camera_{self._camera_index}_frame_{ts}.npy"
                 if self._camera_index == 0:
@@ -162,24 +175,6 @@ class RgbCameraLogger(Logger):
                 frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 results = self.face_mesh.process(frame_rgb)
                 self.create_mediapipe_image(results, self.fps_time, self._frame_count, frame, camera_index=self._camera_index)
-
-                # Hier werden die Daten in die Queue gegeben.
-                try:
-                    # if self.queue is not None:
-                    #     if self.queue.full():
-                    #         self.queue.get_nowait()
-                    #     self.queue.put_nowait(frame)
-                    if self._camera_index == 0:
-                        rgb_queue = self.queues.get("rgb_frame")
-                    elif self._camera_index == 1:
-                        rgb_queue = self.queues.get("rgb_frame2")
-                    #frame_rot = cv2.rotate(frame, cv2.ROTATE_180) # Frame rotation before mediapipe settings
-                    if rgb_queue is not None:
-                        put_latest(rgb_queue, frame)
-                    time.sleep(0.05)
-
-                except Empty:
-                    pass
 
                 # Live-Vorschau
                 if self.live_view:

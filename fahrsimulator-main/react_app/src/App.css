@@ -166,6 +166,22 @@
   gap: 8px;
 }
 
+.widget-actions select {
+  background: #f3f8fd;
+  color: #173247;
+  border-color: #a7bfd3;
+}
+
+.widget-actions select option {
+  background: #ffffff;
+  color: #173247;
+}
+
+.widget-actions select:focus-visible {
+  outline: 2px solid #7fb7e3;
+  outline-offset: 1px;
+}
+
 .widget-body {
   flex: 1;
   padding: 12px;

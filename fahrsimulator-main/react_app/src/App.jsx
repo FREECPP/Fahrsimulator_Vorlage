@@ -19,13 +19,24 @@ function createWidget(view) {
   }
 }
 
+function getDefaultHorizontalPosition(widgetCount, widgetWidth = 4, totalCols = 12) {
+  const widgetsPerRow = Math.max(1, Math.floor(totalCols / widgetWidth))
+  const slot = widgetCount % widgetsPerRow
+  return slot * widgetWidth
+}
+
 function App() {
   const socketRef = useRef(null)
-  const [widgets, setWidgets] = useState([
-    createWidget("status"),
-    createWidget("speed"),
-    createWidget("image"),
-  ])
+  const [widgets, setWidgets] = useState(() =>
+    ["status", "speed", "image"].map((view, index) => {
+      const widget = createWidget(view)
+      return {
+        ...widget,
+        x: getDefaultHorizontalPosition(index, widget.w),
+        y: Infinity,
+      }
+    }),
+  )
   const [connected, setConnected] = useState(false)
   const [running, setRunning] = useState(false)
   const [sensorData, setSensorData] = useState({})
@@ -73,15 +84,26 @@ function App() {
   return (
     <div className="app-shell">
       <Sidebar
-        onAddWidget={(view) => setWidgets((items) => [...items, createWidget(view)])}
+        onAddWidget={(view) =>
+          setWidgets((items) => {
+            const nextWidget = createWidget(view)
+            return [
+              ...items,
+              {
+                ...nextWidget,
+                x: getDefaultHorizontalPosition(items.length, nextWidget.w),
+                y: Infinity,
+              },
+            ]
+          })
+        }
         onClearWidgets={() => setWidgets([])}
       />
 
       <main className="dashboard-area">
         <header className="topbar">
           <div>
-            <h1>Fahrsimulator Dashboard Builder</h1>
-            <p>Drag and resize widgets. Live data is streamed from Flask Socket.IO.</p>
+            <h1>Fahrsimulator Dashboard</h1>
           </div>
           <div className="topbar-right">
             <div className="simulation-controls">
