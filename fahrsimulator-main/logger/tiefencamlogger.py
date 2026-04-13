@@ -1,4 +1,4 @@
-from logger.logger import Logger
+from logger.logger import Logger, LOG_TIME_KEY
 
 import numpy as np
 import imageio
@@ -214,10 +214,17 @@ class TiefenCamLogger(Logger):
                             "ab": image_ab
                         }
 
+                        frame_path = f"frames_tof/tof_frame_{ts}.npy"
                         if q_tof is not None:
                             put_latest(q_tof, (image, ts))
                         if q_pose is not None:
                             put_latest(q_pose, data_packet)
+
+                        self.write_row({
+                            LOG_TIME_KEY: ts,
+                            "timestamp": ts,
+                            "frame_path": frame_path
+                        })
 
                         time.sleep(0.05)  # Dadurch gehen bewusst Frames verloren?
 
