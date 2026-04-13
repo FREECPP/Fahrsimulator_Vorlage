@@ -52,8 +52,6 @@ class EyetrackerLogger(Logger):
         # Wird True gesetzt sobald die Kalibrierung abgeschlossen ist
         self._latency_cal_done = False
 
-        #Sync Flag damit Daten erst ausgetauscht werden wenn die Zeit synchron ist
-        self.sync_flag = False
 
     def _gaze_callback(self, gaze_data):
         # Empfangszeit so früh wie möglich messen um Verarbeitungszeit nicht einzurechnen
@@ -67,7 +65,7 @@ class EyetrackerLogger(Logger):
 
     def _sync_callback(self, sync_data):
         print(f"System_time_synced: {sync_data}")
-        self.sync_flag = True
+        self._device.subscribe_to(tobii_research.EYETRACKER_GAZE_DATA, self._gaze_callback, as_dictionary=self.as_dictionary)
 
     def _update_latency(self, device_ts: float, recv_ns: int) -> None:
         # Erstes Paket: device_time_stamp als Takt-Referenz speichern, noch keine Berechnung möglich
@@ -124,8 +122,6 @@ class EyetrackerLogger(Logger):
             # Systemzeit in Nanosekunden festhalten bevor Streaming startet – Referenz für Latenzberechnung
             self._stream_start_ns = time.time_ns()
             self._device.subscribe_to(tobii_research.EYETRACKER_TIME_SYNCHRONIZATION_DATA, self._sync_callback, as_dictionary=True)
-            if self.sync_flag == True:
-                self._device.subscribe_to(tobii_research.EYETRACKER_GAZE_DATA, self._gaze_callback, as_dictionary=self.as_dictionary)
 
             while not stop_event.is_set():
                 time.sleep(0.1) 
