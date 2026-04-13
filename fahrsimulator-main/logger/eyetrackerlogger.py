@@ -59,6 +59,7 @@ class EyetrackerLogger(Logger):
         device_ts = gaze_data.get("device_time_stamp")
         if device_ts is not None:
             self._update_latency(device_ts, recv_ns)
+        print(f"Tobii-Device-Timestamp: {gaze_data.get("device_time_stamp")}")
         self.process_data(gaze_data)
         if self.eyetracker_queue is not None:
             put_latest(self.eyetracker_queue, gaze_data)
