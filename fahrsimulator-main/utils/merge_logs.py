@@ -77,6 +77,12 @@ def load_sensor_logs(session_dir: Path) -> list[pd.DataFrame]:
         df[TIMESTAMP_COL] = pd.to_numeric(df[TIMESTAMP_COL], errors="coerce")
         df.dropna(subset=[TIMESTAMP_COL], inplace=True)
 
+        # Alle Datenspalten mit dem Sensor-Label prefixen (außer log_time) damit
+        # Spalten verschiedener Sensoren eindeutig identifizierbar sind.
+        # z.B. mean_red → rgb_camera1_mean_red / rgb_camera2_mean_red
+        rename_map = {c: f"{sensor_label}_{c}" for c in df.columns if c != TIMESTAMP_COL}
+        df = df.rename(columns=rename_map)
+
         # Sensor-Label hinzufügen damit im kombinierten Log erkennbar ist
         # woher jede Zeile stammt
         df["sensor"] = sensor_label
