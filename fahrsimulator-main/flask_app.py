@@ -13,6 +13,7 @@ from datetime import datetime
 from multiprocessing import Queue
 import numpy as np
 import time
+from typing import Optional
 from queue import Empty
 
 # ==================================================================================
@@ -102,24 +103,25 @@ def handle_connect():
 # Start-Button handling on 'dashboard.html'
 @socketio.on('start_recording')
 def handle_start_recording():
+    global logging_manager, is_running
+    if is_running:
+        socketio.emit('is_running', True)
+        return
+
     printlog(message="Starte Log-Manager", debug_lvl="info", std_print=True)
     from flask_blueprints.verzeichnis import project_path
     printlog(message=str(project_path), debug_lvl="info", std_print=True)
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    global logging_manager
-    logging_manager = LogManager(directory=project_path, data_queues=data_queues, timestamp=now)
-    
-    global is_running
-    is_running = logging_manager.start_logging_async()
 
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    logging_manager = LogManager(directory=project_path, data_queues=data_queues, timestamp=now)
+    is_running = logging_manager.start_logging_async()
     socketio.emit('is_running', is_running)
-    #threading.Thread(target=stream_all_sensors, daemon=True).start()
     threading.Thread(target=read_queue, args=(logging_manager, ), daemon=True).start()
 
 # Stop-Button handling on 'dashboard.html'
 @socketio.on('stop_recording')
 def handle_stop_recording():
-    global logging_manager
+    global logging_manager, is_running
     if logging_manager:
         logging_manager._stop_logger_processes()
         #logging_manager.stop_logging()
@@ -129,7 +131,7 @@ def handle_stop_recording():
 
 
 # Helper function to encode depth-data to jpeg for live preview
-def encode_depth_to_jpg(depth: np.ndarray) -> str | None:
+def encode_depth_to_jpg(depth: np.ndarray) -> Optional[str]:
     if depth is None:
         return None
     depth = np.nan_to_num(depth)
@@ -272,7 +274,8 @@ def read_queue(logging_manager):
         socketio.emit("sensor_update", sensor_data)
         time.sleep(0.02)  # ~50 Hz updates
 
-# Main entry-point for application
+
+
 if __name__ == '__main__':
     load_config()
     socketio.run(app, port=port, debug=False, allow_unsafe_werkzeug=True)
