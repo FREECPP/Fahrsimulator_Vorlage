@@ -121,7 +121,7 @@ class RgbCameraLogger(Logger):
 
         mean_val = np.mean(test_list)
         self.mean_latency = mean_val / 2
-        print(f"RGB-Latency:{self.mean_latency / 1e6}ms")
+        print(f"RGB-Latency {self._camera_index}: {self.mean_latency / 1e6:.2f} ms")
 
     def start_logging(self, stop_event):
         super().start_logging()
