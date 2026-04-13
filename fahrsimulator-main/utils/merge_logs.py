@@ -114,6 +114,7 @@ def merge_logs(session_dir: Path, keep_incomplete: bool = False) -> pd.DataFrame
     # Alle Sensor-DataFrames untereinander stapeln (jede Zeile = ein Messwert eines Sensors)
     # und chronologisch nach dem Aufnahmezeitpunkt sortieren
     combined = pd.concat(frames, ignore_index=True).sort_values(TIMESTAMP_COL).reset_index(drop=True)
+    combined.insert(1, "sensor", combined.pop("sensor"))
     print(f"\nGesamt vor Merge: {len(combined)} Zeilen, {len(combined.columns)} Spalten")
 
     # Spalten bestimmen die per Forward-Fill aufgefüllt werden sollen.
