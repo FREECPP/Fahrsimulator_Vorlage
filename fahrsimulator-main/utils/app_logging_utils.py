@@ -12,14 +12,20 @@ logging.basicConfig(
 def printlog(message: str, debug_lvl: str = "INFO", std_print: bool = True) -> None:
     level = debug_lvl.upper()
 
-    match level:
-        case "DEBUG": logging.debug(message)
-        case "INFO": logging.info(message)
-        case "WARNING": logging.warning(message)
-        case "ERROR": logging.error(message)
-        case "CRITICAL": logging.critical(message)
-        case "EXCEPTION": logging.exception(message)
-        case _: logging.info(message)
+    if level == "DEBUG":
+        logging.debug(message)
+    elif level == "INFO":
+        logging.info(message)
+    elif level == "WARNING":
+        logging.warning(message)
+    elif level == "ERROR":
+        logging.error(message)
+    elif level == "CRITICAL":
+        logging.critical(message)
+    elif level == "EXCEPTION":
+        logging.exception(message)
+    else:
+        logging.info(message)
 
     if std_print:
         print(f"{message}")

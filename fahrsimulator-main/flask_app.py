@@ -4,7 +4,7 @@ from flask_socketio import SocketIO
 import threading
 import cv2
 import base64
-from logger.log_manager import LogManager
+#from logger.log_manager import LogManager  # Lazy-loaded in handle_start_recording() to support preview mode without sensors
 #from logger.frame_processor import Processor, EyetrackerProcessor, SilabDataProcessor
 from flask_blueprints.verzeichnis import verzeichnis_bp
 import configparser
@@ -13,6 +13,7 @@ from datetime import datetime
 from multiprocessing import Queue
 import numpy as np
 import time
+import math
 from typing import Optional
 from queue import Empty
 
@@ -112,11 +113,20 @@ def handle_start_recording():
     from flask_blueprints.verzeichnis import project_path
     printlog(message=str(project_path), debug_lvl="info", std_print=True)
 
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    logging_manager = LogManager(directory=project_path, data_queues=data_queues, timestamp=now)
-    is_running = logging_manager.start_logging_async()
-    socketio.emit('is_running', is_running)
-    threading.Thread(target=read_queue, args=(logging_manager, ), daemon=True).start()
+    try:
+        from logger.log_manager import LogManager  # Lazy-import to support preview mode without sensors
+        now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        logging_manager = LogManager(directory=project_path, data_queues=data_queues, timestamp=now)
+        is_running = logging_manager.start_logging_async()
+        socketio.emit('is_running', is_running)
+        threading.Thread(target=read_queue, args=(logging_manager, ), daemon=True).start()
+    except Exception as e:
+        # If hardware/SDK dependencies are unavailable, run mock stream for UI preview.
+        logging_manager = None
+        is_running = True
+        printlog(f"Fallback to mock sensor stream: {e}", "warning")
+        socketio.emit('is_running', True)
+        threading.Thread(target=mock_sensor_stream, daemon=True).start()
 
 # Stop-Button handling on 'dashboard.html'
 @socketio.on('stop_recording')
@@ -275,7 +285,61 @@ def read_queue(logging_manager):
         time.sleep(0.02)  # ~50 Hz updates
 
 
+def _mock_image_b64(label: str, t: float, width: int = 640, height: int = 360) -> str:
+    frame = np.zeros((height, width, 3), dtype=np.uint8)
+    frame[:] = (25, 28, 34)
 
+    # Animated status bar for visual feedback that the stream is live.
+    bar_x = int(((math.sin(t * 1.8) + 1) * 0.5) * (width - 120))
+    cv2.rectangle(frame, (bar_x, height - 40), (bar_x + 100, height - 20), (60, 180, 220), -1)
+
+    cv2.putText(frame, f"{label} MOCK", (20, 42), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
+    cv2.putText(frame, datetime.now().strftime("%H:%M:%S"), (20, 78), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (180, 220, 255), 2)
+
+    ok, buffer = cv2.imencode(".jpg", frame)
+    if not ok:
+        return ""
+    return base64.b64encode(buffer.tobytes()).decode()
+
+
+def mock_sensor_stream():
+    start_t = time.time()
+    while is_running and logging_manager is None:
+        t = time.time() - start_t
+        speed_ms = max(0.0, 18.0 + 8.0 * math.sin(t * 0.6))
+
+        sensor_data = {
+            "rgb_frame": _mock_image_b64("RGB Front", t),
+            "tof_frame": None,
+            "pose_frame": None,
+            "eyetracker": None,
+            "silab": {
+                "speed": float(speed_ms),
+                "steering": float(6.5 * math.sin(t * 0.9)),
+                "acc_pedal": float(max(0.0, 0.6 + 0.35 * math.sin(t * 1.1))),
+                "brake_pedal": float(max(0.0, 0.3 * math.sin(t * 1.7 - 1.0))),
+            },
+            "rgb_frame2": _mock_image_b64("RGB Back", t + 1.0),
+            "tof_scelet": _mock_image_b64("TOF", t + 2.0),
+            "distraction": {
+                "label": int((math.sin(t * 0.7) > 0.35)),
+                "prob_distracted": float((math.sin(t * 0.7) + 1.0) * 0.5),
+                "n_frames": int(30 + 20 * abs(math.sin(t * 0.4))),
+            },
+            "shimmer": {
+                "sdnn": float(45 + 10 * math.sin(t * 0.35)),
+                "rmssd": float(32 + 9 * math.sin(t * 0.5 + 0.5)),
+            },
+            "gaze": None,
+            "fahrweise": {
+                "prediction": "fast" if speed_ms > 21 else "normal",
+                "confidence": float(0.65 + 0.25 * abs(math.sin(t * 0.8))),
+            },
+        }
+        socketio.emit("sensor_update", sensor_data)
+        time.sleep(0.1)
+
+# Main entry-point for application
 if __name__ == '__main__':
     load_config()
     socketio.run(app, port=port, debug=False, allow_unsafe_werkzeug=True)

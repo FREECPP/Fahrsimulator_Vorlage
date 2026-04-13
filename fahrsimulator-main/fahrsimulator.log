@@ -1,0 +1,3 @@
+2026-04-13 12:11:08,393 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:9999
+2026-04-13 12:11:08,393 [INFO] [33mPress CTRL+C to quit[0m
