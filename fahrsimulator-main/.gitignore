@@ -39,6 +39,7 @@ htmlcov/
 # Logs (only ignore large log files, keep directory structure)
 logger/logfiles/
 video/
+fahrsimulator.log
 
 # OS
 .DS_Store
