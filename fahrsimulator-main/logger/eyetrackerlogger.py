@@ -2,7 +2,7 @@ from logger.logger import Logger, LOG_TIME_KEY
 from pathlib import Path
 from typing import Union, Optional
 import tobii_research
-import time 
+import time
 import queue as _queue
 
 from utils.queue_utils import put_latest
@@ -21,13 +21,13 @@ class EyetrackerLogger(Logger):
         "left_pupil_diameter",
         "right_pupil_diameter"
     ]
-    
+
     def __init__(
-        self,
-        file: Union[Path, str],
-        device_index: int = 0,
-        as_dictionary: bool = True, 
-        queues = None
+            self,
+            file: Union[Path, str],
+            device_index: int = 0,
+            as_dictionary: bool = True,
+            queues=None
     ):
         super().__init__(file, self.CSV_FIELDS)
         self._device: Optional[object] = None
@@ -52,21 +52,21 @@ class EyetrackerLogger(Logger):
         # Wird True gesetzt sobald die Kalibrierung abgeschlossen ist
         self._latency_cal_done = False
 
-
     def _gaze_callback(self, gaze_data):
         # Empfangszeit so früh wie möglich messen um Verarbeitungszeit nicht einzurechnen
         recv_ns = time.time_ns()
         device_ts = gaze_data.get("device_time_stamp")
         if device_ts is not None:
             self._update_latency(device_ts, recv_ns)
-        print(f"Tobii-Device-Timestamp: {gaze_data.get("device_time_stamp")}")
+        #print(f"Tobii-Device-Timestamp: {device_ts}")
         self.process_data(gaze_data)
         if self.eyetracker_queue is not None:
             put_latest(self.eyetracker_queue, gaze_data)
 
     def _sync_callback(self, sync_data):
-        print(f"System_time_synced: {sync_data}")
-        self._device.subscribe_to(tobii_research.EYETRACKER_GAZE_DATA, self._gaze_callback, as_dictionary=self.as_dictionary)
+        #print(f"System_time_synced: {sync_data}")
+        self._device.subscribe_to(tobii_research.EYETRACKER_GAZE_DATA, self._gaze_callback,
+                                  as_dictionary=self.as_dictionary)
 
     def _update_latency(self, device_ts: float, recv_ns: int) -> None:
         # Erstes Paket: device_time_stamp als Takt-Referenz speichern, noch keine Berechnung möglich
@@ -115,21 +115,21 @@ class EyetrackerLogger(Logger):
     def start_logging(self, stop_event) -> None:
         super().start_logging()
 
-        try: 
+        try:
             found_eyetrackers = tobii_research.find_all_eyetrackers()
             self._device = found_eyetrackers[self.device_index]
             print(f"Using eyetracker: {self._device.device_name} @ {self._device.address}")
 
             # Systemzeit in Nanosekunden festhalten bevor Streaming startet – Referenz für Latenzberechnung
             self._stream_start_ns = time.time_ns()
-            self._device.subscribe_to(tobii_research.EYETRACKER_TIME_SYNCHRONIZATION_DATA, self._sync_callback, as_dictionary=True)
+            self._device.subscribe_to(tobii_research.EYETRACKER_TIME_SYNCHRONIZATION_DATA, self._sync_callback,
+                                      as_dictionary=True)
 
             while not stop_event.is_set():
-                time.sleep(0.1) 
+                time.sleep(0.1)
 
         except Exception as e:
             print(f"Error in EyetrackerLogger: {e}")
-        
 
     def stop_logging(self) -> None:
         """Stop eyetracker subscription."""
@@ -140,5 +140,4 @@ class EyetrackerLogger(Logger):
                 pass
             self._device = None
 
-        super().stop_logging()
-        
+        super().stop_logging() 
