@@ -1,0 +1,304 @@
+2026-04-13 12:11:08,393 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:9999
+2026-04-13 12:11:08,393 [INFO] [33mPress CTRL+C to quit[0m
+2026-04-13 12:32:19,899 [INFO] Client connected
+2026-04-13 12:32:30,903 [INFO] 127.0.0.1 - - [13/Apr/2026 12:32:30] "GET / HTTP/1.1" 200 -
+2026-04-13 12:32:30,938 [INFO] 127.0.0.1 - - [13/Apr/2026 12:32:30] "GET /static/css/index.css HTTP/1.1" 200 -
+2026-04-13 12:32:30,939 [INFO] 127.0.0.1 - - [13/Apr/2026 12:32:30] "GET /static/js/index.js HTTP/1.1" 200 -
+2026-04-13 12:32:30,939 [INFO] 127.0.0.1 - - [13/Apr/2026 12:32:30] "GET /static/logo_white_mini.png HTTP/1.1" 200 -
+2026-04-13 12:35:56,460 [INFO] Starte Log-Manager
+2026-04-13 12:35:56,460 [INFO] None
+2026-04-13 12:35:56,468 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-04-13 12:45:31,479 [INFO] Client connected
+2026-04-13 12:45:31,487 [INFO] 127.0.0.1 - - [13/Apr/2026 12:45:31] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 12:45:31,489 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 12:48:18,175 [INFO] 127.0.0.1 - - [13/Apr/2026 12:48:18] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 12:48:18,176 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 12:48:18,408 [INFO] Client connected
+2026-04-13 12:50:23,578 [INFO] Starte Log-Manager
+2026-04-13 12:50:23,579 [INFO] None
+2026-04-13 12:50:23,583 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-04-13 12:57:22,733 [INFO] 127.0.0.1 - - [13/Apr/2026 12:57:22] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 12:57:22,734 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 12:57:22,744 [INFO] Client connected
+2026-04-13 12:57:25,716 [INFO] Client connected
+2026-04-13 12:57:42,032 [INFO] Client connected
+2026-04-13 12:58:20,097 [INFO] Client connected
+2026-04-13 12:58:20,099 [INFO] 127.0.0.1 - - [13/Apr/2026 12:58:20] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 12:58:20,100 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 12:58:54,269 [INFO] 127.0.0.1 - - [13/Apr/2026 12:58:54] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 12:58:54,270 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 12:58:54,288 [INFO] Client connected
+2026-04-13 12:59:32,972 [INFO] Client connected
+2026-04-13 13:01:42,816 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:42] "POST /vz_anlegen HTTP/1.1" 200 -
+2026-04-13 13:01:42,828 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:42] "GET /api/verzeichnisse HTTP/1.1" 200 -
+2026-04-13 13:01:47,160 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "POST /vz_select HTTP/1.1" 200 -
+2026-04-13 13:01:47,182 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /dashboard HTTP/1.1" 200 -
+2026-04-13 13:01:47,200 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /static/js/socket.io.min.js HTTP/1.1" 200 -
+2026-04-13 13:01:47,205 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "[36mGET /static/logo_white_mini.png HTTP/1.1[0m" 304 -
+2026-04-13 13:01:47,205 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /static/css/dashboard.css HTTP/1.1" 200 -
+2026-04-13 13:01:47,223 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /static/js/dashboard.js HTTP/1.1" 200 -
+2026-04-13 13:01:47,223 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /static/js/chart.umd.js HTTP/1.1" 200 -
+2026-04-13 13:01:47,238 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /static/svg/gas_pedal.svg HTTP/1.1" 200 -
+2026-04-13 13:01:47,239 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /static/svg/brake_pedal.svg HTTP/1.1" 200 -
+2026-04-13 13:01:47,239 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /static/svg/brake_bar.svg HTTP/1.1" 200 -
+2026-04-13 13:01:47,241 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /static/svg/gas_bar.svg HTTP/1.1" 200 -
+2026-04-13 13:01:47,241 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /static/svg/steering_wheel.svg HTTP/1.1" 200 -
+2026-04-13 13:01:47,255 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /socket.io/?EIO=4&transport=polling&t=Ps6WJ9Y HTTP/1.1" 200 -
+2026-04-13 13:01:47,285 [INFO] Client connected
+2026-04-13 13:01:47,286 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /socket.io/?EIO=4&transport=polling&t=Ps6WJAH&sid=H_ZMSJUtWoYs7yBQAAAU HTTP/1.1" 200 -
+2026-04-13 13:01:47,286 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "POST /socket.io/?EIO=4&transport=polling&t=Ps6WJAG&sid=H_ZMSJUtWoYs7yBQAAAU HTTP/1.1" 200 -
+2026-04-13 13:01:47,305 [INFO] 127.0.0.1 - - [13/Apr/2026 13:01:47] "GET /socket.io/?EIO=4&transport=polling&t=Ps6WJAd&sid=H_ZMSJUtWoYs7yBQAAAU HTTP/1.1" 200 -
+2026-04-13 13:01:50,786 [INFO] Starte Log-Manager
+2026-04-13 13:01:50,787 [INFO] D:\Fahrsimulator_Projekte\/asdf/asdf
+2026-04-13 13:01:50,791 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-04-13 13:04:46,700 [INFO] Client connected
+2026-04-13 13:04:49,817 [INFO] Starte Log-Manager
+2026-04-13 13:04:49,818 [INFO] D:\Fahrsimulator_Projekte\/asdf/asdf
+2026-04-13 13:04:49,821 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-04-13 13:06:40,524 [INFO] 127.0.0.1 - - [13/Apr/2026 13:06:40] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 13:06:40,524 [INFO] 127.0.0.1 - - [13/Apr/2026 13:06:40] "GET /socket.io/?EIO=4&transport=websocket&sid=H_ZMSJUtWoYs7yBQAAAU HTTP/1.1" 200 -
+2026-04-13 13:06:40,525 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 13:06:40,642 [INFO] Client connected
+2026-04-13 13:06:42,085 [INFO] 127.0.0.1 - - [13/Apr/2026 13:06:42] "GET /socket.io/?EIO=4&transport=polling&t=Ps6XR8W HTTP/1.1" 200 -
+2026-04-13 13:06:42,088 [INFO] Client connected
+2026-04-13 13:06:42,088 [INFO] 127.0.0.1 - - [13/Apr/2026 13:06:42] "POST /socket.io/?EIO=4&transport=polling&t=Ps6XR8d&sid=_5aBNmBBIgE9W992AAAa HTTP/1.1" 200 -
+2026-04-13 13:06:42,090 [INFO] 127.0.0.1 - - [13/Apr/2026 13:06:42] "GET /socket.io/?EIO=4&transport=polling&t=Ps6XR8d.0&sid=_5aBNmBBIgE9W992AAAa HTTP/1.1" 200 -
+2026-04-13 13:15:03,711 [INFO] 127.0.0.1 - - [13/Apr/2026 13:15:03] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 13:15:03,712 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 13:15:03,720 [INFO] Client connected
+2026-04-13 13:16:43,621 [INFO] 127.0.0.1 - - [13/Apr/2026 13:16:43] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 13:16:43,621 [INFO] 127.0.0.1 - - [13/Apr/2026 13:16:43] "GET /socket.io/?EIO=4&transport=websocket&sid=_5aBNmBBIgE9W992AAAa HTTP/1.1" 200 -
+2026-04-13 13:16:43,622 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 13:16:43,766 [INFO] Client connected
+2026-04-13 13:16:45,362 [INFO] 127.0.0.1 - - [13/Apr/2026 13:16:45] "GET /socket.io/?EIO=4&transport=polling&t=Ps6ZkQj HTTP/1.1" 200 -
+2026-04-13 13:16:45,366 [INFO] Client connected
+2026-04-13 13:16:45,367 [INFO] 127.0.0.1 - - [13/Apr/2026 13:16:45] "POST /socket.io/?EIO=4&transport=polling&t=Ps6ZkQq&sid=VXhBfr57OVaVb-IYAAAh HTTP/1.1" 200 -
+2026-04-13 13:16:45,369 [INFO] 127.0.0.1 - - [13/Apr/2026 13:16:45] "GET /socket.io/?EIO=4&transport=polling&t=Ps6ZkQq.0&sid=VXhBfr57OVaVb-IYAAAh HTTP/1.1" 200 -
+2026-04-13 13:50:45,121 [INFO] Client connected
+2026-04-13 13:54:58,837 [INFO] Starte Log-Manager
+2026-04-13 13:54:58,838 [INFO] D:\Fahrsimulator_Projekte\/asdf/asdf
+2026-04-13 13:54:58,843 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-04-13 13:55:05,033 [INFO] Starte Log-Manager
+2026-04-13 13:55:05,034 [INFO] D:\Fahrsimulator_Projekte\/asdf/asdf
+2026-04-13 13:55:05,035 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-04-13 14:12:30,867 [INFO] 127.0.0.1 - - [13/Apr/2026 14:12:30] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 14:12:30,868 [INFO] 127.0.0.1 - - [13/Apr/2026 14:12:30] "GET /socket.io/?EIO=4&transport=websocket&sid=VXhBfr57OVaVb-IYAAAh HTTP/1.1" 200 -
+2026-04-13 14:12:30,869 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 14:12:31,072 [INFO] 127.0.0.1 - - [13/Apr/2026 14:12:31] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 14:12:31,073 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 14:12:31,108 [INFO] Client connected
+2026-04-13 14:12:32,113 [INFO] 127.0.0.1 - - [13/Apr/2026 14:12:32] "GET /socket.io/?EIO=4&transport=polling&t=Ps6mVVd HTTP/1.1" 200 -
+2026-04-13 14:12:32,123 [INFO] Client connected
+2026-04-13 14:12:32,123 [INFO] 127.0.0.1 - - [13/Apr/2026 14:12:32] "POST /socket.io/?EIO=4&transport=polling&t=Ps6mVVr&sid=A_8-VXFvOrY_rKRuAAAp HTTP/1.1" 200 -
+2026-04-13 14:12:32,126 [INFO] 127.0.0.1 - - [13/Apr/2026 14:12:32] "GET /socket.io/?EIO=4&transport=polling&t=Ps6mVVt&sid=A_8-VXFvOrY_rKRuAAAp HTTP/1.1" 200 -
+2026-04-13 14:28:55,002 [INFO] 127.0.0.1 - - [13/Apr/2026 14:28:55] "GET /socket.io/?EIO=4&transport=websocket&sid=A_8-VXFvOrY_rKRuAAAp HTTP/1.1" 200 -
+2026-04-13 14:28:55,003 [INFO] 127.0.0.1 - - [13/Apr/2026 14:28:55] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 14:28:55,004 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 14:28:55,109 [INFO] Client connected
+2026-04-13 14:28:56,062 [INFO] 127.0.0.1 - - [13/Apr/2026 14:28:56] "GET /socket.io/?EIO=4&transport=polling&t=Ps6qFjw HTTP/1.1" 200 -
+2026-04-13 14:28:56,070 [INFO] Client connected
+2026-04-13 14:28:56,070 [INFO] 127.0.0.1 - - [13/Apr/2026 14:28:56] "GET /socket.io/?EIO=4&transport=polling&t=Ps6qFk0.0&sid=Pp_5c45JgnJ-1c7LAAAt HTTP/1.1" 200 -
+2026-04-13 14:28:56,071 [INFO] 127.0.0.1 - - [13/Apr/2026 14:28:56] "POST /socket.io/?EIO=4&transport=polling&t=Ps6qFk0&sid=Pp_5c45JgnJ-1c7LAAAt HTTP/1.1" 200 -
+2026-04-13 14:47:38,486 [INFO] 127.0.0.1 - - [13/Apr/2026 14:47:38] "GET /socket.io/?EIO=4&transport=websocket&sid=Pp_5c45JgnJ-1c7LAAAt HTTP/1.1" 200 -
+2026-04-13 14:47:38,488 [INFO] 127.0.0.1 - - [13/Apr/2026 14:47:38] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 14:47:38,489 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 14:47:38,623 [INFO] Client connected
+2026-04-13 14:47:40,166 [INFO] 127.0.0.1 - - [13/Apr/2026 14:47:40] "GET /socket.io/?EIO=4&transport=polling&t=Ps6uY9- HTTP/1.1" 200 -
+2026-04-13 14:47:40,169 [INFO] Client connected
+2026-04-13 14:47:40,170 [INFO] 127.0.0.1 - - [13/Apr/2026 14:47:40] "POST /socket.io/?EIO=4&transport=polling&t=Ps6uYA8&sid=BrzxsASbn4cy_ctZAAAx HTTP/1.1" 200 -
+2026-04-13 14:47:40,173 [INFO] 127.0.0.1 - - [13/Apr/2026 14:47:40] "GET /socket.io/?EIO=4&transport=polling&t=Ps6uYA8.0&sid=BrzxsASbn4cy_ctZAAAx HTTP/1.1" 200 -
+2026-04-13 14:47:40,174 [INFO] 127.0.0.1 - - [13/Apr/2026 14:47:40] "GET /socket.io/?EIO=4&transport=polling&t=Ps6uYAD&sid=BrzxsASbn4cy_ctZAAAx HTTP/1.1" 200 -
+2026-04-13 14:50:57,937 [INFO] Client connected
+2026-04-13 14:52:26,596 [INFO] Client connected
+2026-04-13 14:52:26,598 [INFO] 127.0.0.1 - - [13/Apr/2026 14:52:26] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 14:52:26,598 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 15:04:19,423 [INFO] 127.0.0.1 - - [13/Apr/2026 15:04:19] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 15:04:19,423 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 15:04:31,759 [INFO] 127.0.0.1 - - [13/Apr/2026 15:04:31] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 15:04:31,759 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 15:04:31,768 [INFO] Client connected
+2026-04-13 15:07:09,771 [INFO] 127.0.0.1 - - [13/Apr/2026 15:07:09] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 15:07:09,771 [INFO] 127.0.0.1 - - [13/Apr/2026 15:07:09] "GET /socket.io/?EIO=4&transport=websocket&sid=BrzxsASbn4cy_ctZAAAx HTTP/1.1" 200 -
+2026-04-13 15:07:09,771 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 15:07:09,940 [INFO] Client connected
+2026-04-13 15:07:11,747 [INFO] 127.0.0.1 - - [13/Apr/2026 15:07:11] "GET /socket.io/?EIO=4&transport=polling&t=Ps6z0Bw HTTP/1.1" 200 -
+2026-04-13 15:07:11,750 [INFO] Client connected
+2026-04-13 15:07:11,751 [INFO] 127.0.0.1 - - [13/Apr/2026 15:07:11] "POST /socket.io/?EIO=4&transport=polling&t=Ps6z0C4&sid=yOM6ReR3O5ceLAfDAAA9 HTTP/1.1" 200 -
+2026-04-13 15:07:11,752 [INFO] 127.0.0.1 - - [13/Apr/2026 15:07:11] "GET /socket.io/?EIO=4&transport=polling&t=Ps6z0C5&sid=yOM6ReR3O5ceLAfDAAA9 HTTP/1.1" 200 -
+2026-04-13 15:27:31,524 [INFO] 127.0.0.1 - - [13/Apr/2026 15:27:31] "GET /socket.io/?EIO=4&transport=websocket&sid=yOM6ReR3O5ceLAfDAAA9 HTTP/1.1" 200 -
+2026-04-13 15:27:31,525 [INFO] 127.0.0.1 - - [13/Apr/2026 15:27:31] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 15:27:31,525 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 15:27:31,694 [INFO] Client connected
+2026-04-13 15:27:32,805 [INFO] 127.0.0.1 - - [13/Apr/2026 15:27:32] "GET /socket.io/?EIO=4&transport=polling&t=Ps71gJ3 HTTP/1.1" 200 -
+2026-04-13 15:27:32,809 [INFO] Client connected
+2026-04-13 15:27:32,810 [INFO] 127.0.0.1 - - [13/Apr/2026 15:27:32] "POST /socket.io/?EIO=4&transport=polling&t=Ps71gJ7&sid=fPzmTwS9ZGt0eFfVAABB HTTP/1.1" 200 -
+2026-04-13 15:27:32,811 [INFO] 127.0.0.1 - - [13/Apr/2026 15:27:32] "GET /socket.io/?EIO=4&transport=polling&t=Ps71gJ8&sid=fPzmTwS9ZGt0eFfVAABB HTTP/1.1" 200 -
+2026-04-13 15:33:24,526 [INFO] 127.0.0.1 - - [13/Apr/2026 15:33:24] "GET /socket.io/?EIO=4&transport=websocket&sid=fPzmTwS9ZGt0eFfVAABB HTTP/1.1" 200 -
+2026-04-13 15:33:24,527 [INFO] 127.0.0.1 - - [13/Apr/2026 15:33:24] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 15:33:24,527 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 15:33:24,692 [INFO] Client connected
+2026-04-13 15:33:26,015 [INFO] 127.0.0.1 - - [13/Apr/2026 15:33:26] "GET /socket.io/?EIO=4&transport=polling&t=Ps730Xt HTTP/1.1" 200 -
+2026-04-13 15:33:26,025 [INFO] Client connected
+2026-04-13 15:33:26,026 [INFO] 127.0.0.1 - - [13/Apr/2026 15:33:26] "POST /socket.io/?EIO=4&transport=polling&t=Ps730Y2&sid=kNW_uor8U0EmXfOqAABG HTTP/1.1" 200 -
+2026-04-13 15:33:26,026 [INFO] 127.0.0.1 - - [13/Apr/2026 15:33:26] "GET /socket.io/?EIO=4&transport=polling&t=Ps730Y3&sid=kNW_uor8U0EmXfOqAABG HTTP/1.1" 200 -
+2026-04-13 15:45:15,936 [INFO] 127.0.0.1 - - [13/Apr/2026 15:45:15] "GET /socket.io/?EIO=4&transport=websocket&sid=kNW_uor8U0EmXfOqAABG HTTP/1.1" 200 -
+2026-04-13 15:45:15,938 [INFO] 127.0.0.1 - - [13/Apr/2026 15:45:15] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
+2026-04-13 15:45:15,938 [ERROR] Error on request:
+Traceback (most recent call last):
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
+    execute(self.server.app)
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
+    write(b"")
+  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
+    assert status_set is not None, "write() before start_response"
+AssertionError: write() before start_response
+2026-04-13 15:45:16,092 [INFO] Client connected
+2026-04-13 15:45:17,333 [INFO] 127.0.0.1 - - [13/Apr/2026 15:45:17] "GET /socket.io/?EIO=4&transport=polling&t=Ps75kCB HTTP/1.1" 200 -
+2026-04-13 15:45:17,340 [INFO] Client connected
+2026-04-13 15:45:17,342 [INFO] 127.0.0.1 - - [13/Apr/2026 15:45:17] "POST /socket.io/?EIO=4&transport=polling&t=Ps75kCN&sid=QhH1nFrJQAFt1SMPAABL HTTP/1.1" 200 -
+2026-04-13 15:45:17,342 [INFO] 127.0.0.1 - - [13/Apr/2026 15:45:17] "GET /socket.io/?EIO=4&transport=polling&t=Ps75kCO&sid=QhH1nFrJQAFt1SMPAABL HTTP/1.1" 200 -
