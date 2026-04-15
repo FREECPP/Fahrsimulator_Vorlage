@@ -39,65 +39,81 @@ class EyetrackerLogger(Logger):
 
         # Korrigierter Aufnahmezeitpunkt im time.time()-Format, wird pro Paket aktualisiert
         self.capture_time = None
+
         # Systemzeit in Nanosekunden direkt vor subscribe_to() als Referenzpunkt für die Latenzberechnung
         self._stream_start_ns = None
+
         # device_time_stamp des ersten empfangenen Pakets als Takt-Referenz
         self._device_ref_ts = None
+
         # Umrechnungsfaktor: wie viele Nanosekunden Systemzeit entsprechen einem device_time_stamp-Tick
         self._ns_per_tick = None
+
         # Mittlere Übertragungslatenz in Nanosekunden (wird nach Kalibrierung eingefroren)
         self.mean_latency = 0.0
+
         # Rohdaten für die Kalibrierung: Liste von (device_ts, recv_ns)-Tupeln
         self._latency_cal_samples = []
+
         # Wird True gesetzt sobald die Kalibrierung abgeschlossen ist
         self._latency_cal_done = False
 
+        # Rohdaten zum errechnen wie viel monotic clock time ein Tick der Tobii Device Time
+        self._values_for_device_tick_calc = []
+
+        # Kalibrierung der Latenz abgeschlossen
+        self.calibration_finished = False
+
+        
+
     def _gaze_callback(self, gaze_data):
-        # Empfangszeit so früh wie möglich messen um Verarbeitungszeit nicht einzurechnen
-        recv_ns = time.time_ns()
         device_ts = gaze_data.get("device_time_stamp")
         if device_ts is not None:
-            self._update_latency(device_ts, recv_ns)
-        #print(f"Tobii-Device-Timestamp: {device_ts}")
+            self.capture_time = self.transform_to_unix(device_ts)
         self.process_data(gaze_data)
         if self.eyetracker_queue is not None:
             put_latest(self.eyetracker_queue, gaze_data)
 
     def _sync_callback(self, sync_data):
-        #print(f"System_time_synced: {sync_data}")
-        self._device.subscribe_to(tobii_research.EYETRACKER_GAZE_DATA, self._gaze_callback,
-                                  as_dictionary=self.as_dictionary)
 
-    def _update_latency(self, device_ts: float, recv_ns: int) -> None:
-        # Erstes Paket: device_time_stamp als Takt-Referenz speichern, noch keine Berechnung möglich
-        if self._device_ref_ts is None:
-            self._device_ref_ts = device_ts
-            return
+        # Sync Handler -> sync_data enthält die sys_time_request von tobbi, den device_time_stamp von tobii sowie die sys_response_time von tobii   
+        # Sys_req_ts und sys_resp_ts werden ausgehend von der Monotic Clock gesetzt deshalb nicht gleich Unix-Time
+        self.sys_req_ts = sync_data.get("system_request_time_stamp") # Gibt den Zeitstempel zurück, wenn ein Datum angefragt wird
+        self.device_ts = sync_data.get("device_time_stamp") # Gibt den Zeitstempel zurück, wenn ein Datum erzeugt wird
+        self.sys_resp_ts = sync_data.get("system_response_time_stamp") # Gibt den Zeitstempel zurück, wenn ein Datum ankommt
+        
+        # Abschätzen, zu welcher Monotic clock Zeit der device Timestamp ungefär kommt
+        self.monotic_ts_raw = (self.sys_req_ts + self.sys_resp_ts) / 2
 
-        # Kalibrierungsphase: erste 100 Pakete sammeln um ns_per_tick und mean_latency zu berechnen
-        if not self._latency_cal_done:
-            self._latency_cal_samples.append((device_ts, recv_ns))
-            if len(self._latency_cal_samples) >= 100:
-                # Vergangene device-Ticks und Systemzeit über alle Kalibrierungspakete
-                ts_delta = self._latency_cal_samples[-1][0] - self._latency_cal_samples[0][0]
-                sys_delta = self._latency_cal_samples[-1][1] - self._latency_cal_samples[0][1]
-                if ts_delta > 0:
-                    # Umrechnungsfaktor: Nanosekunden pro device_time_stamp-Tick (empirisch abgeleitet)
-                    self._ns_per_tick = sys_delta / ts_delta
-                    latency_samples = []
-                    for d_ts, r_ns in self._latency_cal_samples:
-                        # Erwartete Systemzeit dieses Pakets basierend auf device-Takt
-                        sensor_elapsed_ns = (d_ts - self._device_ref_ts) * self._ns_per_tick
-                        # Latenz = tatsächliche Empfangszeit minus erwartete Empfangszeit
-                        latency_samples.append(r_ns - (self._stream_start_ns + sensor_elapsed_ns))
-                    # Mittlere Latenz einfrieren – wird für alle weiteren Pakete verwendet
-                    self.mean_latency = sum(latency_samples) / len(latency_samples)
-                    self._latency_cal_done = True
-                    print(f"Eyetracker Latenz kalibriert: {self.mean_latency / 1e6:.2f} ms")
-            return
+        # Liste mit Wertepaaren füllen 
+        self._values_for_device_tick_calc.append((self.monotic_ts_raw, self.device_ts))
 
-        # Korrekter Aufnahmezeitpunkt: Empfangszeit minus eingefrorene Latenz, umgerechnet in Sekunden
-        self.capture_time = (recv_ns - self.mean_latency) / 1e9
+
+    def calibrate_time(self):
+        if self.calibration_finished == False:
+            mono_per_tick_list = []
+            offset_calc_ts_and_ts = []
+            for i in range(len(self._values_for_device_tick_calc)):
+                monotic_ts_raw_delta = self._values_for_device_tick_calc[i][0] - self._values_for_device_tick_calc[0][0]
+                device_ts_delta = self._values_for_device_tick_calc[i][1] - self._values_for_device_tick_calc[0][1]
+
+                if monotic_ts_raw_delta > 0:
+                    mono_per_tick = monotic_ts_raw_delta / device_ts_delta
+                    mono_per_tick_list.append(mono_per_tick)
+                    offset = self._values_for_device_tick_calc[i-1][0] - mono_per_tick * self._values_for_device_tick_calc[i-1][1] 
+                    offset_calc_ts_and_ts.append(offset)
+
+            self.mean_mono_per_tick = sum(mono_per_tick_list) / len(mono_per_tick_list)
+            self.mean_offset = sum(offset_calc_ts_and_ts) / len(offset_calc_ts_and_ts)
+            t_perf = time.perf_counter()
+            t_unix = time.time()
+            self.offset_monotic_unix = t_unix - t_perf
+            self.calibration_finished = True
+        else:
+            pass
+
+    def transform_to_unix(self, device_time):
+        return self.mean_mono_per_tick * device_time + self.mean_offset + self.offset_monotic_unix
 
     def process_data(self, data: Union[bytes, str, dict]) -> None:
         """Expects dict from SDK; writes CSV-Row."""
@@ -124,6 +140,12 @@ class EyetrackerLogger(Logger):
             self._stream_start_ns = time.time_ns()
             self._device.subscribe_to(tobii_research.EYETRACKER_TIME_SYNCHRONIZATION_DATA, self._sync_callback,
                                       as_dictionary=True)
+            time.sleep(2)
+            self._device.unsubscribe_from(tobii_research.EYETRACKER_GAZE_DATA, self._gaze_callback)
+            self.calibrate_time()
+            self._device.subscribe_to(tobii_research.EYETRACKER_GAZE_DATA, self._gaze_callback,
+                                  as_dictionary=self.as_dictionary)
+
 
             while not stop_event.is_set():
                 time.sleep(0.1)
