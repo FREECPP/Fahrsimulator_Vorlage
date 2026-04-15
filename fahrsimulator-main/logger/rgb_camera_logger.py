@@ -193,7 +193,7 @@ class RgbCameraLogger(Logger):
                 except Empty:
                     pass
                 
-                file = f"rgb_camera_{self._camera_index}_frame_{ts}.npy"
+                file = f"rgb_camera_{self._camera_index}_frame_{self.capture_time}.npy"
                 if self._camera_index == 0:
                     path = self.directory / "rgb_frames" / "rgb_camera_1_frames"
                 elif self._camera_index == 1:
