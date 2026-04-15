@@ -6,7 +6,7 @@ def parse_silab_data(data: bytes) -> dict:
     Parse binary SiLab UDP packet.
 
     Expected format (52 bytes):
-    - TIME (ulonglong, 8 bytes)
+    - TIME (double, 8 bytes)
     - SPEED (float, 4 bytes)
     - RPM (long, 4 bytes)
     - X, Y, Z (float, 4 bytes each) - position
@@ -25,7 +25,7 @@ def parse_silab_data(data: bytes) -> dict:
 
     try:
         # Unpack binary data (little-endian format)
-        unpacked = struct.unpack('<Qfffffffffff', data)
+        unpacked = struct.unpack('<dfffffffffff', data)
 
         sim_time = unpacked[0]
         speed = unpacked[1]

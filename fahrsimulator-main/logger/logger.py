@@ -57,7 +57,8 @@ class Logger(ABC):
         """Thread-safe write a CSV row to the log file."""
         with self._lock:
             if self._file_handle:
-                row[LOG_TIME_KEY] = time.time()
+                # Korrigierten Zeitstempel verwenden falls vorhanden, sonst aktuelle Systemzeit
+                row[LOG_TIME_KEY] = row.get(LOG_TIME_KEY) or time.time()
                 writer = csv.DictWriter(self._file_handle, fieldnames=self.csv_fields)
                 writer.writerow({k: row.get(k, "") for k in self.csv_fields})
              
