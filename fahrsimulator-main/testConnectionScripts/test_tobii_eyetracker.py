@@ -1,26 +1,42 @@
-    1 def execute(eyetracker):
-    2     time_synchronization_data(eyetracker)
-    3 
-    4 
-    5 # <BeginExample>
-    6 import time
-    7 import tobii_research as tr
-    8 
-    9 
-   10 def time_synchronization_data_callback(time_synchronization_data):
-   11     print(time_synchronization_data)
-   12 
-   13 
-   14 def time_synchronization_data(eyetracker):
-   15     print("Subscribing to time synchronization data for eye tracker with serial number {0}.".
-   16           format(eyetracker.serial_number))
-   17     eyetracker.subscribe_to(tr.EYETRACKER_TIME_SYNCHRONIZATION_DATA,
-   18                             time_synchronization_data_callback, as_dictionary=True)
-   19 
-   20     # Wait while some time synchronization data is collected.
-   21     time.sleep(2)
-   22 
-   23     eyetracker.unsubscribe_from(tr.EYETRACKER_TIME_SYNCHRONIZATION_DATA,
-   24                                 time_synchronization_data_callback)
-   25     print("Unsubscribed from time synchronization data.")
-   26 # <EndExample>
+
+# <BeginExample>
+import time
+import tobii_research as tr
+
+
+def execute(eyetracker):
+    time_synchronization_data(eyetracker)
+
+def time_synchronization_data_callback(time_synchronization_data):
+    #print(f"Unix-Systime: {time.time_ns() / 1e3}")
+    print(f"Tobii-System-Time-Stamp: {tr.get_system_time_stamp()}")
+    print(time_synchronization_data)
+
+
+def time_synchronization_data(eyetracker):
+    print("Subscribing to time synchronization data for eye tracker with serial number {0}.".
+    format(eyetracker.serial_number))
+    eyetracker.subscribe_to(tr.EYETRACKER_TIME_SYNCHRONIZATION_DATA,
+    time_synchronization_data_callback, as_dictionary=True)
+
+    # Wait while some time synchronization data is collected.
+    print("Wait some Time")
+    time.sleep(2)
+
+    eyetracker.unsubscribe_from(tr.EYETRACKER_TIME_SYNCHRONIZATION_DATA,
+    time_synchronization_data_callback)
+    print("Unsubscribed from time synchronization data.")
+# <EndExample>
+
+def find_tracker() -> None:
+    try:
+        found_eyetrackers = tr.find_all_eyetrackers()
+        device = found_eyetrackers[0]
+        print(f"Using eyetracker: {device.device_name} @ {device.address}")
+        return device
+
+    except Exception as e:
+        print(f"Error in EyetrackerLogger: {e}")
+
+dev = find_tracker()
+execute(dev)
