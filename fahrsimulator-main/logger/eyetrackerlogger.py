@@ -67,9 +67,12 @@ class EyetrackerLogger(Logger):
         
 
     def _gaze_callback(self, gaze_data):
+        print(f"Unix-Time: {time.time()}")
         device_ts = gaze_data.get("device_time_stamp")
+        print(f"Tobii-Device-Time {device_ts}")
         if device_ts is not None:
             self.capture_time = self.transform_to_unix(device_ts)
+            print(f"Transformed Tobii Device-time: {self.capture_time}")
         self.process_data(gaze_data)
         if self.eyetracker_queue is not None:
             put_latest(self.eyetracker_queue, gaze_data)
@@ -93,27 +96,38 @@ class EyetrackerLogger(Logger):
         if self.calibration_finished == False:
             mono_per_tick_list = []
             offset_calc_ts_and_ts = []
-            for i in range(len(self._values_for_device_tick_calc)):
+            for i in range(1,len(self._values_for_device_tick_calc)):
                 monotic_ts_raw_delta = self._values_for_device_tick_calc[i][0] - self._values_for_device_tick_calc[0][0]
                 device_ts_delta = self._values_for_device_tick_calc[i][1] - self._values_for_device_tick_calc[0][1]
 
-                if monotic_ts_raw_delta > 0:
+                if  device_ts_delta > 0:
                     mono_per_tick = monotic_ts_raw_delta / device_ts_delta
                     mono_per_tick_list.append(mono_per_tick)
-                    offset = self._values_for_device_tick_calc[i-1][0] - mono_per_tick * self._values_for_device_tick_calc[i-1][1] 
+                    offset = self._values_for_device_tick_calc[i][0] - mono_per_tick * self._values_for_device_tick_calc[i][1] 
                     offset_calc_ts_and_ts.append(offset)
 
+            if not mono_per_tick_list:  # Leere Liste checken!                                                                                                                             
+                print("Error: Could not calculate tick rate")                                                                                                                              
+                return 
             self.mean_mono_per_tick = sum(mono_per_tick_list) / len(mono_per_tick_list)
             self.mean_offset = sum(offset_calc_ts_and_ts) / len(offset_calc_ts_and_ts)
-            t_perf = time.perf_counter()
-            t_unix = time.time()
+            t_perf = time.monotonic_ns()
+            t_unix = time.time_ns()
             self.offset_monotic_unix = t_unix - t_perf
+            print("Tobii: Calibration of Time finished")
+            print(f"Mean_mono_per_tick: {self.mean_mono_per_tick}")
+            print(f"Mean_offset: {self.mean_offset}")
             self.calibration_finished = True
         else:
             pass
 
     def transform_to_unix(self, device_time):
-        return self.mean_mono_per_tick * device_time + self.mean_offset + self.offset_monotic_unix
+        if not self.calibration_finished:
+            return None
+        else:
+            t_monotonic = self.mean_mono_per_tick * device_time + self.mean_offset
+            t_unix = t_monotonic + self.offset_monotic_unix
+            return t_unix / 1e9
 
     def process_data(self, data: Union[bytes, str, dict]) -> None:
         """Expects dict from SDK; writes CSV-Row."""
@@ -140,8 +154,8 @@ class EyetrackerLogger(Logger):
             self._stream_start_ns = time.time_ns()
             self._device.subscribe_to(tobii_research.EYETRACKER_TIME_SYNCHRONIZATION_DATA, self._sync_callback,
                                       as_dictionary=True)
-            time.sleep(2)
-            self._device.unsubscribe_from(tobii_research.EYETRACKER_GAZE_DATA, self._gaze_callback)
+            time.sleep(5)
+            self._device.unsubscribe_from(tobii_research.EYETRACKER_TIME_SYNCHRONIZATION_DATA, self._sync_callback)
             self.calibrate_time()
             self._device.subscribe_to(tobii_research.EYETRACKER_GAZE_DATA, self._gaze_callback,
                                   as_dictionary=self.as_dictionary)
