@@ -96,6 +96,7 @@ class EyetrackerLogger(Logger):
         if self.calibration_finished == False:
             mono_per_tick_list = []
             offset_calc_ts_and_ts = []
+            # Zunächst Mittelwert berechnen für Monotic Zeit pro Device Time Tick
             for i in range(1,len(self._values_for_device_tick_calc)):
                 monotic_ts_raw_delta = self._values_for_device_tick_calc[i][0] - self._values_for_device_tick_calc[0][0]
                 device_ts_delta = self._values_for_device_tick_calc[i][1] - self._values_for_device_tick_calc[0][1]
@@ -103,14 +104,18 @@ class EyetrackerLogger(Logger):
                 if  device_ts_delta > 0:
                     mono_per_tick = monotic_ts_raw_delta / device_ts_delta
                     mono_per_tick_list.append(mono_per_tick)
-                    offset = self._values_for_device_tick_calc[i][0] - mono_per_tick * self._values_for_device_tick_calc[i][1] 
-                    offset_calc_ts_and_ts.append(offset)
 
             if not mono_per_tick_list:  # Leere Liste checken!                                                                                                                             
                 print("Error: Could not calculate tick rate")                                                                                                                              
                 return 
             self.mean_mono_per_tick = sum(mono_per_tick_list) / len(mono_per_tick_list)
+
+            # Mittelwert berechnen für den Offset
+            for i in range(len(self._values_for_device_tick_calc)): 
+                offset_calc_ts_and_ts.append(self._values_for_device_tick_calc[i][0] - self.mean_mono_per_tick * self._values_for_device_tick_calc[i][1])
+            
             self.mean_offset = sum(offset_calc_ts_and_ts) / len(offset_calc_ts_and_ts)
+
             t_perf = time.monotonic_ns()
             t_unix = time.time_ns()
             self.offset_monotic_unix = t_unix - t_perf
