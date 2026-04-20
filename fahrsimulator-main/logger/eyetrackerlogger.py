@@ -64,61 +64,66 @@ class EyetrackerLogger(Logger):
         # Kalibrierung der Latenz abgeschlossen
         self.calibration_finished = False
 
-        
-
     def _gaze_callback(self, gaze_data):
-        print(f"Unix-Time: {time.time()}")
+        print(f"Unix-Timestamp: {time.time()}")
         device_ts = gaze_data.get("device_time_stamp")
-        print(f"Tobii-Device-Time {device_ts}")
         if device_ts is not None:
             self.capture_time = self.transform_to_unix(device_ts)
-            print(f"Transformed Tobii Device-time: {self.capture_time}")
+            print(f"Tobii-Transformed: {self.capture_time}")
         self.process_data(gaze_data)
         if self.eyetracker_queue is not None:
             put_latest(self.eyetracker_queue, gaze_data)
 
     def _sync_callback(self, sync_data):
 
-        # Sync Handler -> sync_data enthält die sys_time_request von tobbi, den device_time_stamp von tobii sowie die sys_response_time von tobii   
+        # Sync Handler -> sync_data enthält die sys_time_request von tobbi, den device_time_stamp von tobii sowie die sys_response_time von tobii
         # Sys_req_ts und sys_resp_ts werden ausgehend von der Monotic Clock gesetzt deshalb nicht gleich Unix-Time
-        self.sys_req_ts = sync_data.get("system_request_time_stamp") # Gibt den Zeitstempel zurück, wenn ein Datum angefragt wird
-        self.device_ts = sync_data.get("device_time_stamp") # Gibt den Zeitstempel zurück, wenn ein Datum erzeugt wird
-        self.sys_resp_ts = sync_data.get("system_response_time_stamp") # Gibt den Zeitstempel zurück, wenn ein Datum ankommt
-        
+        self.sys_req_ts = sync_data.get(
+            "system_request_time_stamp")  # Gibt den Zeitstempel zurück, wenn ein Datum angefragt wird
+        self.device_ts = sync_data.get("device_time_stamp")  # Gibt den Zeitstempel zurück, wenn ein Datum erzeugt wird
+        self.sys_resp_ts = sync_data.get(
+            "system_response_time_stamp")  # Gibt den Zeitstempel zurück, wenn ein Datum ankommt
+
+        print(f"Tobii-request-Time {self.sys_req_ts}")
+        print(f"Tobii-response-Time {self.sys_resp_ts}")
+        print(f"Tobii-device-Time {self.device_ts}")
+        print(f"Perf-Time{time.perf_counter_ns()}")
+        print(f"Monotonic-Time{time.monotonic_ns()}")
         # Abschätzen, zu welcher Monotic clock Zeit der device Timestamp ungefär kommt
         self.monotic_ts_raw = (self.sys_req_ts + self.sys_resp_ts) / 2
 
-        # Liste mit Wertepaaren füllen 
+        # Liste mit Wertepaaren füllen
         self._values_for_device_tick_calc.append((self.monotic_ts_raw, self.device_ts))
-
 
     def calibrate_time(self):
         if self.calibration_finished == False:
             mono_per_tick_list = []
             offset_calc_ts_and_ts = []
             # Zunächst Mittelwert berechnen für Monotic Zeit pro Device Time Tick
-            for i in range(1,len(self._values_for_device_tick_calc)):
+            for i in range(1, len(self._values_for_device_tick_calc)):
                 monotic_ts_raw_delta = self._values_for_device_tick_calc[i][0] - self._values_for_device_tick_calc[0][0]
                 device_ts_delta = self._values_for_device_tick_calc[i][1] - self._values_for_device_tick_calc[0][1]
 
-                if  device_ts_delta > 0:
+                if device_ts_delta > 0:
                     mono_per_tick = monotic_ts_raw_delta / device_ts_delta
                     mono_per_tick_list.append(mono_per_tick)
 
-            if not mono_per_tick_list:  # Leere Liste checken!                                                                                                                             
-                print("Error: Could not calculate tick rate")                                                                                                                              
-                return 
+            if not mono_per_tick_list:  # Leere Liste checken!
+                print("Error: Could not calculate tick rate")
+                return
             self.mean_mono_per_tick = sum(mono_per_tick_list) / len(mono_per_tick_list)
 
             # Mittelwert berechnen für den Offset
-            for i in range(len(self._values_for_device_tick_calc)): 
-                offset_calc_ts_and_ts.append(self._values_for_device_tick_calc[i][0] - self.mean_mono_per_tick * self._values_for_device_tick_calc[i][1])
-            
+            for i in range(len(self._values_for_device_tick_calc)):
+                offset_calc_ts_and_ts.append(self._values_for_device_tick_calc[i][0] - self.mean_mono_per_tick *
+                                             self._values_for_device_tick_calc[i][1])
+
             self.mean_offset = sum(offset_calc_ts_and_ts) / len(offset_calc_ts_and_ts)
 
-            t_perf = time.monotonic_ns()
-            t_unix = time.time_ns()
+            t_perf = time.perf_counter_ns() //1000
+            t_unix = time.time_ns() //1000
             self.offset_monotic_unix = t_unix - t_perf
+            print(f"Offset_monotonic_unix{self.offset_monotic_unix}")
             print("Tobii: Calibration of Time finished")
             print(f"Mean_mono_per_tick: {self.mean_mono_per_tick}")
             print(f"Mean_offset: {self.mean_offset}")
@@ -132,7 +137,7 @@ class EyetrackerLogger(Logger):
         else:
             t_monotonic = self.mean_mono_per_tick * device_time + self.mean_offset
             t_unix = t_monotonic + self.offset_monotic_unix
-            return t_unix / 1e9
+            return t_unix / 1e6
 
     def process_data(self, data: Union[bytes, str, dict]) -> None:
         """Expects dict from SDK; writes CSV-Row."""
@@ -163,8 +168,7 @@ class EyetrackerLogger(Logger):
             self._device.unsubscribe_from(tobii_research.EYETRACKER_TIME_SYNCHRONIZATION_DATA, self._sync_callback)
             self.calibrate_time()
             self._device.subscribe_to(tobii_research.EYETRACKER_GAZE_DATA, self._gaze_callback,
-                                  as_dictionary=self.as_dictionary)
-
+                                      as_dictionary=self.as_dictionary)
 
             while not stop_event.is_set():
                 time.sleep(0.1)
@@ -181,4 +185,4 @@ class EyetrackerLogger(Logger):
                 pass
             self._device = None
 
-        super().stop_logging() 
+        super().stop_logging()
