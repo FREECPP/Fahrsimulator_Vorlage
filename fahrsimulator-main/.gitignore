@@ -51,3 +51,11 @@ Thumbs.db
 # DisrtractionModel 
 driverDistractionModel/model_calibration/params/
 driverDistractionModel/model_train/train_data/
+
+# Node.js
+node_modules/
+fahrsimulator-main/node_modules/
+
+# Runtime / lokale Daten
+instance/
+fahrsimulator-main/instance/

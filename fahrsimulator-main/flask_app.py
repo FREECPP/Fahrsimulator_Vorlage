@@ -1,30 +1,58 @@
 from utils.app_logging_utils import printlog
 from flask import Flask, Response, request, render_template, jsonify
 from flask_socketio import SocketIO
+from flask_cors import CORS
+import socket
+
 import threading
 import cv2
 import base64
-#from logger.log_manager import LogManager  # Lazy-loaded in handle_start_recording() to support preview mode without sensors
-#from logger.frame_processor import Processor, EyetrackerProcessor, SilabDataProcessor
-from flask_blueprints.verzeichnis import verzeichnis_bp
 import configparser
 import os
-from datetime import datetime
-from multiprocessing import Queue
 import numpy as np
 import time
 import math
+
+from datetime import datetime
+from multiprocessing import Queue
 from typing import Optional
 from queue import Empty
+
+from flask_blueprints.verzeichnis import verzeichnis_bp
+from extensions import db
+from dbModels.dashboardLayoutDB import dashboardLayout
+
+# Optional / lazy imports (auskommentiert gelassen wie bei dir)
+# from logger.log_manager import LogManager
+# from logger.frame_processor import Processor, EyetrackerProcessor, SilabDataProcessor
 
 # ==================================================================================
 # Initialising Webapp Data
 # ==================================================================================
 app = Flask(__name__)
+
+CORS(app, supports_credentials=True)
+
 app.register_blueprint(verzeichnis_bp, url_prefix="/")
 socketio = SocketIO(app, cors_allowed_origins="*")
 port = int(os.getenv('PORT', 9999))
 host = "0.0.0.0"
+
+
+# ==================================================================================
+# Initialising Database
+# ==================================================================================
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db.init_app(app)
+DB_PATH = "app.db"
+dummyProject = "demo3"
+
+# DB erstellen falls nicht vorhanden
+if app.debug:
+    with app.app_context():
+        db.create_all()
 
 # ==================================================================================
 # Initialising Logger Data
@@ -55,6 +83,20 @@ data_queues = {
     "gaze_distribution_model": Queue(maxsize=1),
 
 }
+
+def deleteAndRecreateDB():
+    with app.app_context():
+        # Alte DB löschen (falls vorhanden)
+        if os.path.exists(DB_PATH):
+            os.remove(DB_PATH)
+            print("🗑️ Alte DB gelöscht")
+
+        # Neue DB erstellen
+        db.create_all()
+        print("✅ Neue DB erstellt")
+
+
+
 # ==================================================================================
 # Helper function for loading 'config.ini' Data
 # ==================================================================================
@@ -77,6 +119,59 @@ def load_config():
         os.makedirs(base_dir, exist_ok=True)
     except Exception as e:
         printlog(f"Be sure 'config.ini', BASE_DIR under [General] exists and the path is valid. {e}", "error")
+
+@app.route("/api/layout/<project_name>", methods=["GET", "POST"])
+def handle_layout(project_name):
+
+    if request.method == "POST":
+        data = request.get_json()
+
+        layout_data = data.get("layout", [])
+        widgets = data.get("widgets", [])
+
+        try:
+            existing = dashboardLayout.query.filter_by(project_name=project_name).first()
+
+            if existing:
+                existing.layout = layout_data
+                existing.widgets = widgets
+            else:
+                new_layout = dashboardLayout(
+                    project_name=project_name,
+                    layout=layout_data,
+                    widgets=widgets
+                )
+                db.session.add(new_layout)
+
+            db.session.commit()
+
+            return jsonify({"status": "saved"}), 200
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    if request.method == "GET":
+        layout = dashboardLayout.query.filter_by(project_name=project_name).first()
+
+        if not layout:
+            return jsonify({"layout": [], "widgets": []})
+
+        return jsonify({
+            "layout": layout.layout,
+            "widgets": layout.widgets
+        })
+
+@app.route("/api/layouts", methods=["GET"])
+def get_all_layouts():
+    layouts = dashboardLayout.query.all()
+
+    result = []
+    for l in layouts:
+        result.append({
+            "project_name": l.project_name
+        })
+
+    return jsonify(result)
 
 # ==================================================================================
 # Index.html
@@ -101,8 +196,17 @@ def show_dashboard():
 # ==================================================================================
 @socketio.on('connect')
 def handle_connect():
-    printlog("Client connected")
+    server_ip = get_server_ip()
+    printlog(f"Client connected to server {server_ip}:{port}")
 
+def get_server_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))  # keine echte Verbindung nötig
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
 # Start-Button handling on 'dashboard.html'
 @socketio.on('start_recording')
 def handle_start_recording():
