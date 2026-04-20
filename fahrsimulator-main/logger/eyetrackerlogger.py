@@ -154,7 +154,7 @@ class EyetrackerLogger(Logger):
             t_perf = time.perf_counter_ns() //1000
             t_unix = time.time_ns() //1000
             self.offset_monotic_unix = t_unix - t_perf
-            
+            print("####TIME-SYNC####: Kalibrierung Eyetracker abgeschlossen") 
             self.calibration_finished = True
         else:
             pass
