@@ -20,10 +20,29 @@ from queue import Empty
 # ==================================================================================
 # Initialising Webapp Data
 # ==================================================================================
+
+# 1. Flask-Instanz erstellen
+# __name__ sagt Flask, wo es nach Dateien (Statics/Templates) suchen soll.
 app = Flask(__name__)
+
+# 2. Blueprints registrieren
+# Blueprints erlauben es, Routen (URLs) in anderen Dateien zu definieren.
+# url_prefix="/" sorgt dafür, dass die Routen direkt unter der Hauptdomain liegen.
+# Beispiel: Ein Blueprint in 'verzeichnis_bp' könnte die Route für dein Dashboard sein.
 app.register_blueprint(verzeichnis_bp, url_prefix="/")
+
+# 3. SocketIO initialisieren
+# Damit wird die Standard-HTTP-App um Echtzeit-Fähigkeiten (WebSockets) erweitert.
+# cors_allowed_origins="*" erlaubt den Zugriff von beliebigen anderen Adressen (wichtig für Dev-Umgebungen).
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+# 4. Netzwerk-Konfiguration
+# Wir versuchen den Port aus einer Umgebungsvariable (z.B. vom Server) zu lesen.
+# Falls keine gesetzt ist, nutzen wir 9999 als Standard-Port.
 port = int(os.getenv('PORT', 9999))
+
+# '0.0.0.0' bedeutet: Die App ist über alle Netzwerk-Schnittstellen erreichbar.
+# Das ist nötig, wenn du z.B. vom Handy oder einem anderen PC im Netz auf die KI-Daten zugreifen willst.
 host = "0.0.0.0"
 
 # ==================================================================================
@@ -33,6 +52,9 @@ logging_manager = None
 BASE_DIR = None
 is_running = False
 stream_thread = None
+
+# Alle Threads bekommen von dieser Variablen mit (Prinzipiell eine Flag die quasi auf True und auf False gesetzt werden kann)
+# Jedoch erhalten alle Threads gleichzeitig diese Info
 stream_stop_event = threading.Event()
 
 # ==================================================================================
@@ -59,21 +81,48 @@ data_queues = {
 # Helper function for loading 'config.ini' Data
 # ==================================================================================
 def load_config():
+    """
+    Lädt die Anwendungskonfiguration aus einer externen INI-Datei.
+
+    Die Funktion liest Netzwerk-Einstellungen (HOST, PORT) und Verzeichnispfade 
+    aus der 'config.ini'. Zudem wird das Basis-Verzeichnis (BASE_DIR) 
+    automatisch erstellt, falls es noch nicht existiert.
+    """
+
+    # 1. Initialisierung des Parsers für .ini-Dateien
     config = configparser.ConfigParser()
+
+    # 2. Pfad-Ermittlung
+    # os.path.dirname(__file__) ermittelt den Ordner, in dem dieses Skript liegt.
+    # So wird die config.ini immer relativ zum Skript gefunden, egal von wo es gestartet wird.
     config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
     
+    # 3. Sicherheitscheck: Existiert die Datei überhaupt?
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"config.ini not found: {config_path}")
+    
+    # Datei einlesen
     config.read(config_path)
+
+    # 4. Globale Variablen definieren
+    # Das erlaubt es, die Werte für port und host überall im Programm zu nutzen.
     global port, host
     try:
+        # Versucht, die Netzwerk-Einstellungen aus der Sektion [General] zu lesen.
         #port = config.get('General', 'PORT')
         host = str(config.get('General', 'HOST'))
     except Exception as e:
+
+        # Fehlermeldung, falls die Sektion oder die Schlüssel fehlen.
         printlog(f"Data from 'config.ini' couldn't be read. Versichern Sie sich, dass PORT und HOST unter [General] existieren. {e}", "error")
 
     try:
+        # 5. Basis-Verzeichnis für Daten laden/erstellen
+        # Liest den Pfad aus der Config (z.B. für Logs oder Sensor-Dumps).
         base_dir = config.get('General', 'BASE_DIR')
+
+        # Erstellt das Verzeichnis automatisch, falls es noch nicht existiert.
+        # 'exist_ok=True' verhindert einen Fehler, falls der Ordner schon da ist.
         os.makedirs(base_dir, exist_ok=True)
     except Exception as e:
         printlog(f"Be sure 'config.ini', BASE_DIR under [General] exists and the path is valid. {e}", "error")
@@ -81,6 +130,8 @@ def load_config():
 # ==================================================================================
 # Index.html
 # ==================================================================================
+        
+# Pfad zur index.html
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -91,7 +142,7 @@ def stop_logging():
     print("stopped")
     return render_template("index.html")
 
-
+# Pfad zum Dashboard
 @app.route("/dashboard")
 def show_dashboard():
     return render_template("dashboard.html")
@@ -104,29 +155,45 @@ def handle_connect():
     printlog("Client connected")
 
 # Start-Button handling on 'dashboard.html'
+# Funktion handle_start_recording() wird ausgeführt, wenn der Start-Button im Dashboard betätigt wird
 @socketio.on('start_recording')
 def handle_start_recording():
     global logging_manager, is_running, stream_thread
+
+    # Hier wird überprüft ob der Logmanager nicht bereits gestartet wurde, falls ja, soll die Funktion beendet werden
     if is_running:
         socketio.emit('is_running', True)
         return
 
+    # Eigene Print Funktion um den Start des Log-Managers im Terminal erkenntlich zu machen
     printlog(message="Starte Log-Manager", debug_lvl="info", std_print=True)
     from flask_blueprints.verzeichnis import project_path
     printlog(message=str(project_path), debug_lvl="info", std_print=True)
 
     try:
+        # Log-manager Klasse wird importiert und ein Objetk wird angelegt
+        # Als Data-Queues werden die oben instanzierten Queues mit der Länge von 1 genutzt
         from logger.log_manager import LogManager  # Lazy-import to support preview mode without sensors
         now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         logging_manager = LogManager(directory=project_path, data_queues=data_queues, timestamp=now)
+
+        # Startet alle Logging Funktionen der einzelnen Sensoren - return value wird verwendet um festzustellen ob die 
+        # logging Funktionen bereits gestartet wurden
         is_running = logging_manager.start_logging_async()
+
+        # Sendet ans Dashboard das Applikation läuft 
         socketio.emit('is_running', is_running)
 
+        # Allen Threads wird gleichzeitig bescheid gegeben, dass diese Flag zurückgesetzt wurde
         stream_stop_event.clear()
+
+        # Erstellt und startet einen neuen Thread, der die Funktion read_queue ausführen soll 
         stream_thread = threading.Thread(target=read_queue, args=(logging_manager, stream_stop_event), daemon=True)
         stream_thread.start()
+
     except Exception as e:
-        # If hardware/SDK dependencies are unavailable, run mock stream for UI preview.
+        # Falls die Hardware/SDK Depencies nicht verfügbar sind, soll in einem neuen Thread die Funktion
+        # mock_sensor_stream gestartet werden um eine Preview des UI's zu ermöglichen
         logging_manager = None
         is_running = True
         printlog(f"Fallback to mock sensor stream: {e}", "warning")
@@ -137,51 +204,86 @@ def handle_start_recording():
         stream_thread.start()
 
 # Stop-Button handling on 'dashboard.html'
+# Funktion handle_stop_recording wird ausgeführt, wenn der Stop-Button betätigt wird
 @socketio.on('stop_recording')
 def handle_stop_recording():
     global logging_manager, is_running, stream_thread
-    stream_stop_event.set()
 
+    # Thread-übergreifende Flag wird gesetzt 
+    stream_stop_event.set()
+    
+    # Prüfen, ob überhaupt ein Thread existiert und ob dieser noch aktiv ist
     if stream_thread and stream_thread.is_alive():
+
+        # Warte maximal 1 Sekunde darauf, dass der Thread sich beendet.
+        # Dies geschieht meistens, nachdem 'stream_stop_event.set()' aufgerufen wurde.
         stream_thread.join(timeout=1.0)
+    
+    # Die Referenz löschen, damit die Variable für einen Neustart bereit ist 
+    # und der Garbage Collector den Speicher freigeben kann.
     stream_thread = None
 
     if logging_manager:
+
+        # Falls ein logging_manager existiert, werden nun alle Prozesse beendet
         logging_manager._stop_logger_processes()
-        #logging_manager.stop_logging()
+
+        # logging_manager variable wird deinitialisiert
         logging_manager = None
+    
+    # is_running wird auf False gesetzt und ans Dashboard gesendet
     is_running = False
     socketio.emit('is_running', is_running)
 
 
-# Helper function to encode depth-data to jpeg for live preview
+# Hilfsfunktion, um Tiefendaten (Distanzwerte) für die Live-Vorschau in ein JPEG umzuwandeln
 def encode_depth_to_jpg(depth: np.ndarray) -> Optional[str]:
+
+    # 1. Sicherheitscheck: Wenn keine Daten da sind, brich ab
     if depth is None:
         return None
+    
+    # 2. Datenbereinigung: Ersetzt ungültige Werte (NaN - Not a Number) durch 0
+    # Das ist wichtig, da KI-Tiefenkameras oft Messfehler haben, die OpenCV zum Absturz bringen könnten.
     depth = np.nan_to_num(depth)
 
+    # Hinweis: Die auskommentierten Zeilen unten würden die Tiefendaten (oft 16-Bit Grau) 
+    # in ein farbiges Bild (Heatmap) umwandeln, damit man sie mit dem menschlichen Auge besser versteht.
     #depth_norm = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     #depth_color = cv2.applyColorMap(depth_norm, cv2.COLORMAP_JET)
 
+    # 3. Kompression: Wandelt das NumPy-Array in das JPEG-Format um
+    # 'ok' ist ein Boolean (Erfolg?), 'buffer' enthält die binären Bilddaten.
     ok, buffer = cv2.imencode(".jpg", depth)
     if not ok:
         return None
+    
+    # 4. Übertragungsformat: Wandelt die binären Daten in einen Base64-String um
+    # Das ist nötig, damit das Bild als Text über JSON/WebSockets verschickt werden kann.
     return base64.b64encode(buffer).decode()
 
 
 def encode_rgb_stream_frame(rgb_frame) -> Optional[str]:
+
+    # 1. Check auf Existenz
     if rgb_frame is None:
         return None
 
+    # 2. Flexibilitäts-Check: Ist das Bild bereits ein Base64-String?
     if isinstance(rgb_frame, str):
         return rgb_frame
 
+    # 3. Falls das Bild bereits binär vorliegt (z.B. direkt vom Sensor-Buffer)
     if isinstance(rgb_frame, (bytes, bytearray, memoryview)):
         return base64.b64encode(bytes(rgb_frame)).decode()
 
+    # 4. Standardfall: Das Bild liegt als OpenCV/NumPy-Array vor
+    # Wir komprimieren es zu JPEG, um Bandbreite zu sparen.
     ok, buffer = cv2.imencode(".jpg", rgb_frame)
     if not ok:
         return None
+    
+    # 5. Umwandlung in Text-Format (Base64) für den Versand
     return base64.b64encode(buffer.tobytes()).decode()
 
 # Main function to send data per 'socket.emit()' to the dashboard.html
