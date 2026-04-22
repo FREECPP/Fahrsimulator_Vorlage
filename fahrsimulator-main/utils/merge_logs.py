@@ -3,7 +3,7 @@ Führt alle Sensor-CSV-Logs einer Aufnahme-Session zu einem gemeinsamen Log zusa
 
 Hintergrund:
     Während einer Aufnahme schreibt jeder Sensor seinen eigenen CSV-Log mit
-    unterschiedlichen Sample-Raten (z.B. Silab 100 Hz, Shimmer 51 Hz, RGB-Kamera 20 Hz).
+    unterschiedlichen Sample-Raten.
     Dieses Skript fügt alle Logs anhand des gemeinsamen Zeitstempels 'log_time' zusammen,
     sodass am Ende eine einzige CSV mit allen Sensordaten vorliegt.
 
@@ -18,10 +18,6 @@ Vorgehen:
     5. Anfangszeilen entfernen bei denen noch nicht alle Sensoren mindestens einmal
        geliefert haben (sonst stehen dort NaN-Werte)
     6. Ergebnis als combined_log.csv im Session-Verzeichnis speichern
-
-Aufruf (manuell, alternativ zur automatischen Ausführung über LogManager):
-    python utils/merge_logs.py --session-dir logfiles/2024-01-01_12-00-00
-    python utils/merge_logs.py --session-dir logfiles/2024-01-01_12-00-00 --keep-incomplete
 """
 
 import argparse
@@ -159,6 +155,16 @@ def merge_logs(session_dir: Path, keep_incomplete: bool = False) -> pd.DataFrame
         # Hilfsspalte wird nicht mehr benötigt
         combined.drop(columns=[last_ts_col], inplace=True)
 
+    # Spaltenreihenfolge: log_time, sensor, dann pro Sensor alle Datenspalten gefolgt von _value_age
+    ordered_cols = [TIMESTAMP_COL, "sensor"]
+    for sensor_label in LOG_FILES.values():
+        sensor_data_cols = [c for c in combined.columns if c.startswith(f"{sensor_label}_") and not c.endswith("_value_age")]
+        age_col = f"{sensor_label}_value_age"
+        ordered_cols.extend(sensor_data_cols)
+        if age_col in combined.columns:
+            ordered_cols.append(age_col)
+    combined = combined[ordered_cols]
+
     if not keep_incomplete:
         # Am Anfang der Aufnahme haben noch nicht alle Sensoren ihren ersten Wert geliefert.
         # Diese Zeilen haben nach dem Forward-Fill immer noch NaN-Werte und werden entfernt,
@@ -204,7 +210,7 @@ def main():
     combined = merge_logs(session_dir, keep_incomplete=args.keep_incomplete)
 
     output_path = Path(args.output) if args.output else session_dir / "combined_log.csv"
-    combined.to_csv(output_path, index=False)
+    combined.to_csv(output_path, index=False, float_format="%.6f")
     print(f"\nGespeichert: {output_path}")
 
 
