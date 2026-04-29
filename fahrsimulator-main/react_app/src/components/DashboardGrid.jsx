@@ -3,6 +3,8 @@ import GridLayout from "react-grid-layout"
 import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 import WidgetCard from "./WidgetCard"
+import { getDefaultMode, getSensorTitle } from "./widgetConfig"
+import { getPreferredWidgetSize, getWidgetConstraints } from "./widgetSizing"
 
 function DashboardGrid({ widgets, setWidgets, sensorData, connected, running }) {
   const [gridWidth, setGridWidth] = useState(1000)
@@ -18,15 +20,18 @@ function DashboardGrid({ widgets, setWidgets, sensorData, connected, running }) 
     return () => window.removeEventListener("resize", updateGridWidth)
   }, [])
 
-  const layout = widgets.map((widget) => ({
-    i: widget.i,
-    x: widget.x,
-    y: widget.y,
-    w: widget.w,
-    h: widget.h,
-    minW: 2,
-    minH: 2,
-  }))
+  const layout = widgets.map((widget) => {
+    const constraints = getWidgetConstraints(widget.view, widget.mode)
+    return {
+      i: widget.i,
+      x: widget.x,
+      y: widget.y,
+      w: widget.w,
+      h: widget.h,
+      minW: constraints.minW,
+      minH: constraints.minH,
+    }
+  })
 
   const handleLayoutChange = (newLayout) => {
     setWidgets((currentWidgets) =>
@@ -66,13 +71,36 @@ function DashboardGrid({ widgets, setWidgets, sensorData, connected, running }) 
               setWidgets((items) =>
                 items.map((item) =>
                   item.i === id
-                    ? {
-                        ...item,
-                        view: nextView,
-                        title: nextView.charAt(0).toUpperCase() + nextView.slice(1),
-                      }
+                    ? (() => {
+                        const nextMode = getDefaultMode(nextView)
+                        const preferred = getPreferredWidgetSize(nextView, nextMode)
+
+                        return {
+                          ...item,
+                          view: nextView,
+                          mode: nextMode,
+                          title: getSensorTitle(nextView),
+                          w: Math.max(item.w, preferred.w),
+                          h: Math.max(item.h, preferred.h),
+                        }
+                      })()
                     : item,
                 ),
+              )
+            }}
+            onChangeMode={(id, nextMode) => {
+              setWidgets((items) =>
+                items.map((item) => {
+                  if (item.i !== id) return item
+
+                  const preferred = getPreferredWidgetSize(item.view, nextMode)
+                  return {
+                    ...item,
+                    mode: nextMode,
+                    w: Math.max(item.w, preferred.w),
+                    h: Math.max(item.h, preferred.h),
+                  }
+                }),
               )
             }}
             sensorData={sensorData}
