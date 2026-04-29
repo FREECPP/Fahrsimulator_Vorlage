@@ -39,6 +39,11 @@ class LogManager:
 
         self.tof_video = tof_video
 
+        # Liste mit infos zu allen Loggern
+        # Aufbau:
+        # 1. Eintrag: Klasse des Loggers
+        # 2. Eintrag: Dictionary mit Parametern für Objekterstellung
+        # 3. Eintrag: Dictionary mit Dataqueues
         self.loggers = [
             (
                 EyetrackerLogger,
@@ -216,6 +221,7 @@ class LogManager:
             self._process.append(p)
             print(f"{writer_cls.__name__} process started")
 
+        # Über target = run_logger_process wird diese Funktion aufgerufen, die letztendlich das Objekt des Loggers erstellt
         for logger_cls, kwargs, queues in self.loggers:
             p = Process(target=run_logger_process, args=(logger_cls, kwargs, self.stop_event, queues))
             p.start()
@@ -259,8 +265,10 @@ def run_logger_process(logger_cls, kwargs, stop_event, queues):
     else:
         qdict = {"default": queues}
 
+    # Hier wird das eigentliche Objekt erstellt
+    # Als Parameter werden über **kwargs alle relevanten Infos aus der Liste genommen
+    # logger_cls ist die Logger-class -> 1. Argument in der Liste
     logger = logger_cls(**kwargs, queues=qdict)
-    # logger.queues = queues
     logger.start_sensor()
     logger.start_logging(stop_event)
 
