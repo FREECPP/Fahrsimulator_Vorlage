@@ -52,6 +52,7 @@ logging_manager = None
 BASE_DIR = None
 is_running = False
 stream_thread = None
+EMIT_INTERVAL = 0
 
 # Alle Threads bekommen von dieser Variablen mit (Prinzipiell eine Flag die quasi auf True und auf False gesetzt werden kann)
 # Jedoch erhalten alle Threads gleichzeitig diese Info
@@ -321,11 +322,11 @@ def read_queue(logging_manager, stop_event):
         # RGB Data-Queue
         if rgb_queue is not None:
             try:
+                # Holt den tatsächlichen Eintrag aus der Queue
                 rgb_frame = rgb_queue.get_nowait()
                 encoded = encode_rgb_stream_frame(rgb_frame)
                 if encoded is not None:
                     latest_sensor_data["rgb_frame"] = encoded
-                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -334,10 +335,10 @@ def read_queue(logging_manager, stop_event):
         # SILAB Data-Queue
         if silab_queue is not None:
             try:
+                # Holt den tatsächlichen Eintrag aus der Queue
                 silab = silab_queue.get_nowait()
                 if silab is not None:
                     latest_sensor_data["silab"] = silab
-                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -346,10 +347,10 @@ def read_queue(logging_manager, stop_event):
         # Rasante-Fahrweise-Model Data-Queue
         if rasante_fahrweise_model_queue is not None:
             try:
+                # Holt den tatsächlichen Eintrag aus der Queue
                 fahrweise = rasante_fahrweise_model_queue.get_nowait()
                 if fahrweise is not None:
                     latest_sensor_data["fahrweise"] = fahrweise
-                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -358,6 +359,7 @@ def read_queue(logging_manager, stop_event):
         # TOF depth
         # if tof_queue is not None:
         #     try:
+                  # Holt den tatsächlichen Eintrag aus der Queue
         #         depth = tof_queue.get_nowait()
         #         sensor_data["tof_frame"] = encode_depth_to_jpg(depth)
         #     except Empty:
@@ -368,11 +370,11 @@ def read_queue(logging_manager, stop_event):
         # TOF - Data-Queue
         if tof_scelet_queue is not None:
             try:
+                # Holt den tatsächlichen Eintrag aus der Queue
                 depth = tof_scelet_queue.get_nowait()
                 encoded = encode_depth_to_jpg(depth)
                 if encoded is not None:
                     latest_sensor_data["tof_scelet"] = encoded
-                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -381,11 +383,11 @@ def read_queue(logging_manager, stop_event):
         # RGB2 - Data-Queue + pose_queue (optional)
         if rgb2_queue is not None:
             try:
+                # Holt den tatsächlichen Eintrag aus der Queue
                 rgb_frame2 = rgb2_queue.get_nowait()
                 encoded = encode_rgb_stream_frame(rgb_frame2)
                 if encoded is not None:
                     latest_sensor_data["rgb_frame2"] = encoded
-                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -394,10 +396,10 @@ def read_queue(logging_manager, stop_event):
         # Distraction-Model Data-Queue
         if distraction_queue is not None:
             try:
+                # Holt den tatsächlichen Eintrag aus der Queue
                 d = distraction_queue.get_nowait()
                 if d is not None:
                     latest_sensor_data["distraction"] = d
-                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -406,10 +408,10 @@ def read_queue(logging_manager, stop_event):
         # Shimmer Data-Queue
         if shimmer_queue is not None:
             try:
+                # Holt den tatsächlichen Eintrag aus der Queue
                 data = shimmer_queue.get_nowait()
                 if data is not None:
                     latest_sensor_data["shimmer"] = data
-                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -418,18 +420,18 @@ def read_queue(logging_manager, stop_event):
         # Gaze-Distribution Data-Queue
         if gaze_queue is not None:
             try:
+                # Holt den tatsächlichen Eintrag aus der Queue
                 gaze_frame = gaze_queue.get_nowait()
                 ok, buffer2 = cv2.imencode(".jpg", gaze_frame)
                 if ok:
                     latest_sensor_data["gaze"] = base64.b64encode(buffer2.tobytes()).decode()
-                    has_update = True
             except Empty:
                 pass
             except Exception as e:
                 printlog(f"gaze queue error: {e}", "debug")
 
         now = time.monotonic()
-        if has_update or (now - last_emit_time) >= 0.25:
+        if (now - last_emit_time) >= EMIT_INTERVAL:
             socketio.emit("sensor_update", latest_sensor_data)
             last_emit_time = now
 
