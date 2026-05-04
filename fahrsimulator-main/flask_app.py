@@ -197,13 +197,8 @@ def show_dashboard():
 # ==================================================================================
 @socketio.on('connect')
 def handle_connect():
-<<<<<<< HEAD
-    printlog("Client connected")
-    socketio.emit('is_running', is_running)
-=======
     server_ip = get_server_ip()
     printlog(f"Client connected to server {server_ip}:{port}")
->>>>>>> piBrSaveLayout
 
 def get_server_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -264,6 +259,7 @@ def handle_stop_recording():
     socketio.emit('is_running', is_running)
 
 
+# Helper function to encode depth-data to jpeg for live preview
 def encode_depth_to_jpg(depth: np.ndarray) -> Optional[str]:
     if depth is None:
         return None
@@ -319,7 +315,7 @@ def read_queue(logging_manager, stop_event):
         "shimmer": None,
         "gaze": None,
         "fahrweise": None,
-        "shimmer_raw": None,
+        "shimmer_raw": None
     }
 
     last_emit_time = 0.0
@@ -424,7 +420,7 @@ def read_queue(logging_manager, stop_event):
             except Exception as e:
                 printlog(f"Shimmer raw queue error: {e}", "debug")
 
-        # Shimmer HRV data (preferred for chart/metrics)
+        # Shimmer Data-Queue
         if shimmer_hrv_queue is not None:
             try:
                 data = shimmer_hrv_queue.get_nowait()
@@ -492,7 +488,7 @@ def mock_sensor_stream(stop_event):
         sd1_sd2 = float(sd1 / max(sd2, 1e-6))
         s_val = float(math.pi * sd1 * sd2)
         breathing_rate = float(max(0.08, min(0.45, 0.22 + 0.05 * math.sin(t * 0.18))))
-
+        
         sensor_data = {
             "rgb_frame": _mock_image_b64("RGB Front", t),
             "tof_frame": None,
@@ -531,6 +527,8 @@ def mock_sensor_stream(stop_event):
                 "s": s_val,
                 "sd1/sd2": sd1_sd2,
                 "breathingrate": breathing_rate,
+                "sdnn": float(45 + 10 * math.sin(t * 0.35)),
+                "rmssd": float(32 + 9 * math.sin(t * 0.5 + 0.5)),
             },
             "gaze": None,
             "fahrweise": {

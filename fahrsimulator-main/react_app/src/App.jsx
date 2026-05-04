@@ -81,6 +81,7 @@ function getDefaultHorizontalPosition(widgetCount, widgetWidth = 4, totalCols = 
 function App() {
   const socketRef = useRef(null)
   const [widgets, setWidgets] = useState(() => loadStoredWidgets())
+  const [layout, setLayout] = useState([])
   const [connected, setConnected] = useState(false)
   const [running, setRunning] = useState(false)
   const [sensorData, setSensorData] = useState({})
