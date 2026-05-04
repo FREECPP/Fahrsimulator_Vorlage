@@ -55,13 +55,19 @@
 }
 
 .sidebar-bottom {
-    margin-top: auto; /* schiebt es ganz nach unten */
+  margin-top: 16px;
 }
 
 .sidebar-bottom h3 {
     margin-bottom: 8px;
     font-size: 0.95rem;
     color: #b7c7d6;
+}
+
+.layout-current {
+  margin-bottom: 10px;
+  font-size: 0.85rem;
+  color: #8fa6bb;
 }
 
 .sidebar-bottom select {
@@ -75,6 +81,21 @@
     cursor: pointer;
 }
 
+.sidebar-bottom input {
+  width: 100%;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f8fb;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  margin-bottom: 10px;
+}
+
+.sidebar-bottom button {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
 .sidebar-bottom select:hover {
     border-color: rgba(255, 255, 255, 0.4);
 }
@@ -83,6 +104,12 @@
     outline: none;
     border-color: #7fb7e3;
     box-shadow: 0 0 0 2px rgba(127, 183, 227, 0.3);
+}
+
+.sidebar-bottom input:focus {
+  outline: none;
+  border-color: #7fb7e3;
+  box-shadow: 0 0 0 2px rgba(127, 183, 227, 0.3);
 }
 
 .dashboard-area {

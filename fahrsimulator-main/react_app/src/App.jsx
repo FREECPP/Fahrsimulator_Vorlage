@@ -2,12 +2,12 @@ import {useEffect, useMemo, useRef, useState} from "react"
 import {io} from "socket.io-client"
 import DashboardGrid from "./components/DashboardGrid"
 import Sidebar from "./components/Sidebar"
-import { getDefaultMode, getNormalizedMode, getSensorTitle } from "./components/widgetConfig"
+import { getDefaultMode, getSensorTitle } from "./components/widgetConfig"
 import { getPreferredWidgetSize } from "./components/widgetSizing"
 import "./App.css"
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:9999"
-const WIDGET_LAYOUT_STORAGE_KEY = "fahrsimulator-dashboard-widgets"
+const CURRENT_LAYOUT_STORAGE_KEY = "fahrsimulator-current-layout"
 
 const DEFAULT_WIDGET_LAYOUT = [
   { view: "silab", x: 0, y: 0 },
@@ -43,34 +43,6 @@ function createDefaultWidgets() {
   }))
 }
 
-function loadStoredWidgets() {
-  if (typeof window === "undefined") return createDefaultWidgets()
-
-  try {
-    const rawValue = window.localStorage.getItem(WIDGET_LAYOUT_STORAGE_KEY)
-    if (!rawValue) return createDefaultWidgets()
-
-    const parsed = JSON.parse(rawValue)
-    if (!Array.isArray(parsed) || parsed.length === 0) return createDefaultWidgets()
-
-    return parsed
-      .filter((widget) => widget && typeof widget === "object" && typeof widget.view === "string")
-      .map((widget) => {
-        const mode = getNormalizedMode(widget.view, widget.mode)
-        const preferredSize = getPreferredWidgetSize(widget.view, mode)
-
-        return {
-          ...createWidget(widget.view),
-          ...widget,
-          mode,
-          w: Number.isFinite(widget.w) ? widget.w : preferredSize.w,
-          h: Number.isFinite(widget.h) ? widget.h : preferredSize.h,
-        }
-      })
-  } catch {
-    return createDefaultWidgets()
-  }
-}
 
 function getDefaultHorizontalPosition(widgetCount, widgetWidth = 4, totalCols = 12) {
     const widgetsPerRow = Math.max(1, Math.floor(totalCols / widgetWidth))
@@ -80,20 +52,14 @@ function getDefaultHorizontalPosition(widgetCount, widgetWidth = 4, totalCols = 
 
 function App() {
   const socketRef = useRef(null)
-  const [widgets, setWidgets] = useState(() => loadStoredWidgets())
+  const [widgets, setWidgets] = useState([])
   const [layout, setLayout] = useState([])
+  const [layoutReady, setLayoutReady] = useState(false)
+  const [currentLayoutName, setCurrentLayoutName] = useState("")
   const [connected, setConnected] = useState(false)
   const [running, setRunning] = useState(false)
   const [sensorData, setSensorData] = useState({})
   const [lastPacketTime, setLastPacketTime] = useState(null)
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(WIDGET_LAYOUT_STORAGE_KEY, JSON.stringify(widgets))
-    } catch {
-      // Ignore storage failures and keep the dashboard usable.
-    }
-  }, [widgets])
 
     useEffect(() => {
         const socket = io(SOCKET_URL, {
@@ -121,28 +87,53 @@ function App() {
     const PROJECT = "demo3"
 
     useEffect(() => {
-        const fetchLayout = async () => {
-            try {
+      const fetchLayout = async () => {
+        const savedLayoutName =
+          typeof window === "undefined"
+            ? ""
+            : window.localStorage.getItem(CURRENT_LAYOUT_STORAGE_KEY) || ""
+        const layoutNameToLoad = savedLayoutName || PROJECT
 
-                const res = await fetch(`http://localhost:9999/api/layout/${PROJECT}`, {
-                    credentials: "include",
-                })
+        try {
+          const res = await fetch(`http://localhost:9999/api/layout/${layoutNameToLoad}`, {
+            credentials: "include",
+          })
 
-                const data = await res.json()
+          const data = await res.json()
 
-                if (data.widgets?.length > 0) {
-                    setWidgets(data.widgets);
-                }
-                if (data.layout) {
-                    setLayout(data.layout);
-                }
-            } catch (err) {
-                console.error("Fehler beim Laden:", err)
-            }
+          if (data.widgets?.length > 0) {
+            setWidgets(data.widgets);
+          } else {
+            setWidgets(createDefaultWidgets())
+          }
+
+          if (data.layout?.length > 0) {
+            setLayout(data.layout);
+          } else {
+            setLayout([])
+          }
+
+          setCurrentLayoutName(layoutNameToLoad)
+        } catch (err) {
+          console.error("Fehler beim Laden:", err)
+          setWidgets(createDefaultWidgets())
+        } finally {
+          setLayoutReady(true)
         }
+      }
 
-        fetchLayout()
+      fetchLayout()
     }, [])
+
+    useEffect(() => {
+      if (typeof window === "undefined") return
+
+      if (currentLayoutName) {
+        window.localStorage.setItem(CURRENT_LAYOUT_STORAGE_KEY, currentLayoutName)
+      } else {
+        window.localStorage.removeItem(CURRENT_LAYOUT_STORAGE_KEY)
+      }
+    }, [currentLayoutName])
 
     const handleStart = () => {
         if (!socketRef.current || !connected || running) return
@@ -170,6 +161,9 @@ function App() {
             <Sidebar
                 setLayout={setLayout}
                 setWidgets={setWidgets}
+                widgets={widgets}
+                currentLayoutName={currentLayoutName}
+                setCurrentLayoutName={setCurrentLayoutName}
                 onAddWidget={(view) => {
                     setWidgets((items) => {
                         const nextWidget = createWidget(view);
@@ -226,6 +220,7 @@ function App() {
                     sensorData={sensorData}
                     connected={connected}
                     running={running}
+                  saveEnabled={layoutReady}
                 />
             </main>
         </div>

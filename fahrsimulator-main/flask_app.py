@@ -121,7 +121,7 @@ def load_config():
     except Exception as e:
         printlog(f"Be sure 'config.ini', BASE_DIR under [General] exists and the path is valid. {e}", "error")
 
-@app.route("/api/layout/<project_name>", methods=["GET", "POST"])
+@app.route("/api/layout/<project_name>", methods=["GET", "POST", "DELETE"])
 def handle_layout(project_name):
 
     if request.method == "POST":
@@ -161,6 +161,18 @@ def handle_layout(project_name):
             "layout": layout.layout,
             "widgets": layout.widgets
         })
+
+    if request.method == "DELETE":
+        try:
+            existing = dashboardLayout.query.filter_by(project_name=project_name).first()
+            if not existing:
+                return jsonify({"status": "not_found"}), 404
+
+            db.session.delete(existing)
+            db.session.commit()
+            return jsonify({"status": "deleted"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
 @app.route("/api/layouts", methods=["GET"])
 def get_all_layouts():

@@ -7,7 +7,7 @@ import { getDefaultMode, getSensorTitle } from "./widgetConfig"
 import { getPreferredWidgetSize, getWidgetConstraints } from "./widgetSizing"
 import {debounce} from "lodash"
 
-function DashboardGrid({widgets, setWidgets, sensorData, connected, running}) {
+function DashboardGrid({widgets, setWidgets, sensorData, connected, running, saveEnabled = true}) {
     const [gridWidth, setGridWidth] = useState(1000)
 
     const API_URL = "http://localhost:9999"
@@ -69,7 +69,9 @@ function DashboardGrid({widgets, setWidgets, sensorData, connected, running}) {
                 return layoutItem ? {...widget, ...layoutItem} : widget
             })
 
-            saveLayout(newLayout, updatedWidgets)
+            if (saveEnabled) {
+              saveLayout(newLayout, updatedWidgets)
+            }
 
             return updatedWidgets
         })
