@@ -1,21 +1,30 @@
 from utils.app_logging_utils import printlog
 from flask import Flask, Response, request, render_template, jsonify
 from flask_socketio import SocketIO
+from flask_cors import CORS
+import socket
+
 import threading
 import cv2
 import base64
-#from logger.log_manager import LogManager  # Lazy-loaded in handle_start_recording() to support preview mode without sensors
-#from logger.frame_processor import Processor, EyetrackerProcessor, SilabDataProcessor
-from flask_blueprints.verzeichnis import verzeichnis_bp
 import configparser
 import os
-from datetime import datetime
-from multiprocessing import Queue
 import numpy as np
 import time
 import math
+
+from datetime import datetime
+from multiprocessing import Queue
 from typing import Optional
 from queue import Empty
+
+from flask_blueprints.verzeichnis import verzeichnis_bp
+from extensions import db
+from dbModels.dashboardLayoutDB import dashboardLayout
+
+# Optional / lazy imports (auskommentiert gelassen wie bei dir)
+# from logger.log_manager import LogManager
+# from logger.frame_processor import Processor, EyetrackerProcessor, SilabDataProcessor
 
 # ==================================================================================
 # Initialising Webapp Data
@@ -25,10 +34,14 @@ from queue import Empty
 # __name__ sagt Flask, wo es nach Dateien (Statics/Templates) suchen soll.
 app = Flask(__name__)
 
+CORS(app, supports_credentials=True)
+
 # 2. Blueprints registrieren
 # Blueprints erlauben es, Routen (URLs) in anderen Dateien zu definieren.
 # url_prefix="/" sorgt dafür, dass die Routen direkt unter der Hauptdomain liegen.
 # Beispiel: Ein Blueprint in 'verzeichnis_bp' könnte die Route für dein Dashboard sein.
+
+
 app.register_blueprint(verzeichnis_bp, url_prefix="/")
 
 # 3. SocketIO initialisieren
@@ -44,6 +57,22 @@ port = int(os.getenv('PORT', 9999))
 # '0.0.0.0' bedeutet: Die App ist über alle Netzwerk-Schnittstellen erreichbar.
 # Das ist nötig, wenn du z.B. vom Handy oder einem anderen PC im Netz auf die KI-Daten zugreifen willst.
 host = "0.0.0.0"
+
+
+# ==================================================================================
+# Initialising Database
+# ==================================================================================
+
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+db.init_app(app)
+DB_PATH = "app.db"
+dummyProject = "demo3"
+
+# DB erstellen falls nicht vorhanden
+if app.debug:
+    with app.app_context():
+        db.create_all()
 
 # ==================================================================================
 # Initialising Logger Data
@@ -73,11 +102,26 @@ data_queues = {
     "distraction_model_queue": Queue(maxsize=1),
     "scelet_dict": Queue(maxsize=1),
     "silab_model": Queue(maxsize=1),
+    "shimmer": Queue(maxsize=1),
     "rasante_fahrweise_model": Queue(maxsize=1),
     "shimmer_hrv": Queue(maxsize=1),
     "gaze_distribution_model": Queue(maxsize=1),
 
 }
+
+def deleteAndRecreateDB():
+    with app.app_context():
+        # Alte DB löschen (falls vorhanden)
+        if os.path.exists(DB_PATH):
+            os.remove(DB_PATH)
+            print("🗑️ Alte DB gelöscht")
+
+        # Neue DB erstellen
+        db.create_all()
+        print("✅ Neue DB erstellt")
+
+
+
 # ==================================================================================
 # Helper function for loading 'config.ini' Data
 # ==================================================================================
@@ -128,6 +172,71 @@ def load_config():
     except Exception as e:
         printlog(f"Be sure 'config.ini', BASE_DIR under [General] exists and the path is valid. {e}", "error")
 
+@app.route("/api/layout/<project_name>", methods=["GET", "POST", "DELETE"])
+def handle_layout(project_name):
+
+    if request.method == "POST":
+        data = request.get_json()
+
+        layout_data = data.get("layout", [])
+        widgets = data.get("widgets", [])
+
+        try:
+            existing = dashboardLayout.query.filter_by(project_name=project_name).first()
+
+            if existing:
+                existing.layout = layout_data
+                existing.widgets = widgets
+            else:
+                new_layout = dashboardLayout(
+                    project_name=project_name,
+                    layout=layout_data,
+                    widgets=widgets
+                )
+                db.session.add(new_layout)
+
+            db.session.commit()
+
+            return jsonify({"status": "saved"}), 200
+
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    if request.method == "GET":
+        layout = dashboardLayout.query.filter_by(project_name=project_name).first()
+
+        if not layout:
+            return jsonify({"layout": [], "widgets": []})
+
+        return jsonify({
+            "layout": layout.layout,
+            "widgets": layout.widgets
+        })
+
+    if request.method == "DELETE":
+        try:
+            existing = dashboardLayout.query.filter_by(project_name=project_name).first()
+            if not existing:
+                return jsonify({"status": "not_found"}), 404
+
+            db.session.delete(existing)
+            db.session.commit()
+            return jsonify({"status": "deleted"}), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+@app.route("/api/layouts", methods=["GET"])
+def get_all_layouts():
+    layouts = dashboardLayout.query.all()
+
+    result = []
+    for l in layouts:
+        result.append({
+            "project_name": l.project_name
+        })
+
+    return jsonify(result)
+
 # ==================================================================================
 # Index.html
 # ==================================================================================
@@ -153,8 +262,17 @@ def show_dashboard():
 # ==================================================================================
 @socketio.on('connect')
 def handle_connect():
-    printlog("Client connected")
+    server_ip = get_server_ip()
+    printlog(f"Client connected to server {server_ip}:{port}")
 
+def get_server_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        s.connect(("8.8.8.8", 80))  # keine echte Verbindung nötig
+        ip = s.getsockname()[0]
+    finally:
+        s.close()
+    return ip
 # Start-Button handling on 'dashboard.html'
 # Funktion handle_start_recording() wird ausgeführt, wenn der Start-Button im Dashboard betätigt wird
 @socketio.on('start_recording')
@@ -297,7 +415,8 @@ def read_queue(logging_manager, stop_event):
     eyetracker_queue = logging_manager.data_queues.get("eyetracker")
     silab_queue = logging_manager.data_queues.get("silab")
     rasante_fahrweise_model_queue = logging_manager.data_queues.get("rasante_fahrweise_model")
-    shimmer_queue = logging_manager.data_queues.get("shimmer_hrv")
+    shimmer_raw_queue = logging_manager.data_queues.get("shimmer")
+    shimmer_hrv_queue = logging_manager.data_queues.get("shimmer_hrv")
     gaze_queue = logging_manager.data_queues.get("gaze_distribution_model")
 
     latest_sensor_data = {
@@ -312,6 +431,7 @@ def read_queue(logging_manager, stop_event):
         "shimmer": None,
         "gaze": None,
         "fahrweise": None,
+        "shimmer_raw": None
     }
 
     last_emit_time = 0.0
@@ -405,11 +525,23 @@ def read_queue(logging_manager, stop_event):
             except Exception as e:
                 printlog(f"distraction queue error: {e}", "debug")
 
+        # Shimmer raw packet data
+        if shimmer_raw_queue is not None:
+            try:
+                raw_data = shimmer_raw_queue.get_nowait()
+                if raw_data is not None:
+                    latest_sensor_data["shimmer_raw"] = raw_data
+                    has_update = True
+            except Empty:
+                pass
+            except Exception as e:
+                printlog(f"Shimmer raw queue error: {e}", "debug")
+
         # Shimmer Data-Queue
-        if shimmer_queue is not None:
+        if shimmer_hrv_queue is not None:
             try:
                 # Holt den tatsächlichen Eintrag aus der Queue
-                data = shimmer_queue.get_nowait()
+                data = shimmer_hrv_queue.get_nowait()
                 if data is not None:
                     latest_sensor_data["shimmer"] = data
             except Empty:
@@ -460,12 +592,30 @@ def mock_sensor_stream(stop_event):
     while not stop_event.is_set() and is_running and logging_manager is None:
         t = time.time() - start_t
         speed_ms = max(0.0, 18.0 + 8.0 * math.sin(t * 0.6))
-
+        bpm = float(74 + 7 * math.sin(t * 0.42))
+        ibi = float(60000.0 / max(bpm, 1.0))
+        rmssd = float(32 + 9 * math.sin(t * 0.5 + 0.5))
+        sdnn = float(45 + 10 * math.sin(t * 0.35))
+        sdsd = float(max(5.0, rmssd * 0.78 + 2.5 * math.sin(t * 0.33)))
+        pnn20 = float(max(0.0, min(1.0, 0.34 + 0.16 * math.sin(t * 0.27))))
+        pnn50 = float(max(0.0, min(1.0, 0.18 + 0.11 * math.sin(t * 0.21 + 0.3))))
+        hr_mad = float(max(10.0, 45 + 16 * math.sin(t * 0.29 + 0.4)))
+        sd1 = float(max(1.0, rmssd / math.sqrt(2.0)))
+        sd2 = float(max(sd1 + 1.0, sdnn * 1.18))
+        sd1_sd2 = float(sd1 / max(sd2, 1e-6))
+        s_val = float(math.pi * sd1 * sd2)
+        breathing_rate = float(max(0.08, min(0.45, 0.22 + 0.05 * math.sin(t * 0.18))))
+        
         sensor_data = {
             "rgb_frame": _mock_image_b64("RGB Front", t),
             "tof_frame": None,
             "pose_frame": None,
-            "eyetracker": None,
+            "eyetracker": {
+                "x": float(0.5 + 0.18 * math.sin(t * 0.85)),
+                "y": float(0.5 + 0.16 * math.sin(t * 1.1 + 0.45)),
+                "pupil_left": float(3.2 + 0.35 * math.sin(t * 0.52)),
+                "pupil_right": float(3.15 + 0.32 * math.sin(t * 0.56 + 0.2)),
+            },
             "silab": {
                 "speed": float(speed_ms),
                 "steering": float(6.5 * math.sin(t * 0.9)),
@@ -480,6 +630,20 @@ def mock_sensor_stream(stop_event):
                 "n_frames": int(30 + 20 * abs(math.sin(t * 0.4))),
             },
             "shimmer": {
+                "bpm": bpm,
+                "heart_rate": bpm,
+                "ibi": ibi,
+                "sdnn": sdnn,
+                "sdsd": sdsd,
+                "rmssd": rmssd,
+                "pnn20": pnn20,
+                "pnn50": pnn50,
+                "hr_mad": hr_mad,
+                "sd1": sd1,
+                "sd2": sd2,
+                "s": s_val,
+                "sd1/sd2": sd1_sd2,
+                "breathingrate": breathing_rate,
                 "sdnn": float(45 + 10 * math.sin(t * 0.35)),
                 "rmssd": float(32 + 9 * math.sin(t * 0.5 + 0.5)),
             },

@@ -75,6 +75,7 @@ class LogManager:
                     file=self.run_log_dir / "shimmer_log.csv",
                 ),
                 {
+                    "shimmer": self.data_queues["shimmer"],
                     "shimmer_hrv": self.data_queues["shimmer_hrv"],
                 }
             ),

@@ -1,135 +1,137 @@
-import { memo, useEffect, useRef, useState } from "react"
-import SpeedChart from "./SpeedChart"
+import { lazy, memo, Suspense, useEffect, useMemo, useRef } from "react"
+import SilabCockpit from "./SilabCockpit"
+import EyeTrackerSummary from "./EyeTrackerSummary"
+import { getModeOptions, getNormalizedMode, getSensorTitle, SENSOR_WIDGETS } from "./widgetConfig"
 
-function WidgetCard({ widget, onDelete, onChangeView, sensorData, connected, running }) {
-  const [imageSource, setImageSource] = useState("rgb_front")
+const ShimmerChart = lazy(() => import("./ShimmerChart"))
+
+function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, connected, running }) {
   const imageRef = useRef(null)
+  const modeOptions = useMemo(() => getModeOptions(widget.view), [widget.view])
+  const mode = getNormalizedMode(widget.view, widget.mode)
+
   const silab = sensorData?.silab
   const rgbFrame = sensorData?.rgb_frame
   const tofFrame = sensorData?.tof_scelet
   const rgbBackFrame = sensorData?.rgb_frame2
+  const eyetracker = sensorData?.eyetracker
   const shimmer = sensorData?.shimmer
-  const sdnn = Number(shimmer?.sdnn)
-  const rmssd = Number(shimmer?.rmssd)
+  const shimmerRaw = sensorData?.shimmer_raw
   const selectedImage =
-    widget.view === "image"
+    mode === "image"
       ? {
-          rgb_front: rgbFrame,
           tof: tofFrame,
+          rgb_front: rgbFrame,
           rgb_back: rgbBackFrame,
-        }[imageSource]
+        }[widget.view]
       : null
 
   useEffect(() => {
-    if (widget.view !== "image" || !imageRef.current) return
+    if (mode !== "image" || !imageRef.current) return
 
     if (selectedImage) {
       imageRef.current.src = `data:image/jpeg;base64,${selectedImage}`
     } else {
       imageRef.current.removeAttribute("src")
     }
-  }, [selectedImage, widget.view])
+  }, [selectedImage, mode])
 
   let body = <div className="placeholder">Unknown widget type.</div>
 
-  if (widget.view === "status") {
-    body = (
-      <div className="widget-stack">
-        <div className="status-row">
-          <span>Socket</span>
-          <strong className={connected ? "ok" : "bad"}>{connected ? "Connected" : "Disconnected"}</strong>
-        </div>
-        <div className="status-row">
-          <span>Recording</span>
-          <strong className={running ? "ok" : "idle"}>{running ? "Running" : "Stopped"}</strong>
-        </div>
-        <div className="status-row">
-          <span>Speed (km/h)</span>
-          <strong>{typeof silab?.speed === "number" ? (silab.speed * 3.6).toFixed(1) : "-"}</strong>
-        </div>
-      </div>
-    )
-  }
-
-  if (widget.view === "speed") {
-    body = (
-      <div className="widget-stack">
-        <h4>Live Values</h4>
-        <div className="status-row">
-          <span>Speed</span>
-          <strong>{typeof silab?.speed === "number" ? `${(silab.speed * 3.6).toFixed(1)} km/h` : "-"}</strong>
-        </div>
-        <div className="status-row">
-          <span>Steering</span>
-          <strong>{typeof silab?.steering === "number" ? silab.steering.toFixed(2) : "-"}</strong>
-        </div>
-        <div className="status-row">
-          <span>Gas Pedal</span>
-          <strong>{typeof silab?.acc_pedal === "number" ? silab.acc_pedal.toFixed(2) : "-"}</strong>
-        </div>
-        <div className="status-row">
-          <span>Brake Pedal</span>
-          <strong>{typeof silab?.brake_pedal === "number" ? silab.brake_pedal.toFixed(2) : "-"}</strong>
-        </div>
-      </div>
-    )
-  }
-
-  if (widget.view === "image") {
-    body = (
-      <div className="widget-stack image-widget">
-        <div style={{ marginBottom: "8px" }}>
-          <label style={{ marginRight: "8px", fontSize: "0.9em" }}>Camera:</label>
-          <select 
-            value={imageSource} 
-            onChange={(e) => setImageSource(e.target.value)}
-            style={{ padding: "4px 8px", borderRadius: "4px", border: "1px solid #ccc" }}
-          >
-            <option value="rgb_front">RGB Front</option>
-            <option value="tof">ToF</option>
-            <option value="rgb_back">RGB Back</option>
-          </select>
-        </div>
-        {selectedImage ? (
-          <img ref={imageRef} className="stream-image" alt="Live sensor stream" />
-        ) : (
-          <div className="placeholder">No frame yet for {imageSource.replace("_", " ")}. Start recording to receive frames.</div>
-        )}
-      </div>
-    )
-  }
-
-  if (widget.view === "chart") {
-    body = <SpeedChart sensorData={sensorData} />
+  if (widget.view === "silab") {
+    if (mode === "raw") {
+      body = <pre className="raw-payload">{JSON.stringify(silab ?? {}, null, 2)}</pre>
+    } else if (mode === "pedals") {
+      body = <SilabCockpit silab={silab} connected={connected} running={running} variant="pedals" />
+    } else {
+      body = <SilabCockpit silab={silab} connected={connected} running={running} />
+    }
   }
 
   if (widget.view === "shimmer") {
-    body = (
-      <div className="widget-stack">
-        <h4>HRV (Shimmer)</h4>
-        <div className="status-row">
-          <span>SDNN</span>
-          <strong>{Number.isFinite(sdnn) ? sdnn.toFixed(2) : "-"}</strong>
+    if (mode === "raw") {
+      body = (
+        <pre className="raw-payload">
+          {JSON.stringify({ processed: shimmer, raw: shimmerRaw }, null, 2)}
+        </pre>
+      )
+    } else {
+      body = (
+        <Suspense fallback={<div className="placeholder">Loading chart...</div>}>
+          <ShimmerChart shimmer={shimmer} running={running} />
+        </Suspense>
+      )
+    }
+  }
+
+  if (widget.view === "eyetracker") {
+    body =
+      mode === "raw" ? (
+        <pre className="raw-payload">{JSON.stringify(eyetracker ?? {}, null, 2)}</pre>
+      ) : (
+        <EyeTrackerSummary eyetracker={eyetracker} running={running} />
+      )
+  }
+
+  if (["tof", "rgb_front", "rgb_back"].includes(widget.view)) {
+    const frameBySensor = {
+      tof: tofFrame,
+      rgb_front: rgbFrame,
+      rgb_back: rgbBackFrame,
+    }
+    const packetPayload = frameBySensor[widget.view] || ""
+
+    if (mode === "image") {
+      body = selectedImage ? (
+        <div className="widget-stack image-widget">
+          <img ref={imageRef} className="stream-image" alt="Live sensor stream" />
         </div>
-        <div className="status-row">
-          <span>RMSSD</span>
-          <strong>{Number.isFinite(rmssd) ? rmssd.toFixed(2) : "-"}</strong>
+      ) : (
+        <div className="placeholder">No frame yet. Start recording to receive frames.</div>
+      )
+    } else {
+      body = (
+        <div className="widget-stack">
+          <div className="status-row">
+            <span>Sensor</span>
+            <strong>{getSensorTitle(widget.view)}</strong>
+          </div>
+          <div className="status-row">
+            <span>Frame Available</span>
+            <strong>{packetPayload ? "Yes" : "No"}</strong>
+          </div>
+          <div className="status-row">
+            <span>Payload Length</span>
+            <strong>{packetPayload.length || 0}</strong>
+          </div>
         </div>
-      </div>
-    )
+      )
+    }
   }
 
   return (
     <article className="widget-card">
       <header className="widget-header">
-        <strong>{widget.title}</strong>
+        <div className="widget-title-group">
+          <strong>{getSensorTitle(widget.view)}</strong>
+          <span className="widget-size-badge" title="Current widget size">
+            {widget.w} x {widget.h}
+          </span>
+        </div>
         <div className="widget-actions">
           <select value={widget.view} onChange={(event) => onChangeView(widget.i, event.target.value)}>
-            <option value="status">Status</option>
-            <option value="speed">Speed</option>
-            <option value="image">Image</option>
-            <option value="chart">Chart</option>
-            <option value="shimmer">Shimmer</option>
+            {SENSOR_WIDGETS.map((sensor) => (
+              <option key={sensor.key} value={sensor.key}>
+                {sensor.label}
+              </option>
+            ))}
+          </select>
+          <select value={mode} onChange={(event) => onChangeMode(widget.i, event.target.value)}>
+            {modeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
           <button className="danger" onClick={() => onDelete(widget.i)}>
             Remove
@@ -145,6 +147,7 @@ function hasSameWidgetIdentity(prevWidget, nextWidget) {
   return (
     prevWidget.i === nextWidget.i &&
     prevWidget.view === nextWidget.view &&
+    prevWidget.mode === nextWidget.mode &&
     prevWidget.title === nextWidget.title &&
     prevWidget.x === nextWidget.x &&
     prevWidget.y === nextWidget.y &&
@@ -159,32 +162,52 @@ function areWidgetPropsEqual(prevProps, nextProps) {
   if (prevProps.running !== nextProps.running) return false
 
   const view = nextProps.widget.view
+  const mode = nextProps.widget.mode
+  
+  // Raw mode always needs to update with live data
+  if (mode === "raw") return false
+
   const prevData = prevProps.sensorData || {}
   const nextData = nextProps.sensorData || {}
 
-  if (view === "status") {
+  if (view === "silab") {
+    if (mode === "pedals" || mode === "cockpit") {
+      return (
+        prevData.silab?.speed === nextData.silab?.speed &&
+        prevData.silab?.steering === nextData.silab?.steering &&
+        prevData.silab?.acc_pedal === nextData.silab?.acc_pedal &&
+        prevData.silab?.brake_pedal === nextData.silab?.brake_pedal
+      )
+    }
     return prevData.silab?.speed === nextData.silab?.speed
   }
 
-  if (view === "speed" || view === "chart") {
-    return (
-      prevData.silab?.speed === nextData.silab?.speed &&
-      prevData.silab?.steering === nextData.silab?.steering &&
-      prevData.silab?.acc_pedal === nextData.silab?.acc_pedal &&
-      prevData.silab?.brake_pedal === nextData.silab?.brake_pedal
-    )
+  if (view === "shimmer") {
+    return prevData.shimmer === nextData.shimmer
   }
 
-  if (view === "image") {
+  if (view === "eyetracker") {
+    return prevData.eyetracker === nextData.eyetracker
+  }
+
+  if (view === "tof") {
+    return prevData.tof_scelet === nextData.tof_scelet
+  }
+
+  if (view === "rgb_front") {
+    return prevData.rgb_frame === nextData.rgb_frame
+  }
+
+  if (view === "rgb_back") {
+    return prevData.rgb_frame2 === nextData.rgb_frame2
+  }
+
+  if (mode === "image") {
     return (
       prevData.rgb_frame === nextData.rgb_frame &&
       prevData.tof_scelet === nextData.tof_scelet &&
       prevData.rgb_frame2 === nextData.rgb_frame2
     )
-  }
-
-  if (view === "shimmer") {
-    return prevData.shimmer === nextData.shimmer
   }
 
   return true
