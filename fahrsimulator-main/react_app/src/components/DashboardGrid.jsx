@@ -1,24 +1,53 @@
-import { useEffect, useState } from "react"
+import {useEffect, useState, useMemo} from "react"
 import GridLayout from "react-grid-layout"
 import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
 import WidgetCard from "./WidgetCard"
 import { getDefaultMode, getSensorTitle } from "./widgetConfig"
 import { getPreferredWidgetSize, getWidgetConstraints } from "./widgetSizing"
+import {debounce} from "lodash"
 
-function DashboardGrid({ widgets, setWidgets, sensorData, connected, running }) {
-  const [gridWidth, setGridWidth] = useState(1000)
+function DashboardGrid({widgets, setWidgets, sensorData, connected, running}) {
+    const [gridWidth, setGridWidth] = useState(1000)
 
-  useEffect(() => {
-    const updateGridWidth = () => {
-      const sidebarOffset = window.innerWidth <= 1024 ? 40 : 340
-      setGridWidth(Math.max(320, window.innerWidth - sidebarOffset))
-    }
+    const API_URL = "http://localhost:9999"
+    const PROJECT = "demo3"
 
-    updateGridWidth()
-    window.addEventListener("resize", updateGridWidth)
-    return () => window.removeEventListener("resize", updateGridWidth)
-  }, [])
+    const saveLayout = useMemo(
+        () =>
+            debounce((layout, widgets) => {
+
+                fetch(`http://localhost:9999/api/layout/${PROJECT}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({layout, widgets}),
+                }).catch((err) =>
+                    console.error("Fehler beim Speichern:", err)
+                )
+            }, 1000),
+        []
+    )
+    // ✅ Cleanup für debounce (wichtig gegen Memory Leaks)
+    useEffect(() => {
+        return () => {
+            saveLayout.cancel()
+        }
+    }, [saveLayout])
+
+
+    useEffect(() => {
+        const updateGridWidth = () => {
+            const sidebarOffset = window.innerWidth <= 1024 ? 40 : 340
+            setGridWidth(Math.max(320, window.innerWidth - sidebarOffset))
+        }
+
+        updateGridWidth()
+        window.addEventListener("resize", updateGridWidth)
+        return () => window.removeEventListener("resize", updateGridWidth)
+    }, [])
 
   const layout = widgets.map((widget) => {
     const constraints = getWidgetConstraints(widget.view, widget.mode)
@@ -33,23 +62,28 @@ function DashboardGrid({ widgets, setWidgets, sensorData, connected, running }) 
     }
   })
 
-  const handleLayoutChange = (newLayout) => {
-    setWidgets((currentWidgets) =>
-      currentWidgets.map((widget) => {
-        const layoutItem = newLayout.find((item) => item.i === widget.i)
-        return layoutItem ? { ...widget, ...layoutItem } : widget
-      }),
-    )
-  }
+    const handleLayoutChange = (newLayout) => {
+        setWidgets((currentWidgets) => {
+            const updatedWidgets = currentWidgets.map((widget) => {
+                const layoutItem = newLayout.find((item) => item.i === widget.i)
+                return layoutItem ? {...widget, ...layoutItem} : widget
+            })
 
-  if (widgets.length === 0) {
-    return (
-      <div className="empty-state">
-        <h3>Dashboard is empty</h3>
-        <p>Add widgets from the left panel to start building your layout.</p>
-      </div>
-    )
-  }
+            saveLayout(newLayout, updatedWidgets)
+
+            return updatedWidgets
+        })
+    }
+
+
+    if (widgets.length === 0) {
+        return (
+            <div className="empty-state">
+                <h3>Dashboard is empty</h3>
+                <p>Add widgets from the left panel to start building your layout.</p>
+            </div>
+        )
+    }
 
   return (
     <GridLayout

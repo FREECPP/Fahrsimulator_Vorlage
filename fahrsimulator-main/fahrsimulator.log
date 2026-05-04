@@ -1,20 +1,2 @@
-2026-04-29 14:02:25,757 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
- * Running on http://127.0.0.1:9999
-2026-04-29 14:02:25,757 [INFO] [33mPress CTRL+C to quit[0m
-2026-04-29 14:02:28,517 [INFO] Client connected
-2026-04-29 14:03:00,742 [INFO] Client connected
-2026-04-29 14:03:08,762 [INFO] Starte Log-Manager
-2026-04-29 14:03:08,763 [INFO] None
-2026-04-29 14:03:08,768 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
-2026-04-29 14:03:10,161 [INFO] 127.0.0.1 - - [29/Apr/2026 14:03:10] "[35m[1mGET /socket.io/?EIO=4&transport=websocket HTTP/1.1[0m" 500 -
-2026-04-29 14:03:10,166 [ERROR] Error on request:
-Traceback (most recent call last):
-  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 371, in run_wsgi
-    execute(self.server.app)
-  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 337, in execute
-    write(b"")
-  File "/Users/abdulhamid/Downloads/fahrsimulator-main/.venv/lib/python3.9/site-packages/werkzeug/serving.py", line 262, in write
-    assert status_set is not None, "write() before start_response"
-AssertionError: write() before start_response
-2026-04-29 14:03:10,167 [INFO] Client connected
-2026-04-29 14:03:16,283 [INFO] Client connected
+2026-04-20 14:07:47,871 [INFO] Client connected to server 10.19.1.165:9999
+2026-04-20 14:07:53,827 [INFO] Client connected to server 10.19.1.165:9999
