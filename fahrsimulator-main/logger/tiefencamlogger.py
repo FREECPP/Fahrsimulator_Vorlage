@@ -50,7 +50,7 @@ class TiefenCamLogger(Logger):
             ip: str = "ip:10.43.0.1",
             mode: str = "lr-qnative",
             output_dir: Optional[Path] = None,
-            fps: float = 10.0,
+            fps: float = 30.0,
             log_path: Optional[Path] = None,
             raw_pixel_csv: bool = True,
             csv_compressed: bool = True,
@@ -190,6 +190,15 @@ class TiefenCamLogger(Logger):
         self._video_writer = imageio.get_writer(str(self._video_file), fps=self.fps, codec="libx264", quality=8)
         self._running = True
         self.get_latency(100)
+        
+        # Ziel Zeitabstand zwischen zwei Frames in Sekunden (bei 30 fps -> 1/30 -> 33ms)
+        frame_interval = 1.0 / self.fps
+        # Soll Zeitpunkt des nächsten Frames wird nach jedem Frame berechnet
+        next_frame_time = time.time()
+        # Zähler für FPS-Messung
+        fps_counter = 0
+        fps_timer = time.time()
+
         try:
             while self._running and not stop_event.is_set():
                 try:
@@ -200,7 +209,14 @@ class TiefenCamLogger(Logger):
                     ts = time.time() - self.mean_latency / 1e9
 
                     if status:
-                        # Daten aus dem Frame werden extrahiert
+                        # Alle 5 Sekunden die tatsächlichen FPS ausgeben
+                        fps_counter += 1
+                        elapsed = time.time() - fps_timer
+                        if elapsed >= 5.0:
+                            print(f"ToF FPS: {fps_counter / elapsed:.1f}")
+                            fps_counter = 0
+                            fps_timer = time.time()
+
                         image = np.array(frame.getData("depth"), copy=False)
                         image_ab = np.array(frame.getData("ab"), copy=False)
 
@@ -226,7 +242,14 @@ class TiefenCamLogger(Logger):
                             "frame_path": frame_path
                         })
 
-                        time.sleep(0.05)  # Dadurch gehen bewusst Frames verloren?
+                        # Frame-Timing: nur die verbleibende Zeit bis zum Soll-Zeitpunkt "schlafen"
+                        next_frame_time = next_frame_time + frame_interval
+                        sleep_time = next_frame_time - time.time()
+                        if sleep_time > 0:
+                            time.sleep(sleep_time)
+                        else:
+                            # Frame kam zu spät
+                            next_frame_time = time.time()
 
                 except Exception as e:
                     print("Frame processing error:", e)
