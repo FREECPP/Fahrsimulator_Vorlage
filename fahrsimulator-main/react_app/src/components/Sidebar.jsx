@@ -1,164 +1,227 @@
 import {useEffect, useState} from "react";
-import { SENSOR_WIDGETS } from "./widgetConfig";
+import {SENSOR_WIDGETS} from "./widgetConfig";
 
-function Sidebar({onAddWidget, onClearWidgets, setLayout, setWidgets, widgets, currentLayoutName, setCurrentLayoutName}) {
+const API_URL = "http://localhost:9999";
 
-    // State gehört IN die Komponente
+function Sidebar({
+                     onAddWidget,
+                     onClearWidgets,
+                     setLayout,
+                     setWidgets,
+                     widgets,
+                     layout,
+                     currentLayoutName,
+                     setCurrentLayoutName,
+                     project,
+                     setLayoutProject
+                 }) {
     const [layouts, setLayouts] = useState([]);
     const [layoutName, setLayoutName] = useState("");
 
-    // Layouts laden beim Start
-    useEffect(() => {
-        fetch("http://localhost:9999/api/layouts")
+    // 🔄 Layoutliste laden
+    const fetchLayouts = async () => {
+        try {
+            const res = await fetch(`${API_URL}/api/layouts/full-db`, {
+                credentials: "include",
+            });
 
-
-            .then(res => res.json())
-            .then(data => {
-                console.log("Layouts vom Server:", data);
-                setLayouts(data);
-            })
-            .catch(err => console.error(err));
-    }, []);
-
-    const refreshLayouts = () => {
-        fetch("http://localhost:9999/api/layouts")
-            .then(res => res.json())
-            .then(data => setLayouts(data))
-            .catch(err => console.error(err));
+            const data = await res.json();
+            setLayouts(data || []);
+        } catch (err) {
+            console.error("Fehler beim Laden der Layouts:", err);
+        }
     };
 
-    // Layout laden
-    const loadLayout = async (projectName) => {
-        if (!projectName) return;
+    useEffect(() => {
+        fetchLayouts();
+    }, [project]);
+
+    // 📥 Layout laden (projektübergreifend)
+    const loadLayout = async (projectName, layoutName) => {
+        if (!projectName || !layoutName) return;
 
         try {
-            const res = await fetch(`http://localhost:9999/api/layout/${projectName}`);
+            const res = await fetch(
+                `${API_URL}/api/layout/${projectName}/${layoutName}`,
+                {credentials: "include"}
+            );
 
             if (!res.ok) throw new Error("API Fehler");
 
             const data = await res.json();
 
-            // 🔍 DEBUG PRINT
-            console.log("=== LOAD LAYOUT DEBUG ===");
-            console.log("Project:", projectName);
-            console.log("Layout:", data.layout);
-            console.log("Widgets:", data.widgets);
-            console.log("==========================");
+            setLayout(data.layout || []);
+            setWidgets(data.widgets || []);
 
-            setLayout(data.layout);
-            setWidgets(data.widgets);
+            // 🔥 Ownership setzen
+            setLayoutProject(data.project);
 
         } catch (err) {
             console.error("Fehler beim Laden:", err);
         }
     };
 
-    const deleteSelectedLayout = async () => {
-        if (!currentLayoutName) return;
-
-        const confirmed = window.confirm(`Delete layout "${currentLayoutName}"?`);
-        if (!confirmed) return;
-
-        try {
-            const res = await fetch(`http://localhost:9999/api/layout/${currentLayoutName}`, {
-                method: "DELETE",
-            });
-
-            if (!res.ok) throw new Error("API Fehler");
-
-            setCurrentLayoutName("");
-            setLayout([]);
-            setWidgets([]);
-            refreshLayouts();
-        } catch (err) {
-            console.error("Fehler beim Loeschen:", err);
-        }
-    };
-
+    // 💾 Save Layout
     const saveLayoutAs = async () => {
         const trimmedName = layoutName.trim();
-        if (!trimmedName) return;
-
-        const layoutPayload = (widgets || []).map((widget) => ({
-            i: widget.i,
-            x: widget.x,
-            y: widget.y,
-            w: widget.w,
-            h: widget.h,
-        }));
+        if (!project || !trimmedName) return;
 
         try {
-            const res = await fetch(`http://localhost:9999/api/layout/${encodeURIComponent(trimmedName)}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({
-                    layout: layoutPayload,
-                    widgets: widgets || [],
-                }),
-            });
+            const res = await fetch(
+                `${API_URL}/api/layout/${project}/${trimmedName}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        layout,
+                        widgets,
+                    }),
+                }
+            );
 
             if (!res.ok) throw new Error("API Fehler");
 
-            setCurrentLayoutName(trimmedName);
+            setCurrentLayoutName(`${project}::${trimmedName}`);
             setLayoutName("");
-            refreshLayouts();
+            fetchLayouts();
+
         } catch (err) {
             console.error("Fehler beim Speichern:", err);
         }
     };
 
+    // 🗑 Delete Layout
+    const deleteSelectedLayout = async () => {
+        if (!currentLayoutName) return;
+
+        const parts = currentLayoutName.split("::");
+
+        // 🔥 Fallback falls kein "::" vorhanden
+        const layoutProjectName = parts.length === 2 ? parts[0] : project;
+        const layoutNameOnly = parts.length === 2 ? parts[1] : parts[0];
+
+        // ❌ Fremdes Layout blockieren
+        if (layoutProjectName !== project) {
+            alert("Du kannst nur Layouts aus deinem eigenen Projekt löschen!");
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Delete layout "${layoutNameOnly}"?`
+        );
+        if (!confirmed) return;
+
+        try {
+            const res = await fetch(
+                `${API_URL}/api/layout/${project}/${layoutNameOnly}`,
+                {
+                    method: "DELETE",
+                    credentials: "include",
+                }
+            );
+
+            if (!res.ok) throw new Error("API Fehler");
+
+            // 🔥 Reset UI nach Delete
+            setCurrentLayoutName("");
+            setLayout([]);
+            setWidgets([]);
+
+            // 🔄 Liste neu laden
+            fetchLayouts();
+
+        } catch (err) {
+            console.error("Fehler beim Löschen:", err);
+        }
+    };
+    // 🔥 Helpers
+    const isForeignLayout =
+        currentLayoutName &&
+        currentLayoutName.split("::")[0] !== project;
+
+    const isSameNameAsLoaded =
+        currentLayoutName &&
+        layoutName &&
+        currentLayoutName.split("::")[1] === layoutName.trim();
 
     return (
         <aside className="sidebar">
             <h2>Widget Library</h2>
             <p>Add widgets and arrange them by drag and resize.</p>
 
-      <div className="sidebar-actions">
-        {SENSOR_WIDGETS.map((sensor) => (
-          <button key={sensor.key} onClick={() => onAddWidget(sensor.key)}>
-            Add {sensor.label}
-          </button>
-        ))}
-      </div>
+            <div className="sidebar-actions">
+                {SENSOR_WIDGETS.map((sensor) => (
+                    <button key={sensor.key} onClick={() => onAddWidget(sensor.key)}>
+                        Add {sensor.label}
+                    </button>
+                ))}
+            </div>
 
             <button className="danger" onClick={onClearWidgets}>
                 Clear Dashboard
             </button>
 
-            {/* NEU: Dropdown */}
             <div className="sidebar-bottom">
                 <h3>Layouts</h3>
+
                 <div className="layout-current">
                     Current layout: {currentLayoutName || "-"}
                 </div>
+
+                {/* 🔥 Hinweis */}
+                {isForeignLayout && (
+                    <div style={{color: "orange", fontSize: "0.9em", margin: "12px 0"}}>
+                        Dieses Layout gehört zu einem anderen Projekt. Du kannst es unter einem anderen Namen speichern
+                    </div>
+                )}
+
                 <input
                     type="text"
                     placeholder="Layout name"
                     value={layoutName}
                     onChange={(e) => setLayoutName(e.target.value)}
                 />
-                <button onClick={saveLayoutAs} disabled={!layoutName.trim()}>
-                    Save Layout
+
+                <button
+                    onClick={saveLayoutAs}
+                    disabled={
+                        !layoutName.trim() ||
+                        (isForeignLayout && isSameNameAsLoaded)
+                    }
+                >
+                    {isForeignLayout ? "Save as new layout" : "Save Layout"}
                 </button>
+
                 <select
-                    value={currentLayoutName}
+                    value={currentLayoutName || ""}
                     onChange={(e) => {
-                        const nextLayout = e.target.value;
-                        setCurrentLayoutName(nextLayout);
-                        loadLayout(nextLayout);
+                        const value = e.target.value;
+                        setCurrentLayoutName(value);
+
+                        if (!value) return;
+
+                        const [projectName, layoutNameOnly] = value.split("::");
+
+                        loadLayout(projectName, layoutNameOnly);
                     }}
                 >
                     <option value="">Layout auswählen</option>
+
                     {layouts.map((l) => (
-                        <option key={l.project_name} value={l.project_name}>
-                            {l.project_name}
+                        <option key={l.id} value={`${l.project_name}::${l.name}`}>
+                            {l.name} ({l.project_name})
                         </option>
                     ))}
                 </select>
-                <button className="danger" onClick={deleteSelectedLayout} disabled={!currentLayoutName}>
+
+                <button
+                    className="danger"
+                    onClick={deleteSelectedLayout}
+                    disabled={!currentLayoutName || isForeignLayout}
+                >
                     Delete Layout
                 </button>
             </div>

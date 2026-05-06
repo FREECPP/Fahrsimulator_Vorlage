@@ -1,160 +1,144 @@
-import {useEffect, useMemo, useRef, useState} from "react"
-import {io} from "socket.io-client"
-import DashboardGrid from "./components/DashboardGrid"
-import Sidebar from "./components/Sidebar"
-import { getDefaultMode, getSensorTitle } from "./components/widgetConfig"
-import { getPreferredWidgetSize } from "./components/widgetSizing"
-import "./App.css"
+import React, {useState, useEffect} from "react";
+import "./App.css";
+import ProjectTable from "./components/ProjectTable.jsx";
+import {useNavigate} from "react-router-dom";
+import {ToastContainer, toast} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:9999"
-const CURRENT_LAYOUT_STORAGE_KEY = "fahrsimulator-current-layout"
+import {useDropzone} from "react-dropzone";
 
-const DEFAULT_WIDGET_LAYOUT = [
-  { view: "silab", x: 0, y: 0 },
-  { view: "eyetracker", x: 6, y: 0 },
-  { view: "tof", x: 0, y: 3 },
-  { view: "rgb_front", x: 4, y: 3 },
-  { view: "rgb_back", x: 8, y: 3 },
-  { view: "shimmer", x: 0, y: 6 },
-]
+export default function ProjectManager() {
+    const navigate = useNavigate();
+    const [participants, setParticipants] = useState([]);
+    const [_selectedProject, setSelectedProject] = useState("");
+    const [confirmedProject, setConfirmedProject] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [newParticipantName, setNewParticipantName] = useState("");
 
-function createWidget(view) {
-  const id = `${Date.now()}-${Math.round(Math.random() * 10000)}`
-  const mode = getDefaultMode(view)
-  const preferredSize = getPreferredWidgetSize(view, mode)
-
-  return {
-    i: id,
-    x: 0,
-    y: Infinity,
-    w: preferredSize.w,
-    h: preferredSize.h,
-    view,
-    mode,
-    title: getSensorTitle(view),
-  }
-}
-
-function createDefaultWidgets() {
-  return DEFAULT_WIDGET_LAYOUT.map(({ view, x, y }) => ({
-    ...createWidget(view),
-    x,
-    y,
-  }))
-}
-
-
-function getDefaultHorizontalPosition(widgetCount, widgetWidth = 4, totalCols = 12) {
-    const widgetsPerRow = Math.max(1, Math.floor(totalCols / widgetWidth))
-    const slot = widgetCount % widgetsPerRow
-    return slot * widgetWidth
-}
-
-function App() {
-  const socketRef = useRef(null)
-  const [widgets, setWidgets] = useState([])
-  const [layout, setLayout] = useState([])
-  const [layoutReady, setLayoutReady] = useState(false)
-  const [currentLayoutName, setCurrentLayoutName] = useState("")
-  const [connected, setConnected] = useState(false)
-  const [running, setRunning] = useState(false)
-  const [sensorData, setSensorData] = useState({})
-  const [lastPacketTime, setLastPacketTime] = useState(null)
-
-    useEffect(() => {
-        const socket = io(SOCKET_URL, {
-            transports: ["websocket", "polling"],
-            reconnection: true,
-        })
-
-        socket.on("connect", () => setConnected(true))
-        socket.on("disconnect", () => setConnected(false))
-        socket.on("is_running", (value) => setRunning(Boolean(value)))
-        socket.on("sensor_update", (payload) => {
-            setSensorData(payload || {})
-            setLastPacketTime(new Date())
-        })
-
-        socketRef.current = socket
-
-        return () => {
-            socket.close()
-            socketRef.current = null
-        }
-    }, [])
-
-    const API_URL = "http://localhost:9999"
-    const PROJECT = "demo3"
-
-    useEffect(() => {
-      const fetchLayout = async () => {
-        const savedLayoutName =
-          typeof window === "undefined"
-            ? ""
-            : window.localStorage.getItem(CURRENT_LAYOUT_STORAGE_KEY) || ""
-        const layoutNameToLoad = savedLayoutName || PROJECT
+    // 🔥 Teilnehmer laden
+    const loadParticipants = async (projectId) => {
+        const url = `http://localhost:9999/api/participants/${projectId}`
 
         try {
-          const res = await fetch(`http://localhost:9999/api/layout/${layoutNameToLoad}`, {
-            credentials: "include",
-          })
+            const res = await fetch(url)
 
-          const data = await res.json()
+            if (!res.ok) {
+                console.error("❌ Teilnehmer-Request fehlgeschlagen:", res.status)
+                return
+            }
 
-          if (data.widgets?.length > 0) {
-            setWidgets(data.widgets);
-          } else {
-            setWidgets(createDefaultWidgets())
-          }
+            const data = await res.json()
+            setParticipants(data)
 
-          if (data.layout?.length > 0) {
-            setLayout(data.layout);
-          } else {
-            setLayout([])
-          }
-
-          setCurrentLayoutName(layoutNameToLoad)
         } catch (err) {
-          console.error("Fehler beim Laden:", err)
-          setWidgets(createDefaultWidgets())
-        } finally {
-          setLayoutReady(true)
+            console.error("❌ Fetch Fehler (Participants):", err)
         }
-      }
-
-      fetchLayout()
-    }, [])
+    }
 
     useEffect(() => {
-      if (typeof window === "undefined") return
+        if (!confirmedProject?.id) {
+            console.warn("⚠️ Kein gültiges Projekt:", confirmedProject)
+            return
+        }
 
-      if (currentLayoutName) {
-        window.localStorage.setItem(CURRENT_LAYOUT_STORAGE_KEY, currentLayoutName)
-      } else {
-        window.localStorage.removeItem(CURRENT_LAYOUT_STORAGE_KEY)
-      }
-    }, [currentLayoutName])
+        loadParticipants(confirmedProject.id)
+    }, [confirmedProject])
 
-    const handleStart = () => {
-        if (!socketRef.current || !connected || running) return
-        // This event marks the start point for logging sessions on the backend.
-        socketRef.current.emit("start_recording")
-    }
+    // 🔥 DELETE
+    const handleDeleteParticipant = (id) => {
+        if (!window.confirm("Sind Sie sich sicher, dass Sie den Probanden und dessen Daten löschen wollen?")) {
+            return;
+        }
 
-    const handleStop = () => {
-        if (!socketRef.current || !connected || !running) return
-        // This event marks the end point for logging sessions on the backend.
-        socketRef.current.emit("stop_recording")
-    }
+        fetch(`http://localhost:9999/api/participant/${id}`, {
+            method: "DELETE"
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setParticipants(prev => prev.filter(p => p.id !== id));
+                    toast.success("Participant gelöscht");
+                } else {
+                    toast.error(data.message);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                toast.error("Fehler beim Löschen");
+            });
+    };
 
-  const packetLabel = useMemo(() => {
-    if (!lastPacketTime) return "no packets yet"
-    return lastPacketTime.toLocaleTimeString()
-  }, [lastPacketTime])
+    // 🔥 Upload
+    const onDrop = (acceptedFiles) => {
+        if (!confirmedProject) {
+            toast.error("Bitte zuerst ein Projekt auswählen");
+            return;
+        }
 
-  const resetDashboardLayout = () => {
-    setWidgets(createDefaultWidgets())
-  }
+        const formData = new FormData();
+
+        acceptedFiles.forEach(file => {
+            formData.append("files", file);
+            formData.append("paths", file.webkitRelativePath || file.name);
+        });
+
+        formData.append("project_id", confirmedProject.id);
+
+        fetch("http://localhost:9999/api/upload", {
+            method: "POST",
+            body: formData
+        })
+            .then(res => res.json())
+            .then(() => {
+                toast.success("Upload erfolgreich");
+                loadParticipants(confirmedProject.id);
+            })
+            .catch(err => {
+                console.error(err);
+                toast.error("Upload fehlgeschlagen");
+            });
+    };
+
+    // 🔥 Create Participant
+    const handleCreateParticipant = () => {
+        if (!newParticipantName.trim()) {
+            toast.error("Bitte Namen eingeben");
+            return;
+        }
+
+        if (!confirmedProject) {
+            toast.error("Kein Projekt ausgewählt");
+            return;
+        }
+
+        fetch("http://localhost:9999/api/participant/create", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: newParticipantName,
+                project_id: confirmedProject.id
+            })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    toast.success("Participant erstellt");
+                    setShowModal(false);
+                    setNewParticipantName("");
+                    loadParticipants(confirmedProject.id);
+                } else {
+                    toast.error(data.message);
+                }
+            })
+            .catch(() => toast.error("Fehler beim Erstellen"));
+    };
+
+    const {getRootProps, getInputProps, isDragActive} = useDropzone({
+        onDrop,
+        multiple: true
+    });
 
     return (
         <div className="app-shell">
@@ -186,19 +170,95 @@ function App() {
                     <div>
                         <h1>Fahrsimulator Dashboard</h1>
                     </div>
-                    <div className="topbar-right">
-                        <div className="simulation-controls">
-                            <button className="control-btn start" onClick={handleStart}
-                                    disabled={!connected || running}>
-                                Start Simulation
-                            </button>
-                            <button className="control-btn stop" onClick={handleStop} disabled={!connected || !running}>
-                                Stop Simulation
-                            </button>
-              <button className="control-btn reset" onClick={resetDashboardLayout}>
-                Reset Layout
-              </button>
-                        </div>
+
+                    <div className="card">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th className="play-column"></th>
+                                <th>Name</th>
+                                <th>Pfad</th>
+                                <th>Letzter Aufruf</th>
+                                <th className="right">Runs</th>
+                                <th></th>
+                            </tr>
+                            </thead>
+
+                            <tbody>
+                            {participants.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" style={{textAlign: "center"}}>
+                                        Keine Teilnehmer gefunden
+                                    </td>
+                                </tr>
+                            ) : (
+                                participants.map(p => (
+                                    <tr key={p.id}>
+
+                                        {/* ▶ Play Button (eigene Spalte) */}
+                                        <td className="play-column">
+                                            <button
+                                                className="play-btn"
+                                                onClick={() => {
+                                                    const fullPath = p.path;
+
+                                                    console.log("👉 Öffne Dashboard mit:", fullPath);
+
+                                                    navigate("/dashboard", {
+                                                        state: {
+                                                            project: confirmedProject,
+                                                            participant: p,
+                                                            path: fullPath
+                                                        }
+                                                    });
+                                                }}
+                                            >
+                                                ▶
+                                            </button>
+                                        </td>
+
+                                        {/* Name */}
+                                        <td>
+                                            {p.name}
+                                        </td>
+
+                                        {/* Pfad */}
+                                        <td className="path-cell" title={p.path}>
+                                            {p.path}
+                                        </td>
+
+                                        {/* Last Run */}
+                                        <td>
+                                            {p.last_run
+                                                ? new Date(p.last_run).toLocaleDateString()
+                                                : "—"}
+                                        </td>
+
+                                        {/* Runs */}
+                                        <td className="right">{p.runs}</td>
+
+                                        {/* Delete */}
+                                        <td>
+                                            <button
+                                                className="delete-btn"
+                                                onClick={() => handleDeleteParticipant(p.id)}
+                                            >
+                                                🗑️
+                                            </button>
+                                        </td>
+
+                                    </tr>
+                                ))
+                            )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="center">
+                        <button className="btn primary" onClick={() => setShowModal(true)}>
+                            + Add Participant
+                        </button>
+                    </div>
 
                         <div className="badges">
               <span className={connected ? "badge ok" : "badge bad"}>
@@ -212,19 +272,21 @@ function App() {
                     </div>
                 </header>
 
-                <DashboardGrid
-                    layout={layout}
-                    setLayout={setLayout}
-                    widgets={widgets}
-                    setWidgets={setWidgets}
-                    sensorData={sensorData}
-                    connected={connected}
-                    running={running}
-                  saveEnabled={layoutReady}
-                />
-            </main>
-        </div>
-    )
+                    <div className="center">
+                        <button
+                            className="btn"
+                            onClick={() => navigate("/dashboard")}
+                        >
+                            Zum Dashboard
+                        </button>
+                    </div>
+
+                </section>
+            </div>
+
+            <ToastContainer position="bottom-center"/>
+        </main>
+    );
 }
 
 export default App

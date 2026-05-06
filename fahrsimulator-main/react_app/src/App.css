@@ -126,12 +126,10 @@
 
 .topbar h1 {
     margin: 0;
-    color: #132534;
 }
 
-.topbar p {
-    margin: 4px 0 0;
-    color: #324a5f;
+.btn.primary {
+    margin-top: 10px;
 }
 
 .topbar-right {
@@ -637,33 +635,129 @@
   border-radius: 4px;
 }
 
-.wheel-spoke-top {
-  width: 10px;
-  height: 42px;
-  transform: translate(-50%, -88%);
+/* 🔥 Tabelle */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
 }
 
-.wheel-spoke-left,
-.wheel-spoke-right {
-  width: 42px;
-  height: 10px;
+/* 🔥 Spalten sauber definieren */
+th:nth-child(1) { width: 40px; }   /* Play */
+th:nth-child(2) { width: 20%; }    /* Name */
+th:nth-child(3) { width: 45%; }    /* Pfad */
+th:nth-child(4) { width: 120px; }  /* Letzter Lauf */
+th:nth-child(5) { width: 80px; }   /* Runs */
+th:nth-child(6),
+td:nth-child(6) {
+    width: 60px;
+    text-align: center; /* 👉 mittig */
 }
 
-.wheel-spoke-left {
-  transform: translate(-92%, -50%);
+/* Button exakt zentriert */
+.delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto; /* 👉 perfekt mittig */
+}
+.delete-btn:hover{
+    background: #ef5858;
+}
+th, td {
+    padding: 14px;
+    border-top: 1px solid #eee;
+    text-align: left; /* 🔥 alles linksbündig */
 }
 
-.wheel-spoke-right {
-  transform: translate(-8%, -50%);
+
+th {
+    font-size: 12px;
+    color: #777;
 }
 
-.wheel-readout,
-.gauge-status-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.86rem;
+/* 🔥 Badge */
+.badge {
+    background: #eee;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* 🔥 Upload */
+.upload {
+    margin-top: 30px;
+    padding: 40px;
+    border: 2px dashed #ccc;
+    text-align: center;
+    color: #777;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.upload:hover {
+    border-color: #888;
+}
+
+.upload.active {
+    border-color: #4CAF50;
+    background-color: #f0fff4;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.dropdown {
+    border-top: 1px solid #eee;
+}
+
+/* 🔥 Pfad */
+.path-cell {
+    width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* 🔥 Play-Spalte FIX */
+.play-column {
+    width: 40px;
+    min-width: 40px;
+    text-align: center;
+    white-space: nowrap; /* verhindert Umbruch */
+}
+
+.play-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.play-btn:hover {
+    background: #65c57d;
+}
+
+/* 🔥 Last Run kompakt */
+.last-run-column {
+    width: 120px;
+}
+
+/* Modal */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .silab-gauge-panel {
@@ -687,88 +781,4 @@
   display: grid;
   justify-items: center;
   gap: 6px;
-}
-
-.pedal-label {
-  font-weight: 600;
-  color: #2f465c;
-  font-size: 0.84rem;
-}
-
-.pedal-track {
-  position: relative;
-  width: 28px;
-  height: 112px;
-  border-radius: 999px;
-  border: 1px solid #bccfe0;
-  background: linear-gradient(180deg, #f3f8fc, #dbe8f3);
-  overflow: hidden;
-}
-
-.pedal-fill {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  transition: height 110ms linear;
-}
-
-.gas-fill {
-  background: linear-gradient(180deg, #63d39c, #268d5d);
-}
-
-.brake-fill {
-  background: linear-gradient(180deg, #ff8a75, #bf3a2e);
-}
-
-.pedal-value {
-  font-size: 0.83rem;
-  color: #20384e;
-}
-
-.empty-state {
-    min-height: 240px;
-    border: 2px dashed #a9b8c8;
-    border-radius: 12px;
-    display: grid;
-    place-items: center;
-    text-align: center;
-    color: #30485d;
-    background: #f5f9fc;
-}
-
-@media (max-width: 1024px) {
-    .app-shell {
-        grid-template-columns: 1fr;
-    }
-
-    .sidebar {
-        border-right: 0;
-        border-bottom: 1px solid #d5d9df;
-    }
-
-    .topbar {
-        flex-direction: column;
-    }
-
-    .topbar-right {
-        justify-items: stretch;
-    }
-
-    .simulation-controls {
-        width: 100%;
-    }
-
-  .control-btn {
-    flex: 1;
-  }
-
-  .silab-cockpit,
-  .silab-cockpit.pedals-only {
-    grid-template-columns: 1fr;
-  }
-
-  .shimmer-primary-grid {
-    grid-template-columns: 1fr;
-  }
 }

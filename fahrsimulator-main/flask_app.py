@@ -18,7 +18,9 @@ from multiprocessing import Queue
 from typing import Optional
 from queue import Empty
 
-from flask_blueprints.verzeichnis import verzeichnis_bp
+# from flask_blueprints.verzeichnis import verzeichnis_bp
+from controllers.projectController import verzeichnis_bp
+from controllers.layoutController import layout_bp
 from extensions import db
 from dbModels.dashboardLayoutDB import dashboardLayout
 
@@ -34,10 +36,10 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
 app.register_blueprint(verzeichnis_bp, url_prefix="/")
+app.register_blueprint(layout_bp)
 socketio = SocketIO(app, cors_allowed_origins="*")
 port = int(os.getenv('PORT', 9999))
 host = "0.0.0.0"
-
 
 # ==================================================================================
 # Initialising Database
@@ -47,7 +49,6 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db.init_app(app)
 DB_PATH = "app.db"
-dummyProject = "demo3"
 
 # DB erstellen falls nicht vorhanden
 if app.debug:
@@ -70,8 +71,8 @@ data_queues = {
     "eyetracker": Queue(maxsize=1),
     "silab": Queue(maxsize=1),
     "tof": Queue(maxsize=1),
-    "rgb": Queue(maxsize=1), 
-    "pose_queue": Queue(maxsize=1), 
+    "rgb": Queue(maxsize=1),
+    "pose_queue": Queue(maxsize=1),
     "rgb2": Queue(maxsize=1),
     "rgb_frame2": Queue(maxsize=1),
     "tof_scelet": Queue(maxsize=1),
@@ -85,6 +86,7 @@ data_queues = {
 
 }
 
+
 def deleteAndRecreateDB():
     with app.app_context():
         # Alte DB löschen (falls vorhanden)
@@ -97,23 +99,24 @@ def deleteAndRecreateDB():
         print("✅ Neue DB erstellt")
 
 
-
 # ==================================================================================
 # Helper function for loading 'config.ini' Data
 # ==================================================================================
 def load_config():
     config = configparser.ConfigParser()
     config_path = os.path.join(os.path.dirname(__file__), 'config.ini')
-    
+
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"config.ini not found: {config_path}")
     config.read(config_path)
     global port, host
     try:
-        #port = config.get('General', 'PORT')
+        # port = config.get('General', 'PORT')
         host = str(config.get('General', 'HOST'))
     except Exception as e:
-        printlog(f"Data from 'config.ini' couldn't be read. Versichern Sie sich, dass PORT und HOST unter [General] existieren. {e}", "error")
+        printlog(
+            f"Data from 'config.ini' couldn't be read. Versichern Sie sich, dass PORT und HOST unter [General] existieren. {e}",
+            "error")
 
     try:
         base_dir = config.get('General', 'BASE_DIR')
@@ -121,70 +124,6 @@ def load_config():
     except Exception as e:
         printlog(f"Be sure 'config.ini', BASE_DIR under [General] exists and the path is valid. {e}", "error")
 
-@app.route("/api/layout/<project_name>", methods=["GET", "POST", "DELETE"])
-def handle_layout(project_name):
-
-    if request.method == "POST":
-        data = request.get_json()
-
-        layout_data = data.get("layout", [])
-        widgets = data.get("widgets", [])
-
-        try:
-            existing = dashboardLayout.query.filter_by(project_name=project_name).first()
-
-            if existing:
-                existing.layout = layout_data
-                existing.widgets = widgets
-            else:
-                new_layout = dashboardLayout(
-                    project_name=project_name,
-                    layout=layout_data,
-                    widgets=widgets
-                )
-                db.session.add(new_layout)
-
-            db.session.commit()
-
-            return jsonify({"status": "saved"}), 200
-
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-    if request.method == "GET":
-        layout = dashboardLayout.query.filter_by(project_name=project_name).first()
-
-        if not layout:
-            return jsonify({"layout": [], "widgets": []})
-
-        return jsonify({
-            "layout": layout.layout,
-            "widgets": layout.widgets
-        })
-
-    if request.method == "DELETE":
-        try:
-            existing = dashboardLayout.query.filter_by(project_name=project_name).first()
-            if not existing:
-                return jsonify({"status": "not_found"}), 404
-
-            db.session.delete(existing)
-            db.session.commit()
-            return jsonify({"status": "deleted"}), 200
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
-
-@app.route("/api/layouts", methods=["GET"])
-def get_all_layouts():
-    layouts = dashboardLayout.query.all()
-
-    result = []
-    for l in layouts:
-        result.append({
-            "project_name": l.project_name
-        })
-
-    return jsonify(result)
 
 # ==================================================================================
 # Index.html
@@ -193,6 +132,7 @@ def get_all_layouts():
 def index():
     return render_template("index.html")
 
+
 # Nicht mehr vorhanden
 @app.route("/stop_logging", methods=["POST"])
 def stop_logging():
@@ -200,9 +140,11 @@ def stop_logging():
     return render_template("index.html")
 
 
+
 @app.route("/dashboard")
 def show_dashboard():
     return render_template("dashboard.html")
+
 
 # ==================================================================================
 # Dashboard.html
@@ -212,6 +154,7 @@ def handle_connect():
     server_ip = get_server_ip()
     printlog(f"Client connected to server {server_ip}:{port}")
 
+
 def get_server_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -220,6 +163,8 @@ def get_server_ip():
     finally:
         s.close()
     return ip
+
+
 # Start-Button handling on 'dashboard.html'
 @socketio.on('start_recording')
 def handle_start_recording():
@@ -229,7 +174,7 @@ def handle_start_recording():
         return
 
     printlog(message="Starte Log-Manager", debug_lvl="info", std_print=True)
-    from flask_blueprints.verzeichnis import project_path
+    from controllers.projectController import project_path
     printlog(message=str(project_path), debug_lvl="info", std_print=True)
 
     try:
@@ -253,6 +198,7 @@ def handle_start_recording():
         stream_thread = threading.Thread(target=mock_sensor_stream, args=(stream_stop_event,), daemon=True)
         stream_thread.start()
 
+
 # Stop-Button handling on 'dashboard.html'
 @socketio.on('stop_recording')
 def handle_stop_recording():
@@ -265,7 +211,7 @@ def handle_stop_recording():
 
     if logging_manager:
         logging_manager._stop_logger_processes()
-        #logging_manager.stop_logging()
+        # logging_manager.stop_logging()
         logging_manager = None
     is_running = False
     socketio.emit('is_running', is_running)
@@ -277,8 +223,8 @@ def encode_depth_to_jpg(depth: np.ndarray) -> Optional[str]:
         return None
     depth = np.nan_to_num(depth)
 
-    #depth_norm = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-    #depth_color = cv2.applyColorMap(depth_norm, cv2.COLORMAP_JET)
+    # depth_norm = cv2.normalize(depth, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+    # depth_color = cv2.applyColorMap(depth_norm, cv2.COLORMAP_JET)
 
     ok, buffer = cv2.imencode(".jpg", depth)
     if not ok:
@@ -300,6 +246,7 @@ def encode_rgb_stream_frame(rgb_frame) -> Optional[str]:
     if not ok:
         return None
     return base64.b64encode(buffer.tobytes()).decode()
+
 
 # Main function to send data per 'socket.emit()' to the dashboard.html
 def read_queue(logging_manager, stop_event):
@@ -366,6 +313,7 @@ def read_queue(logging_manager, stop_event):
                 fahrweise = rasante_fahrweise_model_queue.get_nowait()
                 if fahrweise is not None:
                     latest_sensor_data["fahrweise"] = fahrweise
+                    has_update = True
                     has_update = True
             except Empty:
                 pass
@@ -500,7 +448,7 @@ def mock_sensor_stream(stop_event):
         sd1_sd2 = float(sd1 / max(sd2, 1e-6))
         s_val = float(math.pi * sd1 * sd2)
         breathing_rate = float(max(0.08, min(0.45, 0.22 + 0.05 * math.sin(t * 0.18))))
-        
+
         sensor_data = {
             "rgb_frame": _mock_image_b64("RGB Front", t),
             "tof_frame": None,
@@ -550,6 +498,7 @@ def mock_sensor_stream(stop_event):
         }
         socketio.emit("sensor_update", sensor_data)
         time.sleep(0.1)
+
 
 # Main entry-point for application
 if __name__ == '__main__':
