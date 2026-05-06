@@ -174,7 +174,7 @@ def handle_start_recording():
         return
 
     printlog(message="Starte Log-Manager", debug_lvl="info", std_print=True)
-    from flask_blueprints.verzeichnis import project_path
+    from controllers.projectController import project_path
     printlog(message=str(project_path), debug_lvl="info", std_print=True)
 
     try:
