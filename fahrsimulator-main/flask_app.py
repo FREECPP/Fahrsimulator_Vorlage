@@ -20,6 +20,9 @@ from queue import Empty
 from flask_cors import CORS
 from extensions import db
 
+from utils.WakeOnLan import wake_on_lan
+from utils.sim_start import start_silab_prozess
+
 from controllers.projectController import verzeichnis_bp
 from extensions import db
 from dbModels.dashboardLayoutDB import dashboardLayout
@@ -360,8 +363,24 @@ def handle_stop_recording():
     is_running = False
     socketio.emit('is_running', is_running)
 
+@socketio.on('start_sensor')
+def handle_start_sensor():
+    pass
 
-# Hilfsfunktion, um Tiefendaten (Distanzwerte) für die Live-Vorschau in ein JPEG umzuwandeln
+@socketio.on('start_logging')
+def handle_start_logging():
+    pass
+
+@socketio.on('start_simulation')
+def handle_start_simulation():
+    start_silab_prozess()
+
+@socketio.on('start_pc')
+def handle_start_pc():
+    wake_on_lan("BC:0F:F3:C4:C4:70")
+
+#
+#  Hilfsfunktion, um Tiefendaten (Distanzwerte) für die Live-Vorschau in ein JPEG umzuwandeln
 def encode_depth_to_jpg(depth: np.ndarray) -> Optional[str]:
 
     # 1. Sicherheitscheck: Wenn keine Daten da sind, brich ab
