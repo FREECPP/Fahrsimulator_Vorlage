@@ -1,48 +1,47 @@
 import {useEffect, useMemo, useRef, useState} from "react"
+import {useLocation} from "react-router-dom"
 import {io} from "socket.io-client"
 import DashboardGrid from "./DashboardGrid"
 import Sidebar from "./Sidebar"
-import { getDefaultMode, getSensorTitle } from "./widgetConfig"
-import { getPreferredWidgetSize } from "./widgetSizing"
+import {getDefaultMode, getSensorTitle} from "./widgetConfig"
+import {getPreferredWidgetSize} from "./widgetSizing"
 import "./../styles/DashboardStyle.css"
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:9999"
-const CURRENT_LAYOUT_STORAGE_KEY = "fahrsimulator-current-layout"
+const API_URL = "http://localhost:9999"
 
 const DEFAULT_WIDGET_LAYOUT = [
-  { view: "silab", x: 0, y: 0 },
-  { view: "eyetracker", x: 6, y: 0 },
-  { view: "tof", x: 0, y: 3 },
-  { view: "rgb_front", x: 4, y: 3 },
-  { view: "rgb_back", x: 8, y: 3 },
-  { view: "shimmer", x: 0, y: 6 },
+    {view: "silab", x: 0, y: 0},
+    {view: "eyetracker", x: 6, y: 0},
+    {view: "tof", x: 0, y: 3},
+    {view: "rgb_front", x: 4, y: 3},
+    {view: "rgb_back", x: 8, y: 3},
+    {view: "shimmer", x: 0, y: 6},
 ]
 
 function createWidget(view) {
-  const id = `${Date.now()}-${Math.round(Math.random() * 10000)}`
-  const mode = getDefaultMode(view)
-  const preferredSize = getPreferredWidgetSize(view, mode)
-
-  return {
-    i: id,
-    x: 0,
-    y: Infinity,
-    w: preferredSize.w,
-    h: preferredSize.h,
-    view,
-    mode,
-    title: getSensorTitle(view),
-  }
+    const id = `${Date.now()}-${Math.round(Math.random() * 10000)}`
+    const mode = getDefaultMode(view)
+    const preferredSize = getPreferredWidgetSize(view, mode)
+    return {
+        i: id,
+        x: 0,
+        y: Infinity,
+        w: preferredSize.w,
+        h: preferredSize.h,
+        view,
+        mode,
+        title: getSensorTitle(view),
+    }
 }
 
 function createDefaultWidgets() {
-  return DEFAULT_WIDGET_LAYOUT.map(({ view, x, y }) => ({
-    ...createWidget(view),
-    x,
-    y,
-  }))
+    return DEFAULT_WIDGET_LAYOUT.map(({view, x, y}) => ({
+        ...createWidget(view),
+        x,
+        y,
+    }))
 }
-
 
 function getDefaultHorizontalPosition(widgetCount, widgetWidth = 4, totalCols = 12) {
     const widgetsPerRow = Math.max(1, Math.floor(totalCols / widgetWidth))
@@ -50,22 +49,49 @@ function getDefaultHorizontalPosition(widgetCount, widgetWidth = 4, totalCols = 
     return slot * widgetWidth
 }
 
-function App() {
-  const socketRef = useRef(null)
-  const [widgets, setWidgets] = useState([])
-  const [layout, setLayout] = useState([])
-  const [layoutReady, setLayoutReady] = useState(false)
-  const [currentLayoutName, setCurrentLayoutName] = useState("")
-  const [connected, setConnected] = useState(false)
-  const [running, setRunning] = useState(false)
-  const [sensorData, setSensorData] = useState({})
-  const [lastPacketTime, setLastPacketTime] = useState(null)
+function Dashboard() {
+    const socketRef = useRef(null)
+    const location = useLocation()
 
+    const project = location.state?.project
+    const projectName = project?.name
+
+    const [widgets, setWidgets] = useState([])
+    const [layout, setLayout] = useState([])
+    const [layoutReady, setLayoutReady] = useState(false)
+    const [layoutProject, setLayoutProject] = useState(null)
+    const [currentLayoutName, setCurrentLayoutName] = useState(null)
+
+    const [connected, setConnected] = useState(false)
+    const [running, setRunning] = useState(false)
+    const [sensorData, setSensorData] = useState({})
+    const [lastPacketTime, setLastPacketTime] = useState(null)
+
+    // 🔥 INIT
     useEffect(() => {
-        const socket = io(SOCKET_URL, {
-            transports: ["websocket", "polling"],
-            reconnection: true,
-        })
+        if (!projectName) return
+
+        const initLayout = async () => {
+            try {
+                const res = await fetch(`${API_URL}/api/layouts/${projectName}`)
+                const data = await res.json()
+
+                if (data.length > 0) {
+                    setCurrentLayoutName(`${projectName}::${data[0].name}`)
+                } else {
+                    setCurrentLayoutName(`${projectName}::default`)
+                }
+            } catch {
+                setCurrentLayoutName(`${projectName}::default`)
+            }
+        }
+
+        initLayout()
+    }, [projectName])
+
+    // 🔌 Socket
+    useEffect(() => {
+        const socket = io(SOCKET_URL)
 
         socket.on("connect", () => setConnected(true))
         socket.on("disconnect", () => setConnected(false))
@@ -77,84 +103,89 @@ function App() {
 
         socketRef.current = socket
 
-        return () => {
-            socket.close()
-            socketRef.current = null
-        }
+        return () => socket.close()
     }, [])
 
-    const API_URL = "http://localhost:9999"
-    const PROJECT = "demo3"
-
+    // 📥 🔥 KORREKTES LADEN (egal welches Projekt)
     useEffect(() => {
-      const fetchLayout = async () => {
-        const savedLayoutName =
-          typeof window === "undefined"
-            ? ""
-            : window.localStorage.getItem(CURRENT_LAYOUT_STORAGE_KEY) || ""
-        const layoutNameToLoad = savedLayoutName || PROJECT
+        if (!currentLayoutName) return
+
+        const [layoutProjectName, layoutNameOnly] =
+            currentLayoutName.split("::")
+
+        const fetchLayout = async () => {
+            try {
+                console.log("📥 Lade Layout:", layoutProjectName, layoutNameOnly)
+
+                const res = await fetch(
+                    `${API_URL}/api/layout/${layoutProjectName}/${layoutNameOnly}`
+                )
+
+                const data = await res.json()
+
+                setWidgets(data.widgets?.length ? data.widgets : createDefaultWidgets())
+                setLayout(data.layout?.length ? data.layout : [])
+
+                // 🔥 wichtig für Save-Logik
+                setLayoutProject(layoutProjectName)
+
+            } catch (err) {
+                console.error("❌ Fehler beim Laden:", err)
+                setWidgets(createDefaultWidgets())
+            } finally {
+                setLayoutReady(true)
+            }
+        }
+
+        fetchLayout()
+    }, [currentLayoutName])
+
+    // 💾 🔥 SAVE (nur eigenes Projekt)
+    const saveLayout = async () => {
+        if (!projectName || !currentLayoutName) return
+
+        const [layoutProjectName, layoutNameOnly] =
+            currentLayoutName.split("::")
+
+        if (layoutProjectName !== projectName) {
+            console.warn("⛔ Fremdes Layout – wird nicht gespeichert")
+            return
+        }
 
         try {
-          const res = await fetch(`http://localhost:9999/api/layout/${layoutNameToLoad}`, {
-            credentials: "include",
-          })
-
-          const data = await res.json()
-
-          if (data.widgets?.length > 0) {
-            setWidgets(data.widgets);
-          } else {
-            setWidgets(createDefaultWidgets())
-          }
-
-          if (data.layout?.length > 0) {
-            setLayout(data.layout);
-          } else {
-            setLayout([])
-          }
-
-          setCurrentLayoutName(layoutNameToLoad)
+            await fetch(
+                `${API_URL}/api/layout/${projectName}/${layoutNameOnly}`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({layout, widgets}),
+                }
+            )
         } catch (err) {
-          console.error("Fehler beim Laden:", err)
-          setWidgets(createDefaultWidgets())
-        } finally {
-          setLayoutReady(true)
+            console.error("❌ Fehler beim Speichern:", err)
         }
-      }
-
-      fetchLayout()
-    }, [])
-
-    useEffect(() => {
-      if (typeof window === "undefined") return
-
-      if (currentLayoutName) {
-        window.localStorage.setItem(CURRENT_LAYOUT_STORAGE_KEY, currentLayoutName)
-      } else {
-        window.localStorage.removeItem(CURRENT_LAYOUT_STORAGE_KEY)
-      }
-    }, [currentLayoutName])
+    }
 
     const handleStart = () => {
         if (!socketRef.current || !connected || running) return
-        // This event marks the start point for logging sessions on the backend.
         socketRef.current.emit("start_recording")
     }
 
     const handleStop = () => {
         if (!socketRef.current || !connected || !running) return
-        // This event marks the end point for logging sessions on the backend.
         socketRef.current.emit("stop_recording")
     }
 
-  const packetLabel = useMemo(() => {
-    if (!lastPacketTime) return "no packets yet"
-    return lastPacketTime.toLocaleTimeString()
-  }, [lastPacketTime])
+    const packetLabel = useMemo(() => {
+        if (!lastPacketTime) return "no packets yet"
+        return lastPacketTime.toLocaleTimeString()
+    }, [lastPacketTime])
 
-  const resetDashboardLayout = () => {
-    setWidgets(createDefaultWidgets())
-  }
+    const resetDashboardLayout = () => {
+        setWidgets(createDefaultWidgets())
+    }
 
     return (
         <div className="app-shell">
@@ -162,12 +193,14 @@ function App() {
                 setLayout={setLayout}
                 setWidgets={setWidgets}
                 widgets={widgets}
+                layout={layout}
                 currentLayoutName={currentLayoutName}
                 setCurrentLayoutName={setCurrentLayoutName}
+                project={projectName}
+                setLayoutProject={setLayoutProject} // 🔥 FIX
                 onAddWidget={(view) => {
                     setWidgets((items) => {
-                        const nextWidget = createWidget(view);
-
+                        const nextWidget = createWidget(view)
                         return [
                             ...items,
                             {
@@ -175,11 +208,13 @@ function App() {
                                 x: getDefaultHorizontalPosition(items.length, nextWidget.w),
                                 y: Math.max(...items.map((item) => item.y + item.h), 0),
                             },
-                        ];
-                    });
+                        ]
+                    })
                 }}
                 onClearWidgets={() => setWidgets([])}
+                onSaveLayout={saveLayout}
             />
+
 
             <main className="dashboard-area">
                 <header className="topbar">
@@ -211,7 +246,6 @@ function App() {
                         </div>
                     </div>
                 </header>
-
                 <DashboardGrid
                     layout={layout}
                     setLayout={setLayout}
@@ -220,11 +254,14 @@ function App() {
                     sensorData={sensorData}
                     connected={connected}
                     running={running}
-                  saveEnabled={layoutReady}
+                    saveEnabled={layoutReady}
+                    project={projectName}
+                    currentLayoutName={currentLayoutName}
+                    layoutProject={layoutProject}
                 />
             </main>
         </div>
     )
 }
 
-export default App
+export default Dashboard

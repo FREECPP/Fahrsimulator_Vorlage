@@ -1,14 +1,14 @@
 import React, {useState, useEffect} from "react";
 import "./App.css";
 import ProjectTable from "./components/ProjectTable.jsx";
-
+import {useNavigate} from "react-router-dom";
 import {ToastContainer, toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import {useDropzone} from "react-dropzone";
 
 export default function ProjectManager() {
-
+    const navigate = useNavigate();
     const [participants, setParticipants] = useState([]);
     const [_selectedProject, setSelectedProject] = useState("");
     const [confirmedProject, setConfirmedProject] = useState(null);
@@ -16,17 +16,33 @@ export default function ProjectManager() {
     const [newParticipantName, setNewParticipantName] = useState("");
 
     // 🔥 Teilnehmer laden
-    const loadParticipants = (projectId) => {
-        fetch(`http://localhost:9999/api/participants/${projectId}`)
-            .then(res => res.json())
-            .then(data => setParticipants(data))
-            .catch(err => console.error("Fehler beim Laden:", err));
-    };
+    const loadParticipants = async (projectId) => {
+        const url = `http://localhost:9999/api/participants/${projectId}`
+
+        try {
+            const res = await fetch(url)
+
+            if (!res.ok) {
+                console.error("❌ Teilnehmer-Request fehlgeschlagen:", res.status)
+                return
+            }
+
+            const data = await res.json()
+            setParticipants(data)
+
+        } catch (err) {
+            console.error("❌ Fetch Fehler (Participants):", err)
+        }
+    }
 
     useEffect(() => {
-        if (!confirmedProject) return;
-        loadParticipants(confirmedProject.id);
-    }, [confirmedProject]);
+        if (!confirmedProject?.id) {
+            console.warn("⚠️ Kein gültiges Projekt:", confirmedProject)
+            return
+        }
+
+        loadParticipants(confirmedProject.id)
+    }, [confirmedProject])
 
     // 🔥 DELETE
     const handleDeleteParticipant = (id) => {
@@ -148,8 +164,10 @@ export default function ProjectManager() {
                         <table>
                             <thead>
                             <tr>
+                                <th className="play-column"></th>
                                 <th>Name</th>
-                                <th>Last Run</th>
+                                <th>Pfad</th>
+                                <th>Letzter Aufruf</th>
                                 <th className="right">Runs</th>
                                 <th></th>
                             </tr>
@@ -158,24 +176,58 @@ export default function ProjectManager() {
                             <tbody>
                             {participants.length === 0 ? (
                                 <tr>
-                                    <td colSpan="4" style={{textAlign: "center"}}>
+                                    <td colSpan="6" style={{textAlign: "center"}}>
                                         Keine Teilnehmer gefunden
                                     </td>
                                 </tr>
                             ) : (
                                 participants.map(p => (
                                     <tr key={p.id}>
-                                        <td>{p.name}</td>
 
+                                        {/* ▶ Play Button (eigene Spalte) */}
+                                        <td className="play-column">
+                                            <button
+                                                className="play-btn"
+                                                onClick={() => {
+                                                    const fullPath = p.path;
+
+                                                    console.log("👉 Öffne Dashboard mit:", fullPath);
+
+                                                    navigate("/dashboard", {
+                                                        state: {
+                                                            project: confirmedProject,
+                                                            participant: p,
+                                                            path: fullPath
+                                                        }
+                                                    });
+                                                }}
+                                            >
+                                                ▶
+                                            </button>
+                                        </td>
+
+                                        {/* Name */}
+                                        <td>
+                                            {p.name}
+                                        </td>
+
+                                        {/* Pfad */}
+                                        <td className="path-cell" title={p.path}>
+                                            {p.path}
+                                        </td>
+
+                                        {/* Last Run */}
                                         <td>
                                             {p.last_run
                                                 ? new Date(p.last_run).toLocaleDateString()
                                                 : "—"}
                                         </td>
 
+                                        {/* Runs */}
                                         <td className="right">{p.runs}</td>
 
-                                        <td className="right">
+                                        {/* Delete */}
+                                        <td>
                                             <button
                                                 className="delete-btn"
                                                 onClick={() => handleDeleteParticipant(p.id)}
@@ -183,6 +235,7 @@ export default function ProjectManager() {
                                                 🗑️
                                             </button>
                                         </td>
+
                                     </tr>
                                 ))
                             )}
@@ -219,9 +272,19 @@ export default function ProjectManager() {
                         Drag & Drop
                     </div>
 
+                    <div className="center">
+                        <button
+                            className="btn"
+                            onClick={() => navigate("/dashboard")}
+                        >
+                            Zum Dashboard
+                        </button>
+                    </div>
+
                 </section>
             </div>
 
-            <ToastContainer position="bottom-center"/></main>
+            <ToastContainer position="bottom-center"/>
+        </main>
     );
 }

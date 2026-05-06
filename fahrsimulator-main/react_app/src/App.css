@@ -24,7 +24,6 @@ h2 {
     margin: 0;
 }
 
-/* ❌ FIX: war falsch geschrieben */
 .btn.primary {
     margin-top: 10px;
 }
@@ -135,11 +134,118 @@ h2 {
     color: white;
 }
 
+/* 🔥 Tabelle */
 table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
+/* 🔥 Spalten sauber definieren */
+th:nth-child(1) { width: 40px; }   /* Play */
+th:nth-child(2) { width: 20%; }    /* Name */
+th:nth-child(3) { width: 45%; }    /* Pfad */
+th:nth-child(4) { width: 120px; }  /* Letzter Lauf */
+th:nth-child(5) { width: 80px; }   /* Runs */
+th:nth-child(6),
+td:nth-child(6) {
+    width: 60px;
+    text-align: center; /* 👉 mittig */
+}
+
+/* Button exakt zentriert */
+.delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto; /* 👉 perfekt mittig */
+}
+.delete-btn:hover{
+    background: #ef5858;
+}
+th, td {
+    padding: 14px;
+    border-top: 1px solid #eee;
+    text-align: left; /* 🔥 alles linksbündig */
+}
+
+
+th {
+    font-size: 12px;
+    color: #777;
+}
+
+/* 🔥 Badge */
+.badge {
+    background: #eee;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+/* 🔥 Upload */
+.upload {
+    margin-top: 30px;
+    padding: 40px;
+    border: 2px dashed #ccc;
+    text-align: center;
+    color: #777;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.upload:hover {
+    border-color: #888;
+}
+
+.upload.active {
+    border-color: #4CAF50;
+    background-color: #f0fff4;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.dropdown {
+    border-top: 1px solid #eee;
+}
+
+/* 🔥 Pfad */
+.path-cell {
+    width: 45%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* 🔥 Play-Spalte FIX */
+.play-column {
+    width: 40px;
+    min-width: 40px;
+    text-align: center;
+    white-space: nowrap; /* verhindert Umbruch */
+}
+
+.play-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.play-btn:hover {
+    background: #65c57d;
+}
+
+/* 🔥 Last Run kompakt */
+.last-run-column {
+    width: 120px;
+}
+
+/* Modal */
 .modalOverlay {
     position: fixed;
     top: 0;
@@ -171,55 +277,4 @@ table {
     justify-content: flex-end;
     gap: 10px;
     margin-top: 15px;
-}
-
-th, td {
-    padding: 14px;
-    border-top: 1px solid #eee;
-    text-align: left;
-}
-
-th {
-    font-size: 12px;
-    color: #777;
-}
-
-.right {
-    text-align: right;
-}
-
-.badge {
-    background: #eee;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-}
-
-/* 🔥 Upload verbessert */
-.upload {
-    margin-top: 30px;
-    padding: 40px;
-    border: 2px dashed #ccc;
-    text-align: center;
-    color: #777;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.upload:hover {
-    border-color: #888;
-}
-
-.upload.active {
-    border-color: #4CAF50;
-    background-color: #f0fff4;
-}
-
-.clickable {
-    cursor: pointer;
-}
-
-.dropdown {
-    border-top: 1px solid #eee;
 }

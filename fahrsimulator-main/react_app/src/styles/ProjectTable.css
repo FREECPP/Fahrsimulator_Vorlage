@@ -103,7 +103,14 @@
 
     cursor: pointer;
 }
+.clickable {
+    cursor: pointer;
+    text-decoration: underline;
+}
 
+.clickable:hover {
+    color: #007bff;
+}
 .continue-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
