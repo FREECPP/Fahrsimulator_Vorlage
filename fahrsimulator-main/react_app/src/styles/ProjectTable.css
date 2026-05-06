@@ -1,0 +1,114 @@
+.project-dropdown {
+    position: relative;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+/* Nur im centered state schmal */
+.container.centered .project-dropdown {
+    max-width: 400px;
+}
+
+.input {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+}
+
+/* 🔹 Row Layout */
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.left {
+    display: flex;
+    flex-direction: column;
+}
+
+.name {
+    font-weight: 500;
+}
+
+.meta {
+    color: #888;
+    font-size: 0.85em;
+}
+
+/* 🔹 Status rechts */
+.status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.status-text {
+    font-size: 12px;
+    color: #666;
+}
+
+/* 🔹 Dropdown */
+.dropdown {
+    position: absolute;
+    width: 100%;
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+
+    background: #e1e1e1;
+    border: 1px solid #333;
+
+    list-style: none;
+    padding: 0;
+    z-index: 10;
+}
+
+.dropdown li {
+    padding: 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.dropdown li:hover {
+    background: #c8c8c8;
+}
+
+/* ❌ deaktivierte Projekte */
+.dropdown li.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Hover deaktivieren für disabled */
+.dropdown li.disabled:hover {
+    background: inherit;
+}
+
+/* 🔹 Button */
+.continue-button {
+    display: block;
+    margin: 30px auto 0;
+    padding: 8px 12px;
+
+    border: 1px solid #ccc;
+    background: #e1e1e1;
+    color: #404040;
+
+    cursor: pointer;
+}
+
+.continue-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+h2 {
+    margin-bottom: 10px;
+}
