@@ -1,227 +1,230 @@
-import React, {useState, useEffect} from "react";
-import "./App.css";
-import ProjectTable from "./components/ProjectTable.jsx";
+import {useEffect, useMemo, useRef, useState} from "react"
+import {io} from "socket.io-client"
+import DashboardGrid from "./components/DashboardGrid"
+import Sidebar from "./components/Sidebar"
+import { getDefaultMode, getSensorTitle } from "./components/widgetConfig"
+import { getPreferredWidgetSize } from "./components/widgetSizing"
+import "./App.css"
 
-import {ToastContainer, toast} from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:9999"
+const CURRENT_LAYOUT_STORAGE_KEY = "fahrsimulator-current-layout"
 
-import {useDropzone} from "react-dropzone";
+const DEFAULT_WIDGET_LAYOUT = [
+  { view: "silab", x: 0, y: 0 },
+  { view: "eyetracker", x: 6, y: 0 },
+  { view: "tof", x: 0, y: 3 },
+  { view: "rgb_front", x: 4, y: 3 },
+  { view: "rgb_back", x: 8, y: 3 },
+  { view: "shimmer", x: 0, y: 6 },
+]
 
-export default function ProjectManager() {
+function createWidget(view) {
+  const id = `${Date.now()}-${Math.round(Math.random() * 10000)}`
+  const mode = getDefaultMode(view)
+  const preferredSize = getPreferredWidgetSize(view, mode)
 
-    const [participants, setParticipants] = useState([]);
-    const [_selectedProject, setSelectedProject] = useState("");
-    const [confirmedProject, setConfirmedProject] = useState(null);
-    const [showModal, setShowModal] = useState(false);
-    const [newParticipantName, setNewParticipantName] = useState("");
+  return {
+    i: id,
+    x: 0,
+    y: Infinity,
+    w: preferredSize.w,
+    h: preferredSize.h,
+    view,
+    mode,
+    title: getSensorTitle(view),
+  }
+}
 
-    // 🔥 Teilnehmer laden
-    const loadParticipants = (projectId) => {
-        fetch(`http://localhost:9999/api/participants/${projectId}`)
-            .then(res => res.json())
-            .then(data => setParticipants(data))
-            .catch(err => console.error("Fehler beim Laden:", err));
-    };
+function createDefaultWidgets() {
+  return DEFAULT_WIDGET_LAYOUT.map(({ view, x, y }) => ({
+    ...createWidget(view),
+    x,
+    y,
+  }))
+}
+
+
+function getDefaultHorizontalPosition(widgetCount, widgetWidth = 4, totalCols = 12) {
+    const widgetsPerRow = Math.max(1, Math.floor(totalCols / widgetWidth))
+    const slot = widgetCount % widgetsPerRow
+    return slot * widgetWidth
+}
+
+function App() {
+  const socketRef = useRef(null)
+  const [widgets, setWidgets] = useState([])
+  const [layout, setLayout] = useState([])
+  const [layoutReady, setLayoutReady] = useState(false)
+  const [currentLayoutName, setCurrentLayoutName] = useState("")
+  const [connected, setConnected] = useState(false)
+  const [running, setRunning] = useState(false)
+  const [sensorData, setSensorData] = useState({})
+  const [lastPacketTime, setLastPacketTime] = useState(null)
 
     useEffect(() => {
-        if (!confirmedProject) return;
-        loadParticipants(confirmedProject.id);
-    }, [confirmedProject]);
-
-    // 🔥 DELETE
-    const handleDeleteParticipant = (id) => {
-        if (!window.confirm("Sind Sie sich sicher, dass Sie den Probanden und dessen Daten löschen wollen?")) {
-            return;
-        }
-
-        fetch(`http://localhost:9999/api/participant/${id}`, {
-            method: "DELETE"
+        const socket = io(SOCKET_URL, {
+            transports: ["websocket", "polling"],
+            reconnection: true,
         })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    setParticipants(prev => prev.filter(p => p.id !== id));
-                    toast.success("Participant gelöscht");
-                } else {
-                    toast.error(data.message);
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                toast.error("Fehler beim Löschen");
-            });
-    };
 
-    // 🔥 Upload
-    const onDrop = (acceptedFiles) => {
-        if (!confirmedProject) {
-            toast.error("Bitte zuerst ein Projekt auswählen");
-            return;
-        }
-
-        const formData = new FormData();
-
-        acceptedFiles.forEach(file => {
-            formData.append("files", file);
-            formData.append("paths", file.webkitRelativePath || file.name);
-        });
-
-        formData.append("project_id", confirmedProject.id);
-
-        fetch("http://localhost:9999/api/upload", {
-            method: "POST",
-            body: formData
+        socket.on("connect", () => setConnected(true))
+        socket.on("disconnect", () => setConnected(false))
+        socket.on("is_running", (value) => setRunning(Boolean(value)))
+        socket.on("sensor_update", (payload) => {
+            setSensorData(payload || {})
+            setLastPacketTime(new Date())
         })
-            .then(res => res.json())
-            .then(() => {
-                toast.success("Upload erfolgreich");
-                loadParticipants(confirmedProject.id);
-            })
-            .catch(err => {
-                console.error(err);
-                toast.error("Upload fehlgeschlagen");
-            });
-    };
 
-    // 🔥 Create Participant
-    const handleCreateParticipant = () => {
-        if (!newParticipantName.trim()) {
-            toast.error("Bitte Namen eingeben");
-            return;
+        socketRef.current = socket
+
+        return () => {
+            socket.close()
+            socketRef.current = null
         }
+    }, [])
 
-        if (!confirmedProject) {
-            toast.error("Kein Projekt ausgewählt");
-            return;
+    const API_URL = "http://localhost:9999"
+    const PROJECT = "demo3"
+
+    useEffect(() => {
+      const fetchLayout = async () => {
+        const savedLayoutName =
+          typeof window === "undefined"
+            ? ""
+            : window.localStorage.getItem(CURRENT_LAYOUT_STORAGE_KEY) || ""
+        const layoutNameToLoad = savedLayoutName || PROJECT
+
+        try {
+          const res = await fetch(`http://localhost:9999/api/layout/${layoutNameToLoad}`, {
+            credentials: "include",
+          })
+
+          const data = await res.json()
+
+          if (data.widgets?.length > 0) {
+            setWidgets(data.widgets);
+          } else {
+            setWidgets(createDefaultWidgets())
+          }
+
+          if (data.layout?.length > 0) {
+            setLayout(data.layout);
+          } else {
+            setLayout([])
+          }
+
+          setCurrentLayoutName(layoutNameToLoad)
+        } catch (err) {
+          console.error("Fehler beim Laden:", err)
+          setWidgets(createDefaultWidgets())
+        } finally {
+          setLayoutReady(true)
         }
+      }
 
-        fetch("http://localhost:9999/api/participant/create", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: newParticipantName,
-                project_id: confirmedProject.id
-            })
-        })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    toast.success("Participant erstellt");
-                    setShowModal(false);
-                    setNewParticipantName("");
-                    loadParticipants(confirmedProject.id);
-                } else {
-                    toast.error(data.message);
-                }
-            })
-            .catch(() => toast.error("Fehler beim Erstellen"));
-    };
+      fetchLayout()
+    }, [])
 
-    const {getRootProps, getInputProps, isDragActive} = useDropzone({
-        onDrop,
-        multiple: true
-    });
+    useEffect(() => {
+      if (typeof window === "undefined") return
+
+      if (currentLayoutName) {
+        window.localStorage.setItem(CURRENT_LAYOUT_STORAGE_KEY, currentLayoutName)
+      } else {
+        window.localStorage.removeItem(CURRENT_LAYOUT_STORAGE_KEY)
+      }
+    }, [currentLayoutName])
+
+    const handleStart = () => {
+        if (!socketRef.current || !connected || running) return
+        // This event marks the start point for logging sessions on the backend.
+        socketRef.current.emit("start_recording")
+    }
+
+    const handleStop = () => {
+        if (!socketRef.current || !connected || !running) return
+        // This event marks the end point for logging sessions on the backend.
+        socketRef.current.emit("stop_recording")
+    }
+
+  const packetLabel = useMemo(() => {
+    if (!lastPacketTime) return "no packets yet"
+    return lastPacketTime.toLocaleTimeString()
+  }, [lastPacketTime])
+
+  const resetDashboardLayout = () => {
+    setWidgets(createDefaultWidgets())
+  }
 
     return (
-        <main className="page">
-            <div className="container">
+        <div className="app-shell">
+            <Sidebar
+                setLayout={setLayout}
+                setWidgets={setWidgets}
+                widgets={widgets}
+                currentLayoutName={currentLayoutName}
+                setCurrentLayoutName={setCurrentLayoutName}
+                onAddWidget={(view) => {
+                    setWidgets((items) => {
+                        const nextWidget = createWidget(view);
 
-                <ProjectTable
-                    onChange={setSelectedProject}
-                    onConfirm={(proj) => setConfirmedProject(proj)}
+                        return [
+                            ...items,
+                            {
+                                ...nextWidget,
+                                x: getDefaultHorizontalPosition(items.length, nextWidget.w),
+                                y: Math.max(...items.map((item) => item.y + item.h), 0),
+                            },
+                        ];
+                    });
+                }}
+                onClearWidgets={() => setWidgets([])}
+            />
+
+            <main className="dashboard-area">
+                <header className="topbar">
+                    <div>
+                        <h1>Fahrsimulator Dashboard</h1>
+                    </div>
+                    <div className="topbar-right">
+                        <div className="simulation-controls">
+                            <button className="control-btn start" onClick={handleStart}
+                                    disabled={!connected || running}>
+                                Start Simulation
+                            </button>
+                            <button className="control-btn stop" onClick={handleStop} disabled={!connected || !running}>
+                                Stop Simulation
+                            </button>
+              <button className="control-btn reset" onClick={resetDashboardLayout}>
+                Reset Layout
+              </button>
+                        </div>
+
+                        <div className="badges">
+              <span className={connected ? "badge ok" : "badge bad"}>
+                {connected ? "Socket connected" : "Socket disconnected"}
+              </span>
+                            <span className={running ? "badge ok" : "badge idle"}>
+                {running ? "Recording running" : "Recording stopped"}
+              </span>
+                            <span className="badge">Last packet: {packetLabel}</span>
+                        </div>
+                    </div>
+                </header>
+
+                <DashboardGrid
+                    layout={layout}
+                    setLayout={setLayout}
+                    widgets={widgets}
+                    setWidgets={setWidgets}
+                    sensorData={sensorData}
+                    connected={connected}
+                    running={running}
+                  saveEnabled={layoutReady}
                 />
-
-                <section>
-
-                    <div className="header">
-                        <div className="center">
-                            <h2>Probanden</h2>
-                            <p className="sub">
-                                {confirmedProject?.name || "Kein Projekt ausgewählt"}
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="card">
-                        <table>
-                            <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Last Run</th>
-                                <th className="right">Runs</th>
-                                <th></th>
-                            </tr>
-                            </thead>
-
-                            <tbody>
-                            {participants.length === 0 ? (
-                                <tr>
-                                    <td colSpan="4" style={{textAlign: "center"}}>
-                                        Keine Teilnehmer gefunden
-                                    </td>
-                                </tr>
-                            ) : (
-                                participants.map(p => (
-                                    <tr key={p.id}>
-                                        <td>{p.name}</td>
-
-                                        <td>
-                                            {p.last_run
-                                                ? new Date(p.last_run).toLocaleDateString()
-                                                : "—"}
-                                        </td>
-
-                                        <td className="right">{p.runs}</td>
-
-                                        <td className="right">
-                                            <button
-                                                className="delete-btn"
-                                                onClick={() => handleDeleteParticipant(p.id)}
-                                            >
-                                                🗑️
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div className="center">
-                        <button className="btn primary" onClick={() => setShowModal(true)}>
-                            + Add Participant
-                        </button>
-                    </div>
-
-                    {showModal && (
-                        <div className="modalOverlay">
-                            <div className="modal">
-                                <h3>Neuer Proband</h3>
-
-                                <input
-                                    value={newParticipantName}
-                                    onChange={(e) => setNewParticipantName(e.target.value)}
-                                />
-
-                                <div className="modalActions">
-                                    <button onClick={handleCreateParticipant}>OK</button>
-                                    <button onClick={() => setShowModal(false)}>Abbrechen</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    <div {...getRootProps()} className={`upload ${isDragActive ? "active" : ""}`}>
-                        <input {...getInputProps()} />
-                        Drag & Drop
-                    </div>
-
-                </section>
-            </div>
-
-            <ToastContainer position="bottom-center"/></main>
-    );
+            </main>
+        </div>
+    )
 }
+
+export default App

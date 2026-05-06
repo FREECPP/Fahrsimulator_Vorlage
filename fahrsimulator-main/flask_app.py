@@ -17,10 +17,8 @@ from datetime import datetime
 from multiprocessing import Queue
 from typing import Optional
 from queue import Empty
-from flask_cors import CORS
-from extensions import db
 
-from controllers.projectController import verzeichnis_bp
+from flask_blueprints.verzeichnis import verzeichnis_bp
 from extensions import db
 from dbModels.dashboardLayoutDB import dashboardLayout
 
@@ -33,11 +31,7 @@ from dbModels.dashboardLayoutDB import dashboardLayout
 # ==================================================================================
 app = Flask(__name__)
 
-CORS(
-    app,
-    resources={r"/*": {"origins": "*"}},
-    supports_credentials=True
-)
+CORS(app, supports_credentials=True)
 
 app.register_blueprint(verzeichnis_bp, url_prefix="/")
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -235,7 +229,7 @@ def handle_start_recording():
         return
 
     printlog(message="Starte Log-Manager", debug_lvl="info", std_print=True)
-    from controllers.projectController import project_path
+    from flask_blueprints.verzeichnis import project_path
     printlog(message=str(project_path), debug_lvl="info", std_print=True)
 
     try:
