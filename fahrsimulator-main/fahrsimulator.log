@@ -1,9 +1,2 @@
-2026-05-06 15:07:22,360 [INFO] Client connected to server 10.19.2.5:9999
-2026-05-06 15:07:48,753 [INFO] Projekt erstellt: Test
-2026-05-06 15:07:56,463 [INFO] Layout request: GET | Test | default
-2026-05-06 15:07:56,471 [INFO] Client connected to server 10.19.2.5:9999
-2026-05-06 15:07:57,537 [INFO] Layout request: POST | Test | default
-2026-05-06 15:07:57,542 [INFO] Creating new layout
-2026-05-06 15:07:59,422 [INFO] Layout request: POST | Test | Test
-2026-05-06 15:07:59,428 [INFO] Creating new layout
-2026-05-06 15:07:59,449 [INFO] Layout request: GET | Test | Test
+2026-04-20 14:07:47,871 [INFO] Client connected to server 10.19.1.165:9999
+2026-04-20 14:07:53,827 [INFO] Client connected to server 10.19.1.165:9999

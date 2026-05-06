@@ -141,23 +141,34 @@ export default function ProjectManager() {
     });
 
     return (
-        <main className="page">
-            <div className="container">
+        <div className="app-shell">
+            <Sidebar
+                setLayout={setLayout}
+                setWidgets={setWidgets}
+                widgets={widgets}
+                currentLayoutName={currentLayoutName}
+                setCurrentLayoutName={setCurrentLayoutName}
+                onAddWidget={(view) => {
+                    setWidgets((items) => {
+                        const nextWidget = createWidget(view);
 
-                <ProjectTable
-                    onChange={setSelectedProject}
-                    onConfirm={(proj) => setConfirmedProject(proj)}
-                />
+                        return [
+                            ...items,
+                            {
+                                ...nextWidget,
+                                x: getDefaultHorizontalPosition(items.length, nextWidget.w),
+                                y: Math.max(...items.map((item) => item.y + item.h), 0),
+                            },
+                        ];
+                    });
+                }}
+                onClearWidgets={() => setWidgets([])}
+            />
 
-                <section>
-
-                    <div className="header">
-                        <div className="center">
-                            <h2>Probanden</h2>
-                            <p className="sub">
-                                {confirmedProject?.name || "Kein Projekt ausgewählt"}
-                            </p>
-                        </div>
+            <main className="dashboard-area">
+                <header className="topbar">
+                    <div>
+                        <h1>Fahrsimulator Dashboard</h1>
                     </div>
 
                     <div className="card">
@@ -249,28 +260,17 @@ export default function ProjectManager() {
                         </button>
                     </div>
 
-                    {showModal && (
-                        <div className="modalOverlay">
-                            <div className="modal">
-                                <h3>Neuer Proband</h3>
-
-                                <input
-                                    value={newParticipantName}
-                                    onChange={(e) => setNewParticipantName(e.target.value)}
-                                />
-
-                                <div className="modalActions">
-                                    <button onClick={handleCreateParticipant}>OK</button>
-                                    <button onClick={() => setShowModal(false)}>Abbrechen</button>
-                                </div>
-                            </div>
+                        <div className="badges">
+              <span className={connected ? "badge ok" : "badge bad"}>
+                {connected ? "Socket connected" : "Socket disconnected"}
+              </span>
+                            <span className={running ? "badge ok" : "badge idle"}>
+                {running ? "Recording running" : "Recording stopped"}
+              </span>
+                            <span className="badge">Last packet: {packetLabel}</span>
                         </div>
-                    )}
-
-                    <div {...getRootProps()} className={`upload ${isDragActive ? "active" : ""}`}>
-                        <input {...getInputProps()} />
-                        Drag & Drop
                     </div>
+                </header>
 
                     <div className="center">
                         <button
@@ -288,3 +288,5 @@ export default function ProjectManager() {
         </main>
     );
 }
+
+export default App

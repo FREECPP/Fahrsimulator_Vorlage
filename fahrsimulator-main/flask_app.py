@@ -140,6 +140,7 @@ def stop_logging():
     return render_template("index.html")
 
 
+
 @app.route("/dashboard")
 def show_dashboard():
     return render_template("dashboard.html")
@@ -312,6 +313,7 @@ def read_queue(logging_manager, stop_event):
                 fahrweise = rasante_fahrweise_model_queue.get_nowait()
                 if fahrweise is not None:
                     latest_sensor_data["fahrweise"] = fahrweise
+                    has_update = True
                     has_update = True
             except Empty:
                 pass

@@ -172,8 +172,7 @@ class RgbCameraLogger(Logger):
                 if (not read_successful) or frame is None or frame.size == 0:
                     time.sleep(0.01)
                     continue
-                if self._camera_index == 0:
-                    frame = cv2.rotate(frame, cv2.ROTATE_180)
+                frame = cv2.rotate(frame, cv2.ROTATE_180)
 
                 if not read_successful:
                     self.stop_logging()
