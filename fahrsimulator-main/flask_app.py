@@ -17,8 +17,10 @@ from datetime import datetime
 from multiprocessing import Queue
 from typing import Optional
 from queue import Empty
+from flask_cors import CORS
+from extensions import db
 
-from flask_blueprints.verzeichnis import verzeichnis_bp
+from controllers.projectController import verzeichnis_bp
 from extensions import db
 from dbModels.dashboardLayoutDB import dashboardLayout
 
@@ -34,7 +36,11 @@ from dbModels.dashboardLayoutDB import dashboardLayout
 # __name__ sagt Flask, wo es nach Dateien (Statics/Templates) suchen soll.
 app = Flask(__name__)
 
-CORS(app, supports_credentials=True)
+CORS(
+    app,
+    resources={r"/*": {"origins": "*"}},
+    supports_credentials=True
+)
 
 # 2. Blueprints registrieren
 # Blueprints erlauben es, Routen (URLs) in anderen Dateien zu definieren.
@@ -286,7 +292,7 @@ def handle_start_recording():
 
     # Eigene Print Funktion um den Start des Log-Managers im Terminal erkenntlich zu machen
     printlog(message="Starte Log-Manager", debug_lvl="info", std_print=True)
-    from flask_blueprints.verzeichnis import project_path
+    from controllers.projectController import project_path
     printlog(message=str(project_path), debug_lvl="info", std_print=True)
 
     try:
