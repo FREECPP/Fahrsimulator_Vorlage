@@ -71,7 +71,6 @@ class LogManager:
                 ),
                 {
                     "shimmer": self.data_queues["shimmer"],
-                    "shimmer_hrv": self.data_queues["shimmer_hrv"],
                 }
             ),
             (
