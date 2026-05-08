@@ -190,13 +190,11 @@ function Dashboard() {
         socketRef.current.emit("start_logging")
     }
     const handleStartPC = () => {
-        if (!socketRef.current || !connected || !running) return
         // This event marks the end point for starting the logging on the backend.
         socketRef.current.emit("start_pc")
     }
 
     const handleStartSimulation = () => {
-        if (!socketRef.current || !connected || !running) return
         // This event marks the end point for starting the logging on the backend.
         socketRef.current.emit("start_simulation")
     }
@@ -259,10 +257,10 @@ function Dashboard() {
                             <button className="start logging" onClick={handleStartLogging} disabled={!connected || !running}>
                                 Start logging       
                             </button>
-                            <button className="start PC" onClick={handleStartPC} disabled={!connected || !running}>
+                            <button className="start PC" onClick={handleStartPC}>
                                 Start PC       
                             </button>
-                            <button className="start Simulation" onClick={handleStartSimulation} disabled={!connected || !running}>
+                            <button className="start Simulation" onClick={handleStartSimulation}>
                                 Start Sim on PC2       
                             </button>
 
