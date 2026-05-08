@@ -18,6 +18,10 @@ from multiprocessing import Queue
 from typing import Optional
 from queue import Empty
 
+# Imports für Starten der Simulation und des externen Rechners
+from utils.WakeOnLan import wake_on_lan
+from utils.sim_start import start_silab_prozess
+
 # from flask_blueprints.verzeichnis import verzeichnis_bp
 from controllers.projectController import verzeichnis_bp
 from controllers.layoutController import layout_bp
@@ -217,6 +221,22 @@ def handle_stop_recording():
         logging_manager = None
     is_running = False
     socketio.emit('is_running', is_running)
+
+@socketio.on('start_sensor')
+def handle_start_sensor():
+    pass
+
+@socketio.on('start_logging')
+def handle_start_logging():
+    pass
+
+@socketio.on('start_simulation')
+def handle_start_simulation():
+    start_silab_prozess()
+
+@socketio.on('start_pc')
+def handle_start_pc():
+    wake_on_lan("BC:0F:F3:C4:C4:70")
 
 
 # Helper function to encode depth-data to jpeg for live preview

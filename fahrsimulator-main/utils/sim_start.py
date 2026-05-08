@@ -3,12 +3,9 @@ import time
 import subprocess
 import os
 
-exe_pfad = r"D:\SILAB\bin\SILAB.exe"
-argumente = r"D:\SILAB\Projects\SILABDemo\SILABDemo_Highway.cfg"
-arbeitsverzeichnis = r"D:\SILAB\bin"
 
-def start_silab_prozess():
-    
+def start_silab_prozess(exe_pfad = r"D:\SILAB\bin\SILAB.exe", argumente = r"D:\SILAB\Projects\SILABDemo\SILABDemo_Highway.cfg", arbeitsverzeichnis = r"D:\SILAB\bin"):
+   
     try:
         subprocess.Popen([exe_pfad, argumente], cwd=arbeitsverzeichnis)
         time.sleep(3)
