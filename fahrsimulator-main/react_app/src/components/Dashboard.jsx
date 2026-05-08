@@ -178,6 +178,29 @@ function Dashboard() {
         socketRef.current.emit("stop_recording")
     }
 
+    const handleStartSensor = () => {
+        if (!socketRef.current || !connected || !running) return
+        // This event marks the end point for starting the sensors on the backend.
+        socketRef.current.emit("start_sensor")
+    }
+
+    const handleStartLogging = () => {
+        if (!socketRef.current || !connected || !running) return
+        // This event marks the end point for starting the logging on the backend.
+        socketRef.current.emit("start_logging")
+    }
+    const handleStartPC = () => {
+        if (!socketRef.current || !connected || !running) return
+        // This event marks the end point for starting the logging on the backend.
+        socketRef.current.emit("start_pc")
+    }
+
+    const handleStartSimulation = () => {
+        if (!socketRef.current || !connected || !running) return
+        // This event marks the end point for starting the logging on the backend.
+        socketRef.current.emit("start_simulation")
+    }
+
     const packetLabel = useMemo(() => {
         if (!lastPacketTime) return "no packets yet"
         return lastPacketTime.toLocaleTimeString()
@@ -230,6 +253,19 @@ function Dashboard() {
                             <button className="control-btn stop" onClick={handleStop} disabled={!connected || !running}>
                                 Stop Simulation
                             </button>
+                            <button className="start sensor" onClick={handleStartSensor} disabled={!connected || !running}>
+                                Start Sensor       
+                            </button>
+                            <button className="start logging" onClick={handleStartLogging} disabled={!connected || !running}>
+                                Start logging       
+                            </button>
+                            <button className="start PC" onClick={handleStartPC} disabled={!connected || !running}>
+                                Start PC       
+                            </button>
+                            <button className="start Simulation" onClick={handleStartSimulation} disabled={!connected || !running}>
+                                Start Sim on PC2       
+                            </button>
+
               <button className="control-btn reset" onClick={resetDashboardLayout}>
                 Reset Layout
               </button>
