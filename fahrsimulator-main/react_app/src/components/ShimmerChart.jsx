@@ -1,6 +1,4 @@
 import {
-  Area,
-  AreaChart,
   CartesianGrid,
   Line,
   LineChart,
@@ -13,13 +11,13 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 const TREND_METRICS = [
   {
-    key: "sdnn",
-    aliases: ["SDNN"],
-    label: "SDNN",
-    unit: "ms",
-    mode: "higher-better",
-    low: 30,
-    mid: 50,
+    key: "hr",
+    aliases: ["heart_rate", "bpm", "pulse"],
+    label: "HR",
+    unit: "bpm",
+    mode: "range",
+    low: 55,
+    high: 95,
   },
   {
     key: "rmssd",
@@ -31,22 +29,22 @@ const TREND_METRICS = [
     mid: 40,
   },
   {
-    key: "hr",
-    aliases: ["heart_rate", "bpm", "pulse"],
-    label: "HR",
-    unit: "bpm",
-    mode: "range",
-    low: 55,
-    high: 95,
+    key: "sdnn",
+    aliases: ["SDNN"],
+    label: "SDNN",
+    unit: "ms",
+    mode: "higher-better",
+    low: 30,
+    mid: 50,
   },
   {
-    key: "breathingrate",
-    aliases: ["breathing_rate", "breaths_per_minute"],
-    label: "Breathing",
-    unit: "Hz",
+    key: "skin_resistance",
+    aliases: ["skin_conductance_resistance", "gsr_resistance", "skin_resistance"],
+    label: "Skin resistance",
+    unit: "ohm",
     mode: "range",
-    low: 0.12,
-    high: 0.35,
+    low: 1000,
+    high: 300000,
   },
 ]
 
@@ -65,81 +63,30 @@ const PRIMARY_METRICS = [
     unit: "ms",
   },
   {
-    key: "breathingrate",
-    aliases: ["breathing_rate", "breaths_per_minute"],
-    label: "Breathing",
-    unit: "Hz",
-    format: (value) => `${(value * 60).toFixed(1)} breaths/min`,
+    key: "sdnn",
+    aliases: ["SDNN"],
+    label: "SDNN",
+    unit: "ms",
+  },
+  {
+    key: "skin_resistance",
+    aliases: ["skin_conductance_resistance", "gsr_resistance", "skin_resistance"],
+    label: "Skin resistance",
+    unit: "ohm",
+    format: (value) => {
+      if (!Number.isFinite(value)) return "-"
+      if (value >= 1000) return `${(value / 1000).toFixed(1)} kOhm`
+      return `${Math.round(value)} Ohm`
+    },
   },
 ]
 
-const ADVANCED_METRICS = [
-  { label: "SDNN", keys: ["sdnn"], unit: "ms" },
-  { label: "IBI", keys: ["ibi"], unit: "ms" },
-  { label: "SDSD", keys: ["sdsd"], unit: "ms" },
-  { label: "pNN20", keys: ["pnn20"], unit: "" },
-  { label: "pNN50", keys: ["pnn50"], unit: "" },
-  { label: "Breathing", keys: ["breathingrate"], unit: "Hz" },
-  { label: "HR MAD", keys: ["hr_mad"], unit: "" },
-  { label: "SD1", keys: ["sd1"], unit: "" },
-  { label: "SD2", keys: ["sd2"], unit: "" },
-  { label: "S", keys: ["s"], unit: "" },
-  { label: "SD1/SD2", keys: ["sd1/sd2"], unit: "" },
-]
-
 const WINDOW_MS = 60_000
-const MOCK_BASE_TIME = WINDOW_MS
 const SERIES_COLORS = {
   sdnn: "#2f9d61",
   rmssd: "#2d5dff",
   hr: "#d84747",
-  breathingrate: "#7b4eff",
-}
-
-function createMockShimmer(nowMs) {
-  const t = nowMs / 1000
-  const bpm = 74 + 7 * Math.sin(t * 0.42)
-  const ibi = 60000 / Math.max(bpm, 1)
-  const rmssd = 32 + 9 * Math.sin(t * 0.5 + 0.5)
-  const sdnn = 45 + 10 * Math.sin(t * 0.35)
-  const sdsd = Math.max(5, rmssd * 0.78 + 2.5 * Math.sin(t * 0.33))
-  const pnn20 = Math.max(0, Math.min(1, 0.34 + 0.16 * Math.sin(t * 0.27)))
-  const pnn50 = Math.max(0, Math.min(1, 0.18 + 0.11 * Math.sin(t * 0.21 + 0.3)))
-  const hrMad = Math.max(10, 45 + 16 * Math.sin(t * 0.29 + 0.4))
-  const sd1 = Math.max(1, rmssd / Math.sqrt(2))
-  const sd2 = Math.max(sd1 + 1, sdnn * 1.18)
-
-  return {
-    bpm,
-    heart_rate: bpm,
-    ibi,
-    sdnn,
-    sdsd,
-    rmssd,
-    pnn20,
-    pnn50,
-    hr_mad: hrMad,
-    sd1,
-    sd2,
-    s: Math.PI * sd1 * sd2,
-    "sd1/sd2": sd1 / Math.max(sd2, 1e-6),
-    breathingrate: Math.max(0.08, Math.min(0.45, 0.22 + 0.05 * Math.sin(t * 0.18))),
-  }
-}
-
-function createMockHistory(nowMs) {
-  const stepMs = 1000
-  const startTime = nowMs - WINDOW_MS
-  const history = []
-
-  for (let timestamp = startTime; timestamp <= nowMs; timestamp += stepMs) {
-    history.push({
-      timestamp,
-      ...createMockShimmer(timestamp),
-    })
-  }
-
-  return history
+  skin_resistance: "#b76b2d",
 }
 
 function getValue(packet, config) {
@@ -155,25 +102,19 @@ function formatMetricValue(value, unit) {
   if (!Number.isFinite(value)) return "-"
 
   if (unit === "bpm") return `${Math.round(value)} ${unit}`
+  if (unit === "ohm") {
+    if (value >= 1000) return `${(value / 1000).toFixed(1)} kOhm`
+    return `${Math.round(value)} Ohm`
+  }
   return `${value.toFixed(2)}${unit ? ` ${unit}` : ""}`
 }
 
 function ShimmerChart({ shimmer, running }) {
   const [history, setHistory] = useState([])
-  const [now, setNow] = useState(MOCK_BASE_TIME)
+  const [now, setNow] = useState(0)
   const latestValuesRef = useRef({})
 
-  const hasTrendValues = useMemo(
-    () => TREND_METRICS.some((metric) => Number.isFinite(getValue(shimmer, metric))),
-    [shimmer],
-  )
-
-  const useMockFallback = running && (!shimmer || Object.keys(shimmer).length === 0 || !hasTrendValues)
-  const shimmerPacket = useMemo(() => (useMockFallback ? createMockShimmer(now || 0) : shimmer || {}), [
-    useMockFallback,
-    now,
-    shimmer,
-  ])
+  const shimmerPacket = useMemo(() => shimmer || {}, [shimmer])
 
   const latestValues = useMemo(() => {
     const nextValues = {}
@@ -218,23 +159,9 @@ function ShimmerChart({ shimmer, running }) {
     [shimmerPacket],
   )
 
-  const advancedRows = useMemo(
-    () =>
-      ADVANCED_METRICS.map((metric) => {
-        const value = Number(
-          metric.keys.map((key) => shimmerPacket?.[key]).find((item) => Number.isFinite(Number(item))),
-        )
-        return {
-          ...metric,
-          value: Number.isFinite(value) ? value : null,
-        }
-      }).filter((metric) => Number.isFinite(metric.value)),
-    [shimmerPacket],
-  )
-
   const data = useMemo(() => {
-    const sourceHistory = !running ? [] : useMockFallback ? createMockHistory(MOCK_BASE_TIME) : history
-    const cutoff = (useMockFallback ? MOCK_BASE_TIME : now) - WINDOW_MS
+    const sourceHistory = !running ? [] : history
+    const cutoff = now - WINDOW_MS
 
     return sourceHistory
       .filter((entry) => entry.timestamp >= cutoff)
@@ -245,30 +172,30 @@ function ShimmerChart({ shimmer, running }) {
           second: "2-digit",
         }),
       }))
-  }, [history, now, running, useMockFallback])
+  }, [history, now, running])
 
-  const sdnnTrendData = useMemo(
+  const hrTrendData = useMemo(
     () =>
       data
         .map((entry) => ({
           timestamp: entry.timestamp,
           timeLabel: entry.timeLabel,
-          sdnn: entry.sdnn,
+          hr: entry.hr,
         }))
-        .filter((entry) => Number.isFinite(entry.sdnn)),
+        .filter((entry) => Number.isFinite(entry.hr)),
     [data],
   )
 
-  const breathingTrendData = useMemo(
+  const hrvTrendData = useMemo(
     () =>
       data
         .map((entry) => ({
           timestamp: entry.timestamp,
           timeLabel: entry.timeLabel,
-          breathingrate: entry.breathingrate,
-          breathing_wave: Math.sin(entry.timestamp / 1000 * 2.4) * (entry.breathingrate || 0),
+          rmssd: entry.rmssd,
+          sdnn: entry.sdnn,
         }))
-        .filter((entry) => Number.isFinite(entry.breathingrate)),
+        .filter((entry) => Number.isFinite(entry.rmssd) || Number.isFinite(entry.sdnn)),
     [data],
   )
 
@@ -279,15 +206,13 @@ function ShimmerChart({ shimmer, running }) {
         <span>
           {!running
             ? "No live data"
-            : useMockFallback
-              ? "Local mock preview data"
-              : "Primary values + trend + research"}
+            : "Primary values + trends"}
         </span>
       </div>
 
       <div className="shimmer-section-title">
         <h4>Primary indicators</h4>
-        <p>BPM, RMSSD and breathing give the fastest live overview.</p>
+        <p>Heart rate, HRV, and skin resistance at a glance.</p>
       </div>
 
       <div className="shimmer-primary-grid">
@@ -306,13 +231,13 @@ function ShimmerChart({ shimmer, running }) {
       </div>
 
       <div className="shimmer-section-title">
-        <h4>SDNN trend</h4>
-        <p>Longer-term stability over the last 60 seconds.</p>
+        <h4>Heart rate trend</h4>
+        <p>Live BPM evolution over the last 60 seconds.</p>
       </div>
 
       <div className="shimmer-chart-wrap">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={sdnnTrendData} margin={{ top: 10, right: 12, left: 4, bottom: 4 }}>
+          <LineChart data={hrTrendData} margin={{ top: 10, right: 12, left: 4, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#dbe5ef" />
             <XAxis dataKey="timeLabel" tick={{ fill: "#30475d", fontSize: 11 }} axisLine={{ stroke: "#c1cfdd" }} />
             <YAxis tick={{ fill: "#30475d", fontSize: 11 }} axisLine={{ stroke: "#c1cfdd" }} width={40} />
@@ -324,47 +249,53 @@ function ShimmerChart({ shimmer, running }) {
                 return [`${valueLabel} ${config?.unit || ""}`, config?.label || name]
               }}
             />
-            <Area
+            <Line
               type="monotone"
-              dataKey="sdnn"
-              name="sdnn"
-              stroke={SERIES_COLORS.sdnn}
-              fill={SERIES_COLORS.sdnn}
-              fillOpacity={0.2}
-              strokeWidth={2.5}
+              dataKey="hr"
+              name="hr"
+              stroke={SERIES_COLORS.hr}
+              strokeWidth={2.4}
               dot={false}
               connectNulls
               isAnimationActive={false}
             />
-          </AreaChart>
+          </LineChart>
         </ResponsiveContainer>
       </div>
 
       <div className="shimmer-section-title">
-        <h4>Breathing waveform</h4>
-        <p>Live breathing rhythm over the same 60-second window.</p>
+        <h4>HRV trend</h4>
+        <p>RMSSD and SDNN stability over the same 60-second window.</p>
       </div>
 
       <div className="shimmer-chart-wrap">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={breathingTrendData} margin={{ top: 10, right: 12, left: 4, bottom: 4 }}>
+          <LineChart data={hrvTrendData} margin={{ top: 10, right: 12, left: 4, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#dbe5ef" />
             <XAxis dataKey="timeLabel" tick={{ fill: "#30475d", fontSize: 11 }} axisLine={{ stroke: "#c1cfdd" }} />
             <YAxis tick={{ fill: "#30475d", fontSize: 11 }} axisLine={{ stroke: "#c1cfdd" }} width={40} />
             <Tooltip
               labelFormatter={(label) => `Time: ${label}`}
               formatter={(value, name) => {
-                if (name === "breathing_wave") {
-                  return [Number(value).toFixed(2), "Breathing waveform"]
-                }
-                return [Number(value).toFixed(2), "Breathing rate"]
+                const config = TREND_METRICS.find((item) => item.key === name)
+                return [Number(value).toFixed(2), config?.label || name]
               }}
             />
             <Line
               type="monotone"
-              dataKey="breathing_wave"
-              name="breathing_wave"
-              stroke={SERIES_COLORS.breathingrate}
+              dataKey="rmssd"
+              name="rmssd"
+              stroke={SERIES_COLORS.rmssd}
+              strokeWidth={2.4}
+              dot={false}
+              connectNulls
+              isAnimationActive={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="sdnn"
+              name="sdnn"
+              stroke={SERIES_COLORS.sdnn}
               strokeWidth={2.4}
               dot={false}
               connectNulls
@@ -376,33 +307,19 @@ function ShimmerChart({ shimmer, running }) {
 
       <div className="shimmer-legend">
         <span className="legend-item">
-          <span className="legend-dot" style={{ background: SERIES_COLORS.breathingrate }} />
-          Breathing waveform
+          <span className="legend-dot" style={{ background: SERIES_COLORS.rmssd }} />
+          RMSSD
         </span>
-      </div>
-
-      <div className="shimmer-legend">
         <span className="legend-item">
           <span className="legend-dot" style={{ background: SERIES_COLORS.sdnn }} />
-          SDNN trend
+          SDNN
+        </span>
+        <span className="legend-item">
+          <span className="legend-dot" style={{ background: SERIES_COLORS.hr }} />
+          Heart rate
         </span>
       </div>
 
-      <details className="shimmer-advanced-panel">
-        <summary>Researcher corner</summary>
-        <div className="shimmer-advanced-grid">
-          {advancedRows.length === 0 ? (
-            <div className="placeholder">No advanced metrics in current packet.</div>
-          ) : (
-            advancedRows.map((metric) => (
-              <div className="shimmer-advanced-row" key={metric.label}>
-                <span>{metric.label}</span>
-                <strong>{formatMetricValue(metric.value, metric.unit)}</strong>
-              </div>
-            ))
-          )}
-        </div>
-      </details>
     </div>
   )
 }

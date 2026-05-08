@@ -50,10 +50,15 @@ class ShimmerLogger(Logger):
         self.adc_values = list()
         self._shimmer_device: Optional[ShimmerBluetooth] = None
         self.adc_value_count = 0
+        self._latest_hrv = {
+            "heart_rate": None,
+            "rmssd": None,
+            "sdnn": None,
+        }
+        self._latest_gsr_raw = None
 
         self.queues = queues or {}
         self.shimmer_queue = self.queues.get("shimmer")
-        self.shimmer_hrv_queue = self.queues.get("shimmer_hrv")
 
         self.shimmer_addr = load_shimmer_addr()
 
@@ -119,8 +124,21 @@ class ShimmerLogger(Logger):
         if shimmer_ts is not None:
             self._update_latency(shimmer_ts, recv_ns)
 
+        gsr_value = mapped_data.get("gsr_raw")
+        if gsr_value is not None:
+            self._latest_gsr_raw = gsr_value
+
         if self.shimmer_queue is not None:
-            put_latest(self.shimmer_queue, mapped_data)
+            payload = dict(mapped_data)
+            if self._latest_hrv.get("heart_rate") is not None:
+                payload["heart_rate"] = self._latest_hrv["heart_rate"]
+            if self._latest_hrv.get("rmssd") is not None:
+                payload["rmssd"] = self._latest_hrv["rmssd"]
+            if self._latest_hrv.get("sdnn") is not None:
+                payload["sdnn"] = self._latest_hrv["sdnn"]
+            if self._latest_gsr_raw is not None:
+                payload["skin_resistance"] = self._latest_gsr_raw
+            put_latest(self.shimmer_queue, payload)
 
         if self.capture_time is not None:
             mapped_data[LOG_TIME_KEY] = self.capture_time
@@ -169,6 +187,17 @@ class ShimmerLogger(Logger):
         if self.adc_value_count % 200 == 0 and len(self.adc_values) >= 1000: # If we have at least 1000 values, calculate HRV for every 200 values
             working_data, measures = get_hr_measures(self.adc_values)
             print(f"sdnn: {measures['sdnn']}   ----   rmssd: {measures['rmssd']}")
-            if self.shimmer_hrv_queue is not None:
-                put_latest(self.shimmer_hrv_queue, measures)
+            self._latest_hrv = {
+                "heart_rate": measures.get("bpm"),
+                "rmssd": measures.get("rmssd"),
+                "sdnn": measures.get("sdnn"),
+            }
+            if self.shimmer_queue is not None:
+                payload = {
+                    "heart_rate": self._latest_hrv.get("heart_rate"),
+                    "rmssd": self._latest_hrv.get("rmssd"),
+                    "sdnn": self._latest_hrv.get("sdnn"),
+                    "skin_resistance": self._latest_gsr_raw,
+                }
+                put_latest(self.shimmer_queue, payload)
 

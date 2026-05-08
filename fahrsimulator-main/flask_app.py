@@ -81,7 +81,6 @@ data_queues = {
     "silab_model": Queue(maxsize=1),
     "shimmer": Queue(maxsize=1),
     "rasante_fahrweise_model": Queue(maxsize=1),
-    "shimmer_hrv": Queue(maxsize=1),
     "gaze_distribution_model": Queue(maxsize=1),
 
 }
@@ -260,8 +259,7 @@ def read_queue(logging_manager, stop_event):
     eyetracker_queue = logging_manager.data_queues.get("eyetracker")
     silab_queue = logging_manager.data_queues.get("silab")
     rasante_fahrweise_model_queue = logging_manager.data_queues.get("rasante_fahrweise_model")
-    shimmer_raw_queue = logging_manager.data_queues.get("shimmer")
-    shimmer_hrv_queue = logging_manager.data_queues.get("shimmer_hrv")
+    shimmer_queue = logging_manager.data_queues.get("shimmer")
     gaze_queue = logging_manager.data_queues.get("gaze_distribution_model")
 
     latest_sensor_data = {
@@ -276,7 +274,6 @@ def read_queue(logging_manager, stop_event):
         "shimmer": None,
         "gaze": None,
         "fahrweise": None,
-        "shimmer_raw": None
     }
 
     last_emit_time = 0.0
@@ -370,29 +367,17 @@ def read_queue(logging_manager, stop_event):
             except Exception as e:
                 printlog(f"distraction queue error: {e}", "debug")
 
-        # Shimmer raw packet data
-        if shimmer_raw_queue is not None:
-            try:
-                raw_data = shimmer_raw_queue.get_nowait()
-                if raw_data is not None:
-                    latest_sensor_data["shimmer_raw"] = raw_data
-                    has_update = True
-            except Empty:
-                pass
-            except Exception as e:
-                printlog(f"Shimmer raw queue error: {e}", "debug")
-
         # Shimmer Data-Queue
-        if shimmer_hrv_queue is not None:
+        if shimmer_queue is not None:
             try:
-                data = shimmer_hrv_queue.get_nowait()
+                data = shimmer_queue.get_nowait()
                 if data is not None:
                     latest_sensor_data["shimmer"] = data
                     has_update = True
             except Empty:
                 pass
             except Exception as e:
-                printlog(f"HRV queue error: {e}", "debug")
+                printlog(f"Shimmer queue error: {e}", "debug")
 
         # Gaze-Distribution Data-Queue
         if gaze_queue is not None:
@@ -438,18 +423,9 @@ def mock_sensor_stream(stop_event):
         t = time.time() - start_t
         speed_ms = max(0.0, 18.0 + 8.0 * math.sin(t * 0.6))
         bpm = float(74 + 7 * math.sin(t * 0.42))
-        ibi = float(60000.0 / max(bpm, 1.0))
         rmssd = float(32 + 9 * math.sin(t * 0.5 + 0.5))
         sdnn = float(45 + 10 * math.sin(t * 0.35))
-        sdsd = float(max(5.0, rmssd * 0.78 + 2.5 * math.sin(t * 0.33)))
-        pnn20 = float(max(0.0, min(1.0, 0.34 + 0.16 * math.sin(t * 0.27))))
-        pnn50 = float(max(0.0, min(1.0, 0.18 + 0.11 * math.sin(t * 0.21 + 0.3))))
-        hr_mad = float(max(10.0, 45 + 16 * math.sin(t * 0.29 + 0.4)))
-        sd1 = float(max(1.0, rmssd / math.sqrt(2.0)))
-        sd2 = float(max(sd1 + 1.0, sdnn * 1.18))
-        sd1_sd2 = float(sd1 / max(sd2, 1e-6))
-        s_val = float(math.pi * sd1 * sd2)
-        breathing_rate = float(max(0.08, min(0.45, 0.22 + 0.05 * math.sin(t * 0.18))))
+        skin_resistance = float(max(800.0, 180000.0 + 25000.0 * math.sin(t * 0.28)))
 
         sensor_data = {
             "rgb_frame": _mock_image_b64("RGB Front", t),
@@ -475,22 +451,10 @@ def mock_sensor_stream(stop_event):
                 "n_frames": int(30 + 20 * abs(math.sin(t * 0.4))),
             },
             "shimmer": {
-                "bpm": bpm,
                 "heart_rate": bpm,
-                "ibi": ibi,
                 "sdnn": sdnn,
-                "sdsd": sdsd,
                 "rmssd": rmssd,
-                "pnn20": pnn20,
-                "pnn50": pnn50,
-                "hr_mad": hr_mad,
-                "sd1": sd1,
-                "sd2": sd2,
-                "s": s_val,
-                "sd1/sd2": sd1_sd2,
-                "breathingrate": breathing_rate,
-                "sdnn": float(45 + 10 * math.sin(t * 0.35)),
-                "rmssd": float(32 + 9 * math.sin(t * 0.5 + 0.5)),
+                "skin_resistance": skin_resistance,
             },
             "gaze": None,
             "fahrweise": {

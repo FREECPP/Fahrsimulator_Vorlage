@@ -16,7 +16,6 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
   const rgbBackFrame = sensorData?.rgb_frame2
   const eyetracker = sensorData?.eyetracker
   const shimmer = sensorData?.shimmer
-  const shimmerRaw = sensorData?.shimmer_raw
   const selectedImage =
     mode === "image"
       ? {
@@ -50,11 +49,7 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
 
   if (widget.view === "shimmer") {
     if (mode === "raw") {
-      body = (
-        <pre className="raw-payload">
-          {JSON.stringify({ processed: shimmer, raw: shimmerRaw }, null, 2)}
-        </pre>
-      )
+      body = <pre className="raw-payload">{JSON.stringify(shimmer ?? {}, null, 2)}</pre>
     } else {
       body = (
         <Suspense fallback={<div className="placeholder">Loading chart...</div>}>
