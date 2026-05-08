@@ -65,6 +65,7 @@ if app.debug:
 logging_manager = None
 BASE_DIR = None
 is_running = False
+are_sensors_running = False
 stream_thread = None
 stream_stop_event = threading.Event()
 
@@ -224,11 +225,56 @@ def handle_stop_recording():
 
 @socketio.on('start_sensor')
 def handle_start_sensor():
-    pass
+    global logging_manager, are_sensors_running
+    if are_sensors_running:
+        return
+
+    print("Starte Sensoren sepperat") 
+    from controllers.projectController import project_path
+    try:
+        from logger.log_manager import LogManager  # Lazy-import to support preview mode without sensors
+        logging_manager = LogManager(directory=project_path, data_queues=data_queues)
+        are_sensors_running = logging_manager.start_sensors_async()
+        if are_sensors_running == True:
+            print("Sensoren wurden sepperat gestartet")
+        else:
+            print("Sensoren wurden nicht sepperat gestartet - are_sensors_running = False")
+
+    except Exception as e:
+        # If hardware/SDK dependencies are unavailable, run mock stream for UI preview.
+        printlog(f"Sensoren könnten nicht gestartet werden: {e}", "warning")
 
 @socketio.on('start_logging')
 def handle_start_logging():
-    pass
+    global logging_manager, is_running, stream_thread
+    if is_running:
+        socketio.emit('is_running', True)
+        return
+
+    print("Starte Logging sepperat")    
+    from controllers.projectController import project_path
+
+    try:
+        from logger.log_manager import LogManager  # Lazy-import to support preview mode without sensors
+        logging_manager = LogManager(directory=project_path, data_queues=data_queues)
+        is_running = logging_manager.start_sepperat_logging_async()
+        if is_running and are_sensors_running:
+            socketio.emit('is_running', is_running)
+
+        stream_stop_event.clear()
+        stream_thread = threading.Thread(target=read_queue, args=(logging_manager, stream_stop_event), daemon=True)
+        stream_thread.start()
+    except Exception as e:
+        # If hardware/SDK dependencies are unavailable, run mock stream for UI preview.
+        logging_manager = None
+        is_running = True
+        printlog(f"Fallback to mock sensor stream: {e}", "warning")
+        socketio.emit('is_running', True)
+
+        stream_stop_event.clear()
+        stream_thread = threading.Thread(target=mock_sensor_stream, args=(stream_stop_event,), daemon=True)
+        stream_thread.start()
+    
 
 @socketio.on('start_simulation')
 def handle_start_simulation():

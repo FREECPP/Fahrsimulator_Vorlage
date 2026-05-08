@@ -10,6 +10,9 @@ from utils.tof_csv_writer import FileWriter
 from utils.merge_logs import merge_logs
 
 
+global are_sensors_started
+are_sensors_started = False
+
 class LogManager:
     """
     Konfiguriert und erstellt die Logger. Startet und stoppt Logging-Prozesse.
@@ -230,7 +233,48 @@ class LogManager:
             print(f"{model_cls.__name__} process started")
 
         return True
+    
+    def start_sepperat_logging_async(self):
+        is_running = self._start_sepperat_logger_processes()
+        return is_running
+    
+    def _start_sepperat_logger_processes(self) -> bool:
 
+        self.stop_event = Event()
+        self._process = []
+        for writer_cls, kwargs, queues in self.file_writer:
+            p = Process(target=run_writer_process, args=(writer_cls, kwargs, self.stop_event, queues))
+            p.start()
+            self._process.append(p)
+            print(f"{writer_cls.__name__} process started")
+
+        for logger_cls, kwargs, queues in self.loggers:
+            p = Process(target=run_logger_sepperat_process, args=(logger_cls, kwargs, self.stop_event, queues))
+            p.start()
+            self._process.append(p)
+            print(f"{logger_cls.__name__} process started")
+
+        for model_cls, kwargs, queues in self.models:
+            p = Process(target=run_model_process, args=(model_cls, kwargs, self.stop_event, queues))
+            p.start()
+            self._process.append(p)
+            print(f"{model_cls.__name__} process started")
+
+        return True
+    
+    def start_sensors_async(self):
+        are_sensors_connected = self._sensor_start_processes()
+        return are_sensors_connected
+    
+    def _sensor_start_processes(self) -> bool:
+        self.stop_event = Event()
+        self._process = []
+
+        for logger_cls, kwargs, queues in self.loggers:
+            p = Process(target=run_sensor_start_process, args=(logger_cls, kwargs, queues))
+            p.start()
+            self._process.append(p)
+            print(f"{logger_cls.__name__} sensor-start-process started")
 
     def _stop_logger_processes(self) -> None:
         print("\nStopping logger processes...")
@@ -263,6 +307,29 @@ def run_logger_process(logger_cls, kwargs, stop_event, queues):
     logger = logger_cls(**kwargs, queues=qdict)
     # logger.queues = queues
     logger.start_sensor()
+    logger.start_logging(stop_event)
+
+    logger.stop_logging()
+
+def run_sensor_start_process(logger_cls, kwargs, queues):
+    if isinstance(queues, dict):
+        qdict = queues
+    else:
+        qdict = {"default": queues}
+
+    logger = logger_cls(**kwargs, queues=qdict)
+    logger.start_sensor()
+    are_sensors_started = True
+    
+
+def run_logger_sepperat_process(logger_cls, kwargs, queues):
+    if isinstance(queues, dict):
+        qdict = queues
+    else:
+        qdict = {"default": queues}
+
+    logger = logger_cls(**kwargs, queues=qdict)
+     
     logger.start_logging(stop_event)
 
     logger.stop_logging()
