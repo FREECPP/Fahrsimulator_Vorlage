@@ -37,7 +37,7 @@ verzeichnis_bp = Blueprint(
 CORS(verzeichnis_bp)
 
 base_dir = init_base_dir()
-project_path = None
+project_path = "A:\Fahrsimulator_Projekte"
 
 
 # -------------------------------

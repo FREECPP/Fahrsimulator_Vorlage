@@ -9,7 +9,7 @@ from dbModels.projectAndParticipantsDB import Project, Participant
 from dbModels.dashboardLayoutDB import dashboardLayout
 
 # 👉 dein Base-Verzeichnis (anpassen!)
-BASE_DIR = "C:\\Fahrsimulator_Projekte\\"
+BASE_DIR = "A:\\Fahrsimulator_Projekte\\"
 
 
 def delete_project_folders():

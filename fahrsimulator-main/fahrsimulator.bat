@@ -3,11 +3,13 @@ cd /d "%~dp0"
 :: ALT cd "C:\PycharmProjects\Fahrsimulator"
 :: Beachte richtige venv, wenn venv genutzt wird!
 :: CALL .venv1\Scripts\activate
-set PORT=9999
 :: Starte Standard Browser
-start http://127.0.0.1:%PORT%
+::start http://127.0.0.1:9999
+start http://localhost:5173/
 :: Starte Applikation
-python3.10 flask_app.py
+start cmd /c "python3.10 flask_app.py"
+cd react_app
+call npm run dev
 :: CMD Fenster geöffnet lassen
 pause
 

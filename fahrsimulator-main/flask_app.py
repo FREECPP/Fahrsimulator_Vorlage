@@ -160,6 +160,8 @@ def get_server_ip():
     try:
         s.connect(("8.8.8.8", 80))  # keine echte Verbindung nötig
         ip = s.getsockname()[0]
+    except OSError:
+        ip = "127.0.0.1"
     finally:
         s.close()
     return ip

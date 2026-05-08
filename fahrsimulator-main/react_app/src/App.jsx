@@ -141,115 +141,90 @@ export default function ProjectManager() {
     });
 
     return (
-        <div className="app-shell">
-            <Sidebar
-                setLayout={setLayout}
-                setWidgets={setWidgets}
-                widgets={widgets}
-                currentLayoutName={currentLayoutName}
-                setCurrentLayoutName={setCurrentLayoutName}
-                onAddWidget={(view) => {
-                    setWidgets((items) => {
-                        const nextWidget = createWidget(view);
+        <main className="page">
+            <div className="container">
+                <ProjectTable
+                    onChange={setSelectedProject}
+                    onConfirm={(proj) => setConfirmedProject(proj)}
+                />
 
-                        return [
-                            ...items,
-                            {
-                                ...nextWidget,
-                                x: getDefaultHorizontalPosition(items.length, nextWidget.w),
-                                y: Math.max(...items.map((item) => item.y + item.h), 0),
-                            },
-                        ];
-                    });
-                }}
-                onClearWidgets={() => setWidgets([])}
-            />
-
-            <main className="dashboard-area">
-                <header className="topbar">
-                    <div>
-                        <h1>Fahrsimulator Dashboard</h1>
+                <section>
+                    <div className="header">
+                        <div className="center">
+                            <h2>Probanden</h2>
+                            <p className="sub">
+                                {confirmedProject?.name || "Kein Projekt ausgewählt"}
+                            </p>
+                        </div>
                     </div>
 
                     <div className="card">
                         <table>
                             <thead>
-                            <tr>
-                                <th className="play-column"></th>
-                                <th>Name</th>
-                                <th>Pfad</th>
-                                <th>Letzter Aufruf</th>
-                                <th className="right">Runs</th>
-                                <th></th>
-                            </tr>
+                                <tr>
+                                    <th className="play-column"></th>
+                                    <th>Name</th>
+                                    <th>Pfad</th>
+                                    <th>Letzter Aufruf</th>
+                                    <th className="right">Runs</th>
+                                    <th></th>
+                                </tr>
                             </thead>
 
                             <tbody>
-                            {participants.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" style={{textAlign: "center"}}>
-                                        Keine Teilnehmer gefunden
-                                    </td>
-                                </tr>
-                            ) : (
-                                participants.map(p => (
-                                    <tr key={p.id}>
-
-                                        {/* ▶ Play Button (eigene Spalte) */}
-                                        <td className="play-column">
-                                            <button
-                                                className="play-btn"
-                                                onClick={() => {
-                                                    const fullPath = p.path;
-
-                                                    console.log("👉 Öffne Dashboard mit:", fullPath);
-
-                                                    navigate("/dashboard", {
-                                                        state: {
-                                                            project: confirmedProject,
-                                                            participant: p,
-                                                            path: fullPath
-                                                        }
-                                                    });
-                                                }}
-                                            >
-                                                ▶
-                                            </button>
+                                {participants.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="6" style={{textAlign: "center"}}>
+                                            Keine Teilnehmer gefunden
                                         </td>
-
-                                        {/* Name */}
-                                        <td>
-                                            {p.name}
-                                        </td>
-
-                                        {/* Pfad */}
-                                        <td className="path-cell" title={p.path}>
-                                            {p.path}
-                                        </td>
-
-                                        {/* Last Run */}
-                                        <td>
-                                            {p.last_run
-                                                ? new Date(p.last_run).toLocaleDateString()
-                                                : "—"}
-                                        </td>
-
-                                        {/* Runs */}
-                                        <td className="right">{p.runs}</td>
-
-                                        {/* Delete */}
-                                        <td>
-                                            <button
-                                                className="delete-btn"
-                                                onClick={() => handleDeleteParticipant(p.id)}
-                                            >
-                                                🗑️
-                                            </button>
-                                        </td>
-
                                     </tr>
-                                ))
-                            )}
+                                ) : (
+                                    participants.map((p) => (
+                                        <tr key={p.id}>
+                                            <td className="play-column">
+                                                <button
+                                                    className="play-btn"
+                                                    onClick={() => {
+                                                        const fullPath = p.path
+
+                                                        console.log("👉 Öffne Dashboard mit:", fullPath)
+
+                                                        navigate("/dashboard", {
+                                                            state: {
+                                                                project: confirmedProject,
+                                                                participant: p,
+                                                                path: fullPath,
+                                                            },
+                                                        })
+                                                    }}
+                                                >
+                                                    ▶
+                                                </button>
+                                            </td>
+
+                                            <td>{p.name}</td>
+
+                                            <td className="path-cell" title={p.path}>
+                                                {p.path}
+                                            </td>
+
+                                            <td>
+                                                {p.last_run ? new Date(p.last_run).toLocaleDateString() : "—"}
+                                            </td>
+
+                                            <td className="right">{p.runs}</td>
+
+                                            <td>
+                                                <button
+                                                    className="delete-btn"
+                                                    onClick={() => handleDeleteParticipant(p.id)}
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
@@ -260,33 +235,32 @@ export default function ProjectManager() {
                         </button>
                     </div>
 
-                        <div className="badges">
-              <span className={connected ? "badge ok" : "badge bad"}>
-                {connected ? "Socket connected" : "Socket disconnected"}
-              </span>
-                            <span className={running ? "badge ok" : "badge idle"}>
-                {running ? "Recording running" : "Recording stopped"}
-              </span>
-                            <span className="badge">Last packet: {packetLabel}</span>
+                    {showModal && (
+                        <div className="modalOverlay">
+                            <div className="modal">
+                                <h3>Neuer Proband</h3>
+
+                                <input
+                                    value={newParticipantName}
+                                    onChange={(e) => setNewParticipantName(e.target.value)}
+                                />
+
+                                <div className="modalActions">
+                                    <button onClick={handleCreateParticipant}>OK</button>
+                                    <button onClick={() => setShowModal(false)}>Abbrechen</button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </header>
+                    )}
 
-                    <div className="center">
-                        <button
-                            className="btn"
-                            onClick={() => navigate("/dashboard")}
-                        >
-                            Zum Dashboard
-                        </button>
+                    <div {...getRootProps()} className={`upload ${isDragActive ? "active" : ""}`}>
+                        <input {...getInputProps()} />
+                        Drag & Drop
                     </div>
-
                 </section>
             </div>
 
-            <ToastContainer position="bottom-center"/>
+            <ToastContainer position="bottom-center" />
         </main>
     );
 }
-
-export default App

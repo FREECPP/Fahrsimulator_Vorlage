@@ -1,2 +1,43 @@
-2026-04-20 14:07:47,871 [INFO] Client connected to server 10.19.1.165:9999
-2026-04-20 14:07:53,827 [INFO] Client connected to server 10.19.1.165:9999
+2026-05-08 10:13:15,237 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:9999
+2026-05-08 10:13:15,237 [INFO] [33mPress CTRL+C to quit[0m
+2026-05-08 10:13:56,039 [INFO] 127.0.0.1 - - [08/May/2026 10:13:56] "GET /api/projects HTTP/1.1" 200 -
+2026-05-08 10:13:56,042 [INFO] 127.0.0.1 - - [08/May/2026 10:13:56] "GET /api/projects HTTP/1.1" 200 -
+2026-05-08 10:13:58,406 [INFO] Projekt erstellt: asdf
+2026-05-08 10:13:58,409 [INFO] 127.0.0.1 - - [08/May/2026 10:13:58] "POST /vz_anlegen HTTP/1.1" 200 -
+2026-05-08 10:13:58,417 [INFO] 127.0.0.1 - - [08/May/2026 10:13:58] "GET /api/projects HTTP/1.1" 200 -
+2026-05-08 10:13:58,432 [INFO] 127.0.0.1 - - [08/May/2026 10:13:58] "GET /api/participants/1 HTTP/1.1" 200 -
+2026-05-08 10:14:04,558 [INFO] 127.0.0.1 - - [08/May/2026 10:14:04] "OPTIONS /api/participant/create HTTP/1.1" 200 -
+2026-05-08 10:14:04,575 [INFO] 127.0.0.1 - - [08/May/2026 10:14:04] "POST /api/participant/create HTTP/1.1" 200 -
+2026-05-08 10:14:04,587 [INFO] 127.0.0.1 - - [08/May/2026 10:14:04] "GET /api/participants/1 HTTP/1.1" 200 -
+2026-05-08 10:14:05,928 [INFO] 127.0.0.1 - - [08/May/2026 10:14:05] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-08 10:14:05,931 [INFO] 127.0.0.1 - - [08/May/2026 10:14:05] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-08 10:14:05,931 [INFO] 127.0.0.1 - - [08/May/2026 10:14:05] "GET /socket.io/?EIO=4&transport=polling&t=n2dlwzpb HTTP/1.1" 200 -
+2026-05-08 10:14:05,931 [INFO] 127.0.0.1 - - [08/May/2026 10:14:05] "GET /socket.io/?EIO=4&transport=polling&t=n2dlxgok HTTP/1.1" 200 -
+2026-05-08 10:14:05,935 [INFO] 127.0.0.1 - - [08/May/2026 10:14:05] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-08 10:14:05,937 [INFO] Layout request: GET | asdf | default
+2026-05-08 10:14:05,939 [INFO] 127.0.0.1 - - [08/May/2026 10:14:05] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-08 10:14:05,940 [INFO] 127.0.0.1 - - [08/May/2026 10:14:05] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-08 10:14:05,941 [INFO] Client connected to server 10.19.137.6:9999
+2026-05-08 10:14:05,942 [INFO] 127.0.0.1 - - [08/May/2026 10:14:05] "POST /socket.io/?EIO=4&transport=polling&t=n2dmayqr&sid=uCWZQH5c8PMHTmx5AAAB HTTP/1.1" 200 -
+2026-05-08 10:14:05,943 [INFO] 127.0.0.1 - - [08/May/2026 10:14:05] "GET /socket.io/?EIO=4&transport=polling&t=n2dma1ae&sid=uCWZQH5c8PMHTmx5AAAB HTTP/1.1" 200 -
+2026-05-08 10:14:05,962 [INFO] 127.0.0.1 - - [08/May/2026 10:14:05] "GET /socket.io/?EIO=4&transport=polling&t=n2dmrf0y&sid=uCWZQH5c8PMHTmx5AAAB HTTP/1.1" 200 -
+2026-05-08 10:14:06,966 [INFO] 127.0.0.1 - - [08/May/2026 10:14:06] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-08 10:14:06,969 [INFO] Layout request: POST | asdf | default
+2026-05-08 10:14:06,970 [INFO] Creating new layout
+2026-05-08 10:14:06,973 [INFO] 127.0.0.1 - - [08/May/2026 10:14:06] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-08 10:14:36,164 [INFO] 127.0.0.1 - - [08/May/2026 10:14:36] "GET /socket.io/?EIO=4&transport=websocket&sid=uCWZQH5c8PMHTmx5AAAB HTTP/1.1" 200 -
+2026-05-08 10:14:36,165 [INFO] 127.0.0.1 - - [08/May/2026 10:14:36] "GET /socket.io/?EIO=4&transport=polling&t=n30xu9q3 HTTP/1.1" 200 -
+2026-05-08 10:14:36,166 [INFO] 127.0.0.1 - - [08/May/2026 10:14:36] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-08 10:14:36,166 [INFO] Layout request: GET | asdf | default
+2026-05-08 10:14:36,168 [INFO] 127.0.0.1 - - [08/May/2026 10:14:36] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-08 10:14:36,175 [INFO] Client connected to server 10.19.137.6:9999
+2026-05-08 10:14:36,176 [INFO] 127.0.0.1 - - [08/May/2026 10:14:36] "POST /socket.io/?EIO=4&transport=polling&t=n30y4sik&sid=DckEfWYkYXffno_dAAAD HTTP/1.1" 200 -
+2026-05-08 10:14:36,176 [INFO] 127.0.0.1 - - [08/May/2026 10:14:36] "GET /socket.io/?EIO=4&transport=polling&t=n30y4pjx&sid=DckEfWYkYXffno_dAAAD HTTP/1.1" 200 -
+2026-05-08 10:20:31,880 [INFO] 127.0.0.1 - - [08/May/2026 10:20:31] "GET /socket.io/?EIO=4&transport=websocket&sid=DckEfWYkYXffno_dAAAD HTTP/1.1" 200 -
+2026-05-08 10:20:31,943 [INFO] 127.0.0.1 - - [08/May/2026 10:20:31] "GET /api/projects HTTP/1.1" 200 -
+2026-05-08 10:20:31,949 [INFO] 127.0.0.1 - - [08/May/2026 10:20:31] "GET /api/projects HTTP/1.1" 200 -
+2026-05-08 10:39:53,666 [INFO] 127.0.0.1 - - [08/May/2026 10:39:53] "GET /api/projects HTTP/1.1" 200 -
+2026-05-08 10:39:53,674 [INFO] 127.0.0.1 - - [08/May/2026 10:39:53] "GET /api/projects HTTP/1.1" 200 -
+2026-05-08 10:53:46,962 [INFO] 127.0.0.1 - - [08/May/2026 10:53:46] "GET /api/projects HTTP/1.1" 200 -
+2026-05-08 10:53:46,970 [INFO] 127.0.0.1 - - [08/May/2026 10:53:46] "GET /api/projects HTTP/1.1" 200 -
