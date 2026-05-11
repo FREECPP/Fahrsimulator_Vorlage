@@ -1,3 +1,4 @@
+/* ===== Global ===== */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
@@ -5,41 +6,13 @@ body {
     color: #333;
 }
 
-.header {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    margin: 20px 0;
-}
-
 .page {
     min-height: 100vh;
 }
 
-.left {
-    justify-self: start;
-}
-
-h2 {
-    margin: 0;
-}
-
-.btn.primary {
-    margin-top: 10px;
-}
-
-.center {
-    justify-self: start;
-    text-align: left;
-}
-
-.right {
-    justify-self: end;
-}
-
-/* Container */
+/* ===== Layout ===== */
 .container {
-    width: 800px;
+    width: min(1400px, calc(100vw - 600px));
     margin: 0 auto;
     padding: 40px 0;
     transition: all 0.3s ease;
@@ -52,6 +25,36 @@ h2 {
     min-height: 100vh;
 }
 
+/* ===== Header ===== */
+.header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.left {
+    justify-self: start;
+}
+
+.center {
+    justify-self: start;
+    text-align: left;
+}
+
+.right {
+    justify-self: end;
+}
+
+h2 {
+    margin: 0;
+}
+
+.sub {
+    font-size: 12px;
+    color: #777;
+}
+
 .section-label {
     font-size: 12px;
     text-transform: uppercase;
@@ -59,6 +62,7 @@ h2 {
     margin-bottom: 10px;
 }
 
+/* ===== Card ===== */
 .card {
     background: white;
     border: 1px solid #ddd;
@@ -66,6 +70,112 @@ h2 {
     overflow: hidden;
 }
 
+/* ===== Buttons ===== */
+.btn {
+    padding: 8px 12px;
+    margin-top: 10px;
+    border: 1px solid #ccc;
+    background: #808080;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.btn.primary {
+    background: #808080;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+/* ===== Table ===== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+
+th {
+    font-size: 12px;
+    color: #777;
+    font-weight: 600;
+    background: #fafafa;
+}
+
+th,
+td {
+    padding: 18px 20px;
+    border-top: 1px solid #eee;
+    text-align: left;
+    vertical-align: middle;
+}
+
+th:nth-child(1) {
+    width: 180px;
+}
+
+th:nth-child(2) {
+    width: 700px;
+}
+
+th:nth-child(3) {
+    width: 260px;
+}
+
+th:nth-child(4) {
+    width: 180px;
+}
+
+th:nth-child(5),
+td:nth-child(5) {
+    width: 120px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+tbody tr {
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+tbody tr:hover {
+    background: #fafafa;
+}
+
+.selected-row {
+    background: #e8f0ff !important;
+}
+
+/* ===== Path ===== */
+.path-cell {
+    white-space: nowrap;
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* ===== Delete Button ===== */
+.delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    width: 40px;
+    height: 40px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+    background: #ef5858;
+    color: white;
+    border-color: #ef5858;
+}
+
+/* ===== Search ===== */
 .search {
     display: flex;
     gap: 10px;
@@ -79,6 +189,7 @@ h2 {
     outline: none;
 }
 
+/* ===== Project ===== */
 .project-item {
     display: flex;
     justify-content: space-between;
@@ -98,16 +209,12 @@ h2 {
     color: #777;
 }
 
-.sub {
-    font-size: 12px;
-    color: #777;
-}
-
+/* ===== Status ===== */
 .status {
-    font-size: 12px;
     display: flex;
     align-items: center;
     gap: 6px;
+    font-size: 12px;
 }
 
 .status.error {
@@ -121,61 +228,7 @@ h2 {
     border-radius: 50%;
 }
 
-.btn {
-    padding: 8px 12px;
-    margin-top: 10px;
-    border: 1px solid #ccc;
-    background: #808080;
-    cursor: pointer;
-}
-
-.btn.primary {
-    background: #808080;
-    color: white;
-}
-
-/* 🔥 Tabelle */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-}
-
-/* 🔥 Spalten sauber definieren */
-th:nth-child(1) { width: 40px; }   /* Play */
-th:nth-child(2) { width: 20%; }    /* Name */
-th:nth-child(3) { width: 45%; }    /* Pfad */
-th:nth-child(4) { width: 120px; }  /* Letzter Lauf */
-th:nth-child(5) { width: 80px; }   /* Runs */
-th:nth-child(6),
-td:nth-child(6) {
-    width: 60px;
-    text-align: center; /* 👉 mittig */
-}
-
-/* Button exakt zentriert */
-.delete-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto; /* 👉 perfekt mittig */
-}
-.delete-btn:hover{
-    background: #ef5858;
-}
-th, td {
-    padding: 14px;
-    border-top: 1px solid #eee;
-    text-align: left; /* 🔥 alles linksbündig */
-}
-
-
-th {
-    font-size: 12px;
-    color: #777;
-}
-
-/* 🔥 Badge */
+/* ===== Badge ===== */
 .badge {
     background: #eee;
     padding: 4px 8px;
@@ -183,7 +236,7 @@ th {
     font-size: 12px;
 }
 
-/* 🔥 Upload */
+/* ===== Upload ===== */
 .upload {
     margin-top: 30px;
     padding: 40px;
@@ -212,48 +265,19 @@ th {
     border-top: 1px solid #eee;
 }
 
-/* 🔥 Pfad */
-.path-cell {
-    width: 45%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.9em;
-    color: #666;
-}
-
-/* 🔥 Play-Spalte FIX */
-.play-column {
-    width: 40px;
-    min-width: 40px;
-    text-align: center;
-    white-space: nowrap; /* verhindert Umbruch */
-}
-
-.play-btn {
-    display: inline-flex;
-    align-items: center;
+/* ===== Actions ===== */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
     justify-content: center;
+    margin-top: 20px;
 }
 
-.play-btn:hover {
-    background: #65c57d;
-}
-
-/* 🔥 Last Run kompakt */
-.last-run-column {
-    width: 120px;
-}
-
-/* Modal */
+/* ===== Modal ===== */
 .modalOverlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(0, 0, 0, 0.4);
-
     display: flex;
     justify-content: center;
     align-items: center;
@@ -264,12 +288,20 @@ th {
     padding: 20px;
     border-radius: 10px;
     min-width: 300px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.modal h3 {
+    margin-top: 0;
 }
 
 .modal input {
     width: 100%;
-    padding: 8px;
+    padding: 10px;
     margin-top: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
 }
 
 .modalActions {
@@ -277,4 +309,17 @@ th {
     justify-content: flex-end;
     gap: 10px;
     margin-top: 15px;
+}
+
+.modalActions button {
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.modalActions button:hover {
+    background: #f2f2f2;
 }

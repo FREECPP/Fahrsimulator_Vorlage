@@ -2,16 +2,6 @@ from utils.app_logging_utils import printlog
 from flask import Flask, Response, request, render_template, jsonify
 from flask_socketio import SocketIO
 from flask_cors import CORS
-import socket
-
-import threading
-import cv2
-import base64
-import configparser
-import os
-import numpy as np
-import time
-import math
 
 from datetime import datetime
 from multiprocessing import Queue
@@ -27,21 +17,29 @@ from controllers.projectController import verzeichnis_bp
 from controllers.layoutController import layout_bp
 from extensions import db
 from dbModels.dashboardLayoutDB import dashboardLayout
+from dbModels.projectAndParticipantsDB import Participant
+from extensions import db
 
-# Optional / lazy imports (auskommentiert gelassen wie bei dir)
-# from logger.log_manager import LogManager
-# from logger.frame_processor import Processor, EyetrackerProcessor, SilabDataProcessor
+import socket
+import threading
+import cv2
+import base64
+import configparser
+import os
+import numpy as np
+import time
+import math
 
-# ==================================================================================
-# Initialising Webapp Data
-# ==================================================================================
+# ===== App =====
 app = Flask(__name__)
 
 CORS(app, supports_credentials=True)
 
 app.register_blueprint(verzeichnis_bp, url_prefix="/")
 app.register_blueprint(layout_bp)
+
 socketio = SocketIO(app, cors_allowed_origins="*")
+
 port = int(os.getenv('PORT', 9999))
 host = "0.0.0.0"
 
@@ -173,8 +171,33 @@ def get_server_ip():
 
 # Start-Button handling on 'dashboard.html'
 @socketio.on('start_recording')
-def handle_start_recording():
-    global logging_manager, is_running, stream_thread
+def handle_start_recording(data):
+    global logging_manager
+    global is_running
+    global stream_thread
+    global current_participant_id
+
+    participant = data.get("participant")
+    project = data.get("project")
+
+    if not participant:
+        printlog("Kein Participant erhalten", "error")
+        return
+
+    participant_id = participant.get("id")
+
+    current_participant_id = participant_id
+
+    participant_db = db.session.get(Participant, participant_id)
+
+    now = datetime.utcnow()
+
+    participant_db.run_started_at = now
+    participant_db.run_ended_at = None
+    participant_db.run_duration_seconds = None
+
+    db.session.commit()
+
     if is_running:
         socketio.emit('is_running', True)
         return
@@ -208,12 +231,36 @@ def handle_start_recording():
 # Stop-Button handling on 'dashboard.html'
 @socketio.on('stop_recording')
 def handle_stop_recording():
-    global logging_manager, is_running, stream_thread
+    global logging_manager
+    global is_running
+    global stream_thread
+    global current_participant_id
+
     stream_stop_event.set()
 
     if stream_thread and stream_thread.is_alive():
         stream_thread.join(timeout=1.0)
     stream_thread = None
+
+    if current_participant_id:
+        participant_db = db.session.get(
+            Participant,
+            current_participant_id
+        )
+
+        if participant_db and participant_db.run_started_at:
+            participant_db.run_ended_at = datetime.utcnow()
+
+            duration = (
+                participant_db.run_ended_at
+                - participant_db.run_started_at
+            )
+
+            participant_db.run_duration_seconds = int(
+                duration.total_seconds()
+            )
+
+            db.session.commit()
 
     if logging_manager:
         logging_manager._stop_logger_processes()
