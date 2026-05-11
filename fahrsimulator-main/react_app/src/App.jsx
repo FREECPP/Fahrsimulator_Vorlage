@@ -5,101 +5,75 @@ import {useNavigate} from "react-router-dom";
 import {ToastContainer, toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-import {useDropzone} from "react-dropzone";
-
 export default function ProjectManager() {
     const navigate = useNavigate();
+
     const [participants, setParticipants] = useState([]);
     const [_selectedProject, setSelectedProject] = useState("");
     const [confirmedProject, setConfirmedProject] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [newParticipantName, setNewParticipantName] = useState("");
+    const [selectedParticipant, setSelectedParticipant] = useState(null);
 
-    // 🔥 Teilnehmer laden
+    // Teilnehmer laden
     const loadParticipants = async (projectId) => {
-        const url = `http://localhost:9999/api/participants/${projectId}`
+        const url = `http://localhost:9999/api/participants/${projectId}`;
 
         try {
-            const res = await fetch(url)
+            const res = await fetch(url);
 
             if (!res.ok) {
-                console.error("❌ Teilnehmer-Request fehlgeschlagen:", res.status)
-                return
+                console.error("Participants Request Fehler:", res.status);
+                return;
             }
 
-            const data = await res.json()
-            setParticipants(data)
-
+            const data = await res.json();
+            setParticipants(data);
         } catch (err) {
-            console.error("❌ Fetch Fehler (Participants):", err)
+            console.error("Participants Fetch Fehler:", err);
         }
-    }
+    };
 
+    // Projekt geändert
     useEffect(() => {
         if (!confirmedProject?.id) {
-            console.warn("⚠️ Kein gültiges Projekt:", confirmedProject)
-            return
+            console.warn("Ungültiges Projekt:", confirmedProject);
+            return;
         }
 
-        loadParticipants(confirmedProject.id)
-    }, [confirmedProject])
+        setSelectedParticipant(null);
+        void loadParticipants(confirmedProject.id);
+    }, [confirmedProject]);
 
-    // 🔥 DELETE
+    // Participant löschen
     const handleDeleteParticipant = (id) => {
-        if (!window.confirm("Sind Sie sich sicher, dass Sie den Probanden und dessen Daten löschen wollen?")) {
+        if (
+            !window.confirm(
+                "Sind Sie sich sicher, dass Sie den Probanden und dessen Daten löschen wollen?"
+            )
+        ) {
             return;
         }
 
         fetch(`http://localhost:9999/api/participant/${id}`, {
             method: "DELETE"
         })
-            .then(res => res.json())
-            .then(data => {
+            .then((res) => res.json())
+            .then((data) => {
                 if (data.success) {
-                    setParticipants(prev => prev.filter(p => p.id !== id));
+                    setParticipants((prev) => prev.filter((p) => p.id !== id));
                     toast.success("Participant gelöscht");
                 } else {
                     toast.error(data.message);
                 }
             })
-            .catch(err => {
+            .catch((err) => {
                 console.error(err);
                 toast.error("Fehler beim Löschen");
             });
     };
 
-    // 🔥 Upload
-    const onDrop = (acceptedFiles) => {
-        if (!confirmedProject) {
-            toast.error("Bitte zuerst ein Projekt auswählen");
-            return;
-        }
-
-        const formData = new FormData();
-
-        acceptedFiles.forEach(file => {
-            formData.append("files", file);
-            formData.append("paths", file.webkitRelativePath || file.name);
-        });
-
-        formData.append("project_id", confirmedProject.id);
-
-        fetch("http://localhost:9999/api/upload", {
-            method: "POST",
-            body: formData
-        })
-            .then(res => res.json())
-            .then(() => {
-                toast.success("Upload erfolgreich");
-                loadParticipants(confirmedProject.id);
-            })
-            .catch(err => {
-                console.error(err);
-                toast.error("Upload fehlgeschlagen");
-            });
-    };
-
-    // 🔥 Create Participant
+    // Participant erstellen
     const handleCreateParticipant = () => {
         if (!newParticipantName.trim()) {
             toast.error("Bitte Namen eingeben");
@@ -121,13 +95,23 @@ export default function ProjectManager() {
                 project_id: confirmedProject.id
             })
         })
-            .then(res => res.json())
-            .then(data => {
+            .then((res) => res.json())
+            .then((data) => {
                 if (data.success) {
                     toast.success("Participant erstellt");
+
+                    const participant = data.participant;
+
                     setShowModal(false);
                     setNewParticipantName("");
-                    loadParticipants(confirmedProject.id);
+
+                    navigate("/dashboard", {
+                        state: {
+                            project: confirmedProject,
+                            participant,
+                            path: participant.path
+                        }
+                    });
                 } else {
                     toast.error(data.message);
                 }
@@ -135,11 +119,27 @@ export default function ProjectManager() {
             .catch(() => toast.error("Fehler beim Erstellen"));
     };
 
-    const {getRootProps, getInputProps, isDragActive} = useDropzone({
-        onDrop,
-        multiple: true
-    });
+    // Dashboard öffnen
+    const openDashboard = () => {
+        if (!selectedParticipant) {
+            toast.error("Bitte Participant auswählen");
+            return;
+        }
 
+        const fullPath = selectedParticipant.path;
+
+        console.log("Öffne Dashboard:", fullPath);
+
+        navigate("/dashboard", {
+            state: {
+                project: confirmedProject,
+                participant: selectedParticipant,
+                path: fullPath
+            }
+        });
+    };
+
+    // Render
     return (
         <main className="page">
             <div className="container">
@@ -152,89 +152,123 @@ export default function ProjectManager() {
                     <div className="header">
                         <div className="center">
                             <h2>Probanden</h2>
+
                             <p className="sub">
                                 {confirmedProject?.name || "Kein Projekt ausgewählt"}
                             </p>
                         </div>
                     </div>
 
+                    {/* Tabelle */}
                     <div className="card">
                         <table>
                             <thead>
-                                <tr>
-                                    <th className="play-column"></th>
-                                    <th>Name</th>
-                                    <th>Pfad</th>
-                                    <th>Letzter Aufruf</th>
-                                    <th className="right">Runs</th>
-                                    <th></th>
-                                </tr>
+                            <tr>
+                                <th>Name</th>
+                                <th>Pfad</th>
+                                <th>Datum</th>
+                                <th>Dauer</th>
+                                <th>Größe</th>
+                                <th></th>
+                            </tr>
                             </thead>
 
                             <tbody>
-                                {participants.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="6" style={{textAlign: "center"}}>
-                                            Keine Teilnehmer gefunden
+                            {participants.length === 0 ? (
+                                <tr>
+                                    <td
+                                        colSpan="6"
+                                        style={{textAlign: "center"}}
+                                    >
+                                        Keine Teilnehmer gefunden
+                                    </td>
+                                </tr>
+                            ) : (
+                                participants.map((p) => (
+                                    <tr
+                                        key={p.id}
+                                        onClick={() => setSelectedParticipant(p)}
+                                        className={
+                                            selectedParticipant?.id === p.id
+                                                ? "selected-row"
+                                                : ""
+                                        }
+                                    >
+                                        <td>{p.name}</td>
+
+                                        <td
+                                            className="path-cell"
+                                            title={p.path}
+                                        >
+                                            {p.path.replace(`\\${p.name}`, "")}
+                                        </td>
+
+                                        <td>
+                                            {p.run_started_at
+                                                ? new Date(
+                                                    p.run_started_at
+                                                ).toLocaleString()
+                                                : "—"}
+                                        </td>
+
+                                        <td>
+                                            {p.run_duration_seconds
+                                                ? `${Math.floor(
+                                                    p.run_duration_seconds / 60
+                                                )} min ${
+                                                    p.run_duration_seconds % 60
+                                                } s`
+                                                : "—"}
+                                        </td>
+                                        <td>
+
+                                            {p.file_size !== undefined
+                                                ? `${(p.file_size / (1024 * 1024)).toFixed(2)} MB`
+                                                : "—"}
+                                        </td>
+                                        <td>
+                                            <button
+                                                className="delete-btn"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteParticipant(p.id);
+                                                }}
+                                            >
+                                                🗑️
+                                            </button>
                                         </td>
                                     </tr>
-                                ) : (
-                                    participants.map((p) => (
-                                        <tr key={p.id}>
-                                            <td className="play-column">
-                                                <button
-                                                    className="play-btn"
-                                                    onClick={() => {
-                                                        const fullPath = p.path
-
-                                                        console.log("👉 Öffne Dashboard mit:", fullPath)
-
-                                                        navigate("/dashboard", {
-                                                            state: {
-                                                                project: confirmedProject,
-                                                                participant: p,
-                                                                path: fullPath,
-                                                            },
-                                                        })
-                                                    }}
-                                                >
-                                                    ▶
-                                                </button>
-                                            </td>
-
-                                            <td>{p.name}</td>
-
-                                            <td className="path-cell" title={p.path}>
-                                                {p.path}
-                                            </td>
-
-                                            <td>
-                                                {p.last_run ? new Date(p.last_run).toLocaleDateString() : "—"}
-                                            </td>
-
-                                            <td className="right">{p.runs}</td>
-
-                                            <td>
-                                                <button
-                                                    className="delete-btn"
-                                                    onClick={() => handleDeleteParticipant(p.id)}
-                                                >
-                                                    🗑️
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
+                                ))
+                            )}
                             </tbody>
                         </table>
                     </div>
 
-                    <div className="center">
-                        <button className="btn primary" onClick={() => setShowModal(true)}>
+                    {/* Buttons */}
+                    <div
+                        className="center"
+                        style={{
+                            display: "flex",
+                            gap: "1rem",
+                            justifyContent: "center"
+                        }}
+                    >
+                        <button
+                            className="btn primary"
+                            onClick={() => setShowModal(true)}
+                        >
                             + Add Participant
+                        </button>
+
+                        <button
+                            className="btn primary"
+                            onClick={openDashboard}
+                        >
+                            Dashboard öffnen
                         </button>
                     </div>
 
+                    {/* Modal */}
                     {showModal && (
                         <div className="modalOverlay">
                             <div className="modal">
@@ -242,25 +276,29 @@ export default function ProjectManager() {
 
                                 <input
                                     value={newParticipantName}
-                                    onChange={(e) => setNewParticipantName(e.target.value)}
+                                    onChange={(e) =>
+                                        setNewParticipantName(e.target.value)
+                                    }
                                 />
 
                                 <div className="modalActions">
-                                    <button onClick={handleCreateParticipant}>OK</button>
-                                    <button onClick={() => setShowModal(false)}>Abbrechen</button>
+                                    <button onClick={handleCreateParticipant}>
+                                        OK
+                                    </button>
+
+                                    <button
+                                        onClick={() => setShowModal(false)}
+                                    >
+                                        Abbrechen
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     )}
-
-                    <div {...getRootProps()} className={`upload ${isDragActive ? "active" : ""}`}>
-                        <input {...getInputProps()} />
-                        Drag & Drop
-                    </div>
                 </section>
             </div>
 
-            <ToastContainer position="bottom-center" />
+            <ToastContainer position="bottom-center"/>
         </main>
     );
 }

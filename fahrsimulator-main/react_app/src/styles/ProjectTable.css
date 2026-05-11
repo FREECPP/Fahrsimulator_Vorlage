@@ -15,6 +15,25 @@
     font-size: 14px;
 }
 
+.right-section {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+.input-wrapper {
+    position: relative;
+}
+
+.dropdown-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 18px;
+}
 /* 🔹 Row Layout */
 .row {
     display: flex;
@@ -103,6 +122,7 @@
 
     cursor: pointer;
 }
+
 .clickable {
     cursor: pointer;
     text-decoration: underline;
@@ -111,6 +131,7 @@
 .clickable:hover {
     color: #007bff;
 }
+
 .continue-button:disabled {
     opacity: 0.5;
     cursor: not-allowed;

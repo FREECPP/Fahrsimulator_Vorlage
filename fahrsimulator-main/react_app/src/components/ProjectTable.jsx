@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from "react";
-import "./../styles/ProjectTable.css";
 import {toast} from "react-toastify";
+
+import "./../styles/ProjectTable.css";
 
 export default function ProjectTable({onChange, onConfirm}) {
 
@@ -8,12 +9,11 @@ export default function ProjectTable({onChange, onConfirm}) {
     const [selectedOption, setSelectedOption] = useState(null);
     const [options, setOptions] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
+    const [showAll, setShowAll] = useState(false);
 
     const containerRef = useRef(null);
 
-    // -------------------------------
-    // Projekte laden
-    // -------------------------------
+    // ===== Load Projects =====
     async function fetchProjects() {
         try {
             const res = await fetch("http://localhost:9999/api/projects");
@@ -40,18 +40,21 @@ export default function ProjectTable({onChange, onConfirm}) {
         fetchProjects();
     }, []);
 
-    // -------------------------------
-    // Projekt erstellen (FIXED)
-    // -------------------------------
+    // ===== Create Project =====
     async function createDirectory(name) {
         try {
             const formData = new FormData();
+
             formData.append("projektverzeichnis", name);
             formData.append("creator", "User");
-            const response = await fetch("http://localhost:9999/vz_anlegen", {
-                method: "POST",
-                body: formData
-            });
+
+            const response = await fetch(
+                "http://localhost:9999/vz_anlegen",
+                {
+                    method: "POST",
+                    body: formData
+                }
+            );
 
             const data = await response.json();
 
@@ -60,83 +63,142 @@ export default function ProjectTable({onChange, onConfirm}) {
 
                 await fetchProjects();
 
-                // 🔥 WICHTIG: echtes Projekt zurückgeben
                 return data.project;
             }
 
             toast.error(data.message || "Fehler ❌");
+
             return null;
 
         } catch (err) {
             console.error("🔥 Netzwerk/JS Fehler:", err);
+
             toast.error("Netzwerkfehler ❌");
+
             return null;
         }
     }
 
-    // -------------------------------
-    // Outside Click
-    // -------------------------------
+    // ===== Outside Click =====
     useEffect(() => {
+
         function handleClickOutside(e) {
-            if (containerRef.current && !containerRef.current.contains(e.target)) {
+            if (
+                containerRef.current
+                && !containerRef.current.contains(e.target)
+            ) {
                 setIsOpen(false);
             }
         }
 
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        document.addEventListener(
+            "mousedown",
+            handleClickOutside
+        );
+
+        return () =>
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+
     }, []);
 
-    // -------------------------------
-    // Filter + Sort
-    // -------------------------------
+    // ===== Filter =====
     const filteredOptions = options
         .filter(opt => {
+
+            if (showAll) {
+                return true;
+            }
+
             const search = ProjectName.toLowerCase();
+
             return [opt.name, opt.person, opt.room]
-                .some(value => String(value).toLowerCase().includes(search));
+                .some(value =>
+                    String(value)
+                        .toLowerCase()
+                        .includes(search)
+                );
         })
+
         .sort((a, b) => {
+
             if (a.available !== b.available) {
                 return b.available - a.available;
             }
+
             return a.name.localeCompare(b.name);
         });
 
-    // -------------------------------
-    // Render
-    // -------------------------------
+    // ===== Render =====
     return (
-        <div className="project-dropdown" ref={containerRef}>
+        <div
+            className="project-dropdown"
+            ref={containerRef}
+        >
             <h2> Projekte </h2>
 
-            <input
-                type="text"
-                placeholder="Wählen oder erstellen Sie ein Projekt..."
-                value={ProjectName}
-                onFocus={() => setIsOpen(true)}
-                onChange={(e) => {
-                    const val = e.target.value;
+            <div className="input-wrapper">
 
-                    setProjectName(val);
-                    setSelectedOption(null);
-                    setIsOpen(true);
+                <input
+                    type="text"
+                    placeholder="Wählen oder erstellen Sie ein Projekt..."
+                    value={ProjectName}
+                    className="input"
 
-                    onChange?.({name: val});
-                }}
-                className="input"
-            />
+                    onFocus={() => {
+                        setShowAll(false);
+                        setIsOpen(true);
+                    }}
+
+                    onChange={(e) => {
+                        const val = e.target.value;
+
+                        setShowAll(false);
+
+                        setProjectName(val);
+                        setSelectedOption(null);
+                        setIsOpen(true);
+
+                        onChange?.({name: val});
+                    }}
+                />
+
+                <button
+                    type="button"
+                    className="dropdown-toggle"
+
+                    onClick={() => {
+                        setShowAll(true);
+                        setIsOpen(true);
+                    }}
+                >
+                    ▼
+                </button>
+
+            </div>
 
             {isOpen && (
                 <ul className="dropdown">
+
                     {filteredOptions.map((opt) => (
+
                         <li
                             key={opt.id}
-                            className={!opt.available ? "disabled" : ""}
+                            className={
+                                !opt.available
+                                    ? "disabled"
+                                    : ""
+                            }
+
                             onClick={() => {
+
                                 if (!opt.available) {
-                                    toast.error("Projekt ist nicht verfügbar ❌");
+                                    toast.error(
+                                        "Projekt ist nicht verfügbar ❌"
+                                    );
+
                                     return;
                                 }
 
@@ -145,64 +207,110 @@ export default function ProjectTable({onChange, onConfirm}) {
                                 setIsOpen(false);
 
                                 onChange?.(opt);
+                                onConfirm?.(opt);
                             }}
                         >
                             <div className="row">
-                                <div className="left">
-                                    <span className="name">{opt.name}</span>
-                                </div>
 
-                                <div className="status">
-                                    <div
-                                        className="status-dot"
-                                        style={{
-                                            backgroundColor: opt.available ? "green" : "red"
-                                        }}
-                                    />
-                                    <span className="status-text">
-                                        {opt.available ? "Verfügbar" : "Nicht verfügbar"}
+                                <div className="left">
+                                    <span className="name">
+                                        {opt.name}
                                     </span>
                                 </div>
+
+                                <div className="right-section">
+
+                                    <div className="right">
+                                        <span className="projectPath">
+                                            {opt.path}
+                                        </span>
+                                    </div>
+
+                                    <div className="status">
+
+                                        <div
+                                            className="status-dot"
+
+                                            style={{
+                                                backgroundColor:
+                                                    opt.available
+                                                        ? "green"
+                                                        : "red"
+                                            }}
+                                        />
+
+                                        <span className="status-text">
+                                            {
+                                                opt.available
+                                                    ? "Verfügbar"
+                                                    : "Nicht verfügbar"
+                                            }
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
                             </div>
+
                         </li>
+
                     ))}
+
                 </ul>
             )}
 
-            <button
-                className="continue-button"
-                disabled={
-                    !ProjectName ||
-                    (selectedOption && !selectedOption.available)
-                }
-                onClick={async () => {
+            {/*
+<button
+    className="continue-button"
 
-                    const finalValue = selectedOption?.name || ProjectName;
-                    let projectToConfirm = selectedOption;
+    disabled={
+        !ProjectName
+        || (
+            selectedOption
+            && !selectedOption.available
+        )
+    }
 
-                    // 🔥 FIX: neues Projekt korrekt behandeln
-                    if (!selectedOption) {
-                        const newProject = await createDirectory(finalValue);
+    onClick={async () => {
 
-                        if (!newProject) return;
+        const finalValue =
+            selectedOption?.name
+            || ProjectName;
 
-                        projectToConfirm = {
-                            id: newProject.id,
-                            name: newProject.name,
-                            path: newProject.path,
-                            creator: newProject.creator,
-                            available: newProject.available
-                        };
-                    }
+        let projectToConfirm =
+            selectedOption;
 
-                    console.log("✅ CONFIRM PROJECT:", projectToConfirm);
+        if (!selectedOption) {
 
-                    // 🔥 IMMER mit ID
-                    onConfirm?.(projectToConfirm);
-                }}
-            >
-                Weiter
-            </button>
+            const newProject =
+                await createDirectory(finalValue);
+
+            if (!newProject) {
+                return;
+            }
+
+            projectToConfirm = {
+                id: newProject.id,
+                name: newProject.name,
+                path: newProject.path,
+                creator: newProject.creator,
+                available: newProject.available
+            };
+        }
+
+        console.log(
+            "✅ CONFIRM PROJECT:",
+            projectToConfirm
+        );
+
+        onConfirm?.(projectToConfirm);
+    }}
+>
+    Weiter
+</button>
+*/}
+
         </div>
     );
 }
