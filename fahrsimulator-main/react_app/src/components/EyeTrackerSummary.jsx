@@ -2,19 +2,38 @@ import { useEffect, useMemo, useRef, useState } from "react"
 
 const TRAIL_WINDOW_MS = 60_000
 
-function isFiniteNumber(value) {
-  return typeof value === "number" && Number.isFinite(value)
+const DISPLAY_AREA_BOUNDS = {
+  left: 0.0,
+  right: 1.0,
+  top: 0.0,
+  bottom: 1.0,
+  invertY: false,
 }
 
 function clamp01(value) {
   return Math.max(0, Math.min(1, value))
 }
 
+function applyDisplayBounds(point) {
+  if (!point?.valid) return point
+  const width = DISPLAY_AREA_BOUNDS.right - DISPLAY_AREA_BOUNDS.left
+  const height = DISPLAY_AREA_BOUNDS.bottom - DISPLAY_AREA_BOUNDS.top
+  if (width <= 0 || height <= 0) {
+    return { x: null, y: null, valid: false }
+  }
+
+  const normX = (point.x - DISPLAY_AREA_BOUNDS.left) / width
+  const normY = (point.y - DISPLAY_AREA_BOUNDS.top) / height
+  const mappedY = DISPLAY_AREA_BOUNDS.invertY ? 1 - normY : normY
+
+  return { x: clamp01(normX), y: clamp01(mappedY), valid: true }
+}
+
 function getGazePoint(eyetracker) {
   const x = Number(eyetracker?.x)
   const y = Number(eyetracker?.y)
   if (Number.isFinite(x) && Number.isFinite(y)) {
-    return { x: clamp01(x), y: clamp01(y), valid: true }
+    return applyDisplayBounds({ x, y, valid: true })
   }
 
   const left = eyetracker?.left_gaze_point_on_display_area
@@ -43,38 +62,11 @@ function getGazePoint(eyetracker) {
     return { x: null, y: null, valid: false }
   }
 
-  return {
-    x: clamp01(xCandidates.reduce((acc, item) => acc + item, 0) / xCandidates.length),
-    y: clamp01(yCandidates.reduce((acc, item) => acc + item, 0) / yCandidates.length),
+  return applyDisplayBounds({
+    x: xCandidates.reduce((acc, item) => acc + item, 0) / xCandidates.length,
+    y: yCandidates.reduce((acc, item) => acc + item, 0) / yCandidates.length,
     valid: true,
-  }
-}
-
-function getPupilLeft(eyetracker) {
-  const direct = Number(eyetracker?.pupil_left)
-  if (Number.isFinite(direct)) return direct
-  const raw = Number(eyetracker?.left_pupil_diameter)
-  return Number.isFinite(raw) ? raw : null
-}
-
-function getPupilRight(eyetracker) {
-  const direct = Number(eyetracker?.pupil_right)
-  if (Number.isFinite(direct)) return direct
-  const raw = Number(eyetracker?.right_pupil_diameter)
-  return Number.isFinite(raw) ? raw : null
-}
-
-function classifyAoi(point) {
-  if (!point || !point.valid) return "unknown"
-
-  if (point.y > 0.64 && point.x >= 0.3 && point.x <= 0.7) return "cluster"
-  if (point.y < 0.28 && (point.x <= 0.18 || point.x >= 0.82)) return "mirrors"
-  if (point.y <= 0.62 && point.x >= 0.18 && point.x <= 0.82) return "road"
-  return "off_road"
-}
-
-function formatValue(value, digits = 2) {
-  return Number.isFinite(value) ? value.toFixed(digits) : "-"
+  })
 }
 
 function EyeTrackerSummary({ eyetracker, running }) {
@@ -123,35 +115,9 @@ function EyeTrackerSummary({ eyetracker, running }) {
   const trackingStatus = useMemo(() => {
     if (!running) return { label: "Simulation stopped", className: "idle" }
     if (!latestPoint) return { label: "No gaze samples", className: "bad" }
-    if (lastSampleAgeMs <= 700) return { label: "Good", className: "ok" }
-    if (lastSampleAgeMs <= 2200) return { label: "Degraded", className: "idle" }
+    if (lastSampleAgeMs <= 2200) return { label: "Tracking", className: "ok" }
     return { label: "Lost", className: "bad" }
   }, [lastSampleAgeMs, latestPoint, running])
-
-  const pupilLeft = getPupilLeft(eyetracker)
-  const pupilRight = getPupilRight(eyetracker)
-
-  const aoiStats = useMemo(() => {
-    const counts = {
-      road: 0,
-      mirrors: 0,
-      cluster: 0,
-      off_road: 0,
-      unknown: 0,
-    }
-
-    for (const point of visibleTrail) {
-      counts[classifyAoi(point)] += 1
-    }
-
-    const total = visibleTrail.length || 1
-    return [
-      { key: "road", label: "Road", percent: Math.round((counts.road / total) * 100) },
-      { key: "mirrors", label: "Mirrors", percent: Math.round((counts.mirrors / total) * 100) },
-      { key: "cluster", label: "Cluster", percent: Math.round((counts.cluster / total) * 100) },
-      { key: "off_road", label: "Off-road", percent: Math.round((counts.off_road / total) * 100) },
-    ]
-  }, [visibleTrail])
 
   const markerStyle = {
     left: `${((latestPoint?.x ?? 0.5) * 100).toFixed(2)}%`,
@@ -179,40 +145,6 @@ function EyeTrackerSummary({ eyetracker, running }) {
           />
         ))}
         <span className="eyetracker-live-dot" style={markerStyle} />
-      </div>
-
-      <div className="eyetracker-metrics">
-        <div className="status-row">
-          <span>Gaze X / Y</span>
-          <strong>
-            {formatValue(latestPoint?.x, 3)} / {formatValue(latestPoint?.y, 3)}
-          </strong>
-        </div>
-        <div className="status-row">
-          <span>Pupil Left / Right</span>
-          <strong>
-            {formatValue(pupilLeft, 2)} / {formatValue(pupilRight, 2)}
-          </strong>
-        </div>
-        <div className="status-row">
-          <span>Last sample age</span>
-          <strong>{isFiniteNumber(lastSampleAgeMs) ? `${Math.round(lastSampleAgeMs)} ms` : "-"}</strong>
-        </div>
-      </div>
-
-      <div className="eyetracker-aoi-panel">
-        <h4>AOI over last 60s</h4>
-        <div className="eyetracker-aoi-list">
-          {aoiStats.map((item) => (
-            <div className="eyetracker-aoi-row" key={item.key}>
-              <span>{item.label}</span>
-              <div className="eyetracker-aoi-bar-wrap">
-                <div className="eyetracker-aoi-bar" style={{ width: `${item.percent}%` }} />
-              </div>
-              <strong>{item.percent}%</strong>
-            </div>
-          ))}
-        </div>
       </div>
     </div>
   )

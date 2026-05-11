@@ -241,6 +241,38 @@ select option {
     gap: 4px;
 }
 
+.widget-title-group select {
+    font-size: 1rem;
+    font-weight: 700;
+    padding: 10px 38px 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: linear-gradient(90deg, #173c56, #225f7a);
+    color: #f7fdff;
+    min-width: 190px;
+    cursor: pointer;
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, #e8f3ff 50%),
+        linear-gradient(135deg, #e8f3ff 50%, transparent 50%);
+    background-position:
+        right 16px top 55%,
+        right 10px top 55%;
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.widget-title-group select:hover {
+    border-color: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 0 0 2px rgba(127, 183, 227, 0.35);
+}
+
+.widget-title-group select:focus-visible {
+    outline: 2px solid #7fb7e3;
+    outline-offset: 1px;
+}
+
 .widget-size-badge {
     display: inline-flex;
     align-items: center;
@@ -483,6 +515,7 @@ select option {
 
 .eyetracker-card {
     display: grid;
+    grid-template-rows: auto 1fr;
     gap: 10px;
     height: 100%;
 }
@@ -497,7 +530,8 @@ select option {
 
 .eyetracker-map {
     position: relative;
-    min-height: 180px;
+    min-height: 260px;
+    height: 100%;
     border-radius: 12px;
     border: 1px solid #c9dbea;
     background: linear-gradient(180deg, #f8fbff, #edf4fb);
@@ -531,11 +565,6 @@ select option {
     background: #e54d55;
     border: 2px solid #ffffff;
     box-shadow: 0 0 0 6px rgba(229, 77, 85, 0.2);
-}
-
-.eyetracker-metrics {
-    display: grid;
-    gap: 8px;
 }
 
 .eyetracker-aoi-panel {

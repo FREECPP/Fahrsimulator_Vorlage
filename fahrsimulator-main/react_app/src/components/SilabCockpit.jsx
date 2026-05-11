@@ -32,7 +32,7 @@ function toSteeringDegrees(value) {
   return clamp((normalized - 0.5) * 2 * MAX_STEERING_DEG, -MAX_STEERING_DEG, MAX_STEERING_DEG)
 }
 
-function SilabCockpit({ silab, connected, running, variant = "full" }) {
+function SilabCockpit({ silab }) {
   const wheelSources = ["/steering-wheel.svg", "/assets/steering-wheel.svg"]
   const [wheelSourceIndex, setWheelSourceIndex] = useState(0)
   const [displaySpeedKmh, setDisplaySpeedKmh] = useState(0)
@@ -60,7 +60,7 @@ function SilabCockpit({ silab, connected, running, variant = "full" }) {
   const hasMoreWheelSources = wheelSourceIndex < wheelSources.length - 1
 
   return (
-    <div className={`silab-cockpit ${variant === "pedals" ? "pedals-only" : ""}`}>
+    <div className="silab-cockpit">
       <section className="silab-wheel-panel">
         <div className="wheel-stage">
           <div className="wheel-frame" style={{ transform: `rotate(${steeringDeg.toFixed(1)}deg)` }}>
@@ -88,49 +88,34 @@ function SilabCockpit({ silab, connected, running, variant = "full" }) {
           </div>
         </div>
 
-        <div className="wheel-readout">
-          <span>Steering</span>
-          <strong>{Number.isFinite(silab?.steering) ? silab.steering.toFixed(2) : "-"}</strong>
-        </div>
       </section>
 
-      {variant !== "pedals" ? (
-        <section className="silab-gauge-panel">
-          <svg viewBox="0 0 140 95" className="speed-gauge" role="img" aria-label="Speedometer">
-            <path d="M 18 72 A 52 52 0 0 1 122 72" fill="none" stroke="#d7e2ec" strokeWidth="10" strokeLinecap="round" />
-            <path
-              d="M 18 72 A 52 52 0 0 1 122 72"
-              fill="none"
-              stroke="url(#gaugeAccent)"
-              strokeWidth="10"
-              strokeLinecap="round"
-              style={{
-                strokeDasharray: `${speedRatio * GAUGE_ARC_LENGTH} ${GAUGE_ARC_LENGTH}`,
-                transition: "stroke-dasharray 120ms linear",
-              }}
-            />
+      <section className="silab-gauge-panel">
+        <svg viewBox="0 0 140 95" className="speed-gauge" role="img" aria-label="Speedometer">
+          <path d="M 18 72 A 52 52 0 0 1 122 72" fill="none" stroke="#d7e2ec" strokeWidth="10" strokeLinecap="round" />
+          <path
+            d="M 18 72 A 52 52 0 0 1 122 72"
+            fill="none"
+            stroke="url(#gaugeAccent)"
+            strokeWidth="10"
+            strokeLinecap="round"
+            style={{
+              strokeDasharray: `${speedRatio * GAUGE_ARC_LENGTH} ${GAUGE_ARC_LENGTH}`,
+              transition: "stroke-dasharray 120ms linear",
+            }}
+          />
 
-            <defs>
-              <linearGradient id="gaugeAccent" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#6ab2ff" />
-                <stop offset="100%" stopColor="#2d5dff" />
-              </linearGradient>
-            </defs>
-            <text x="70" y="85" textAnchor="middle" fontSize="12" fontWeight="700" fill="#223447">
-              {displaySpeedKmh.toFixed(1)} km/h
-            </text>
-          </svg>
-
-          <div className="gauge-status-row">
-            <span>Socket</span>
-            <strong className={connected ? "ok" : "bad"}>{connected ? "Connected" : "Disconnected"}</strong>
-          </div>
-          <div className="gauge-status-row">
-            <span>Recording</span>
-            <strong className={running ? "ok" : "idle"}>{running ? "Running" : "Stopped"}</strong>
-          </div>
-        </section>
-      ) : null}
+          <defs>
+            <linearGradient id="gaugeAccent" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6ab2ff" />
+              <stop offset="100%" stopColor="#2d5dff" />
+            </linearGradient>
+          </defs>
+          <text x="70" y="85" textAnchor="middle" fontSize="12" fontWeight="700" fill="#223447">
+            {displaySpeedKmh.toFixed(1)} km/h
+          </text>
+        </svg>
+      </section>
 
       <section className="silab-pedals">
         <div className="pedal">

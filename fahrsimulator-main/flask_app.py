@@ -67,6 +67,7 @@ BASE_DIR = None
 is_running = False
 stream_thread = None
 stream_stop_event = threading.Event()
+EMIT_INTERVAL = 0
 
 # ==================================================================================
 # Initialising Queue for Multiprocessing IPC
@@ -326,6 +327,18 @@ def read_queue(logging_manager, stop_event):
             except Exception as e:
                 printlog(f"Reading Silab-Queue error: {e}", "debug")
 
+        # Eyetracker Data-Queue
+        if eyetracker_queue is not None:
+            try:
+                eyetracker = eyetracker_queue.get_nowait()
+                if eyetracker is not None:
+                    latest_sensor_data["eyetracker"] = eyetracker
+                    has_update = True
+            except Empty:
+                pass
+            except Exception as e:
+                printlog(f"Reading Eyetracker-Queue error: {e}", "debug")
+
         # Rasante-Fahrweise-Model Data-Queue
         if rasante_fahrweise_model_queue is not None:
             try:
@@ -413,7 +426,7 @@ def read_queue(logging_manager, stop_event):
                 printlog(f"gaze queue error: {e}", "debug")
 
         now = time.monotonic()
-        if has_update or (now - last_emit_time) >= 0.25:
+        if (now - last_emit_time) >= EMIT_INTERVAL:
             socketio.emit("sensor_update", latest_sensor_data)
             last_emit_time = now
 

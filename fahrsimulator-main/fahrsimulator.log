@@ -1,71 +1,324 @@
-2026-05-08 12:45:40,973 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+2026-05-11 09:17:35,621 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
  * Running on http://127.0.0.1:9999
-2026-05-08 12:45:40,973 [INFO] [33mPress CTRL+C to quit[0m
-2026-05-08 12:45:45,018 [INFO] 127.0.0.1 - - [08/May/2026 12:45:45] "GET /socket.io/?EIO=4&transport=polling&t=sheibynl HTTP/1.1" 200 -
-2026-05-08 12:45:45,033 [INFO] Client connected to server 10.19.137.6:9999
-2026-05-08 12:45:45,035 [INFO] 127.0.0.1 - - [08/May/2026 12:45:45] "GET /socket.io/?EIO=4&transport=polling&t=sheiows1&sid=aPO_Jk8x62VLXiTbAAAA HTTP/1.1" 200 -
-2026-05-08 12:45:45,037 [INFO] 127.0.0.1 - - [08/May/2026 12:45:45] "POST /socket.io/?EIO=4&transport=polling&t=sheimbd9&sid=aPO_Jk8x62VLXiTbAAAA HTTP/1.1" 200 -
-2026-05-08 12:45:45,989 [INFO] 127.0.0.1 - - [08/May/2026 12:45:45] "GET /socket.io/?EIO=4&transport=websocket&sid=aPO_Jk8x62VLXiTbAAAA HTTP/1.1" 200 -
-2026-05-08 12:45:46,137 [INFO] 127.0.0.1 - - [08/May/2026 12:45:46] "GET /socket.io/?EIO=4&transport=polling&t=shfd6n75 HTTP/1.1" 200 -
-2026-05-08 12:45:46,139 [INFO] 127.0.0.1 - - [08/May/2026 12:45:46] "GET /socket.io/?EIO=4&transport=polling&t=shfd7p49 HTTP/1.1" 200 -
-2026-05-08 12:45:46,141 [INFO] 127.0.0.1 - - [08/May/2026 12:45:46] "GET /api/layouts/full-db HTTP/1.1" 200 -
-2026-05-08 12:45:46,144 [INFO] 127.0.0.1 - - [08/May/2026 12:45:46] "GET /api/layouts/asdf HTTP/1.1" 200 -
-2026-05-08 12:45:46,148 [INFO] 127.0.0.1 - - [08/May/2026 12:45:46] "GET /api/layouts/full-db HTTP/1.1" 200 -
-2026-05-08 12:45:46,149 [INFO] Client connected to server 10.19.137.6:9999
-2026-05-08 12:45:46,150 [INFO] 127.0.0.1 - - [08/May/2026 12:45:46] "GET /api/layouts/asdf HTTP/1.1" 200 -
-2026-05-08 12:45:46,150 [INFO] 127.0.0.1 - - [08/May/2026 12:45:46] "POST /socket.io/?EIO=4&transport=polling&t=shfdufew&sid=BzsneWYDPNans3SlAAAD HTTP/1.1" 200 -
-2026-05-08 12:45:46,151 [INFO] 127.0.0.1 - - [08/May/2026 12:45:46] "GET /socket.io/?EIO=4&transport=polling&t=shfdu2fb&sid=BzsneWYDPNans3SlAAAD HTTP/1.1" 200 -
-2026-05-08 12:45:46,151 [INFO] Layout request: GET | asdf | default
-2026-05-08 12:45:46,153 [INFO] 127.0.0.1 - - [08/May/2026 12:45:46] "GET /api/layout/asdf/default HTTP/1.1" 200 -
-2026-05-08 12:45:46,181 [INFO] 127.0.0.1 - - [08/May/2026 12:45:46] "GET /socket.io/?EIO=4&transport=polling&t=shferdmm&sid=BzsneWYDPNans3SlAAAD HTTP/1.1" 200 -
-2026-05-08 12:45:47,106 [INFO] Starte Log-Manager
-2026-05-08 12:45:47,107 [INFO] A:\Fahrsimulator_Projekte
-2026-05-08 12:45:47,124 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
-2026-05-08 12:45:47,195 [INFO] 127.0.0.1 - - [08/May/2026 12:45:47] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
-2026-05-08 12:45:47,196 [INFO] Layout request: POST | asdf | default
-2026-05-08 12:45:47,197 [INFO] Updating layout ID 1
-2026-05-08 12:45:47,198 [INFO] 127.0.0.1 - - [08/May/2026 12:45:47] "POST /api/layout/asdf/default HTTP/1.1" 200 -
-2026-05-08 12:49:35,092 [INFO] 127.0.0.1 - - [08/May/2026 12:49:35] "GET /api/projects HTTP/1.1" 200 -
-2026-05-08 12:49:35,095 [INFO] 127.0.0.1 - - [08/May/2026 12:49:35] "GET /api/projects HTTP/1.1" 200 -
-2026-05-08 12:49:41,484 [INFO] 127.0.0.1 - - [08/May/2026 12:49:41] "GET / HTTP/1.1" 200 -
-2026-05-08 12:49:41,517 [INFO] 127.0.0.1 - - [08/May/2026 12:49:41] "[36mGET /static/js/index.js HTTP/1.1[0m" 304 -
-2026-05-08 12:49:41,517 [INFO] 127.0.0.1 - - [08/May/2026 12:49:41] "[36mGET /static/logo_white_mini.png HTTP/1.1[0m" 304 -
-2026-05-08 12:49:41,519 [INFO] 127.0.0.1 - - [08/May/2026 12:49:41] "[36mGET /static/css/index.css HTTP/1.1[0m" 304 -
-2026-05-08 12:49:44,571 [INFO] 127.0.0.1 - - [08/May/2026 12:49:44] "GET / HTTP/1.1" 200 -
-2026-05-08 12:49:44,590 [INFO] 127.0.0.1 - - [08/May/2026 12:49:44] "[36mGET /static/css/index.css HTTP/1.1[0m" 304 -
-2026-05-08 12:49:44,594 [INFO] 127.0.0.1 - - [08/May/2026 12:49:44] "[36mGET /static/logo_white_mini.png HTTP/1.1[0m" 304 -
-2026-05-08 12:49:44,595 [INFO] 127.0.0.1 - - [08/May/2026 12:49:44] "[36mGET /static/js/index.js HTTP/1.1[0m" 304 -
-2026-05-08 13:04:52,192 [INFO] 127.0.0.1 - - [08/May/2026 13:04:52] "GET /socket.io/?EIO=4&transport=websocket&sid=BzsneWYDPNans3SlAAAD HTTP/1.1" 200 -
-2026-05-08 13:04:52,353 [INFO] 127.0.0.1 - - [08/May/2026 13:04:52] "GET /api/layouts/full-db HTTP/1.1" 200 -
-2026-05-08 13:04:52,356 [INFO] 127.0.0.1 - - [08/May/2026 13:04:52] "GET /api/layouts/asdf HTTP/1.1" 200 -
-2026-05-08 13:04:52,356 [INFO] 127.0.0.1 - - [08/May/2026 13:04:52] "GET /socket.io/?EIO=4&transport=polling&t=t5zsnrfo HTTP/1.1" 200 -
-2026-05-08 13:04:52,357 [INFO] 127.0.0.1 - - [08/May/2026 13:04:52] "GET /socket.io/?EIO=4&transport=polling&t=t5zsopbh HTTP/1.1" 200 -
-2026-05-08 13:04:52,360 [INFO] 127.0.0.1 - - [08/May/2026 13:04:52] "GET /api/layouts/asdf HTTP/1.1" 200 -
-2026-05-08 13:04:52,361 [INFO] 127.0.0.1 - - [08/May/2026 13:04:52] "GET /api/layouts/full-db HTTP/1.1" 200 -
-2026-05-08 13:04:52,369 [INFO] Client connected to server 10.19.137.6:9999
-2026-05-08 13:04:52,370 [INFO] 127.0.0.1 - - [08/May/2026 13:04:52] "POST /socket.io/?EIO=4&transport=polling&t=t5zta1kw&sid=AI0CPW7ILV8Qpmj3AAAG HTTP/1.1" 200 -
-2026-05-08 13:04:52,371 [INFO] 127.0.0.1 - - [08/May/2026 13:04:52] "GET /socket.io/?EIO=4&transport=polling&t=t5ztay38&sid=AI0CPW7ILV8Qpmj3AAAG HTTP/1.1" 200 -
-2026-05-08 13:04:52,372 [INFO] Layout request: GET | asdf | default
-2026-05-08 13:04:52,374 [INFO] 127.0.0.1 - - [08/May/2026 13:04:52] "GET /api/layout/asdf/default HTTP/1.1" 200 -
-2026-05-08 13:04:53,793 [INFO] 127.0.0.1 - - [08/May/2026 13:04:53] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
-2026-05-08 13:04:53,796 [INFO] Layout request: POST | asdf | default
-2026-05-08 13:04:53,800 [INFO] Updating layout ID 1
-2026-05-08 13:04:53,801 [INFO] 127.0.0.1 - - [08/May/2026 13:04:53] "POST /api/layout/asdf/default HTTP/1.1" 200 -
-2026-05-08 13:35:46,855 [INFO] 127.0.0.1 - - [08/May/2026 13:35:46] "GET /socket.io/?EIO=4&transport=websocket&sid=AI0CPW7ILV8Qpmj3AAAG HTTP/1.1" 200 -
-2026-05-08 13:35:47,026 [INFO] 127.0.0.1 - - [08/May/2026 13:35:47] "GET /api/layouts/full-db HTTP/1.1" 200 -
-2026-05-08 13:35:47,026 [INFO] 127.0.0.1 - - [08/May/2026 13:35:47] "GET /api/layouts/asdf HTTP/1.1" 200 -
-2026-05-08 13:35:47,027 [INFO] 127.0.0.1 - - [08/May/2026 13:35:47] "GET /socket.io/?EIO=4&transport=polling&t=u9qux6vg HTTP/1.1" 200 -
-2026-05-08 13:35:47,028 [INFO] 127.0.0.1 - - [08/May/2026 13:35:47] "GET /socket.io/?EIO=4&transport=polling&t=u9quy4nu HTTP/1.1" 200 -
-2026-05-08 13:35:47,032 [INFO] 127.0.0.1 - - [08/May/2026 13:35:47] "GET /api/layouts/asdf HTTP/1.1" 200 -
-2026-05-08 13:35:47,033 [INFO] 127.0.0.1 - - [08/May/2026 13:35:47] "GET /api/layouts/full-db HTTP/1.1" 200 -
-2026-05-08 13:35:47,033 [INFO] Layout request: GET | asdf | default
-2026-05-08 13:35:47,036 [INFO] 127.0.0.1 - - [08/May/2026 13:35:47] "GET /api/layout/asdf/default HTTP/1.1" 200 -
-2026-05-08 13:35:47,038 [INFO] Client connected to server 10.19.137.6:9999
-2026-05-08 13:35:47,039 [INFO] 127.0.0.1 - - [08/May/2026 13:35:47] "POST /socket.io/?EIO=4&transport=polling&t=u9qvtwnc&sid=oCI8AytTWSXIFEeUAAAJ HTTP/1.1" 200 -
-2026-05-08 13:35:47,039 [INFO] 127.0.0.1 - - [08/May/2026 13:35:47] "GET /socket.io/?EIO=4&transport=polling&t=u9qvuxqp&sid=oCI8AytTWSXIFEeUAAAJ HTTP/1.1" 200 -
-2026-05-08 13:35:47,051 [INFO] 127.0.0.1 - - [08/May/2026 13:35:47] "GET /socket.io/?EIO=4&transport=polling&t=u9qwat0u&sid=oCI8AytTWSXIFEeUAAAJ HTTP/1.1" 200 -
-2026-05-08 13:35:48,057 [INFO] 127.0.0.1 - - [08/May/2026 13:35:48] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
-2026-05-08 13:35:48,058 [INFO] Layout request: POST | asdf | default
-2026-05-08 13:35:48,061 [INFO] Updating layout ID 1
-2026-05-08 13:35:48,063 [INFO] 127.0.0.1 - - [08/May/2026 13:35:48] "POST /api/layout/asdf/default HTTP/1.1" 200 -
-2026-05-08 13:35:50,199 [INFO] 127.0.0.1 - - [08/May/2026 13:35:50] "GET /socket.io/?EIO=4&transport=websocket&sid=oCI8AytTWSXIFEeUAAAJ HTTP/1.1" 200 -
+2026-05-11 09:17:35,621 [INFO] [33mPress CTRL+C to quit[0m
+2026-05-11 09:18:16,995 [INFO] 127.0.0.1 - - [11/May/2026 09:18:16] "GET /api/projects HTTP/1.1" 200 -
+2026-05-11 09:18:16,998 [INFO] 127.0.0.1 - - [11/May/2026 09:18:16] "GET /api/projects HTTP/1.1" 200 -
+2026-05-11 09:18:20,398 [INFO] 127.0.0.1 - - [11/May/2026 09:18:20] "GET /api/participants/1 HTTP/1.1" 200 -
+2026-05-11 09:18:21,870 [INFO] 127.0.0.1 - - [11/May/2026 09:18:21] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 09:18:21,872 [INFO] 127.0.0.1 - - [11/May/2026 09:18:21] "GET /socket.io/?EIO=4&transport=polling&t=ve9bayzg HTTP/1.1" 200 -
+2026-05-11 09:18:21,873 [INFO] 127.0.0.1 - - [11/May/2026 09:18:21] "GET /socket.io/?EIO=4&transport=polling&t=ve9bbay7 HTTP/1.1" 200 -
+2026-05-11 09:18:21,874 [INFO] 127.0.0.1 - - [11/May/2026 09:18:21] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 09:18:21,878 [INFO] 127.0.0.1 - - [11/May/2026 09:18:21] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 09:18:21,879 [INFO] 127.0.0.1 - - [11/May/2026 09:18:21] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 09:18:21,880 [INFO] Layout request: GET | asdf | default
+2026-05-11 09:18:21,883 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 09:18:21,884 [INFO] 127.0.0.1 - - [11/May/2026 09:18:21] "GET /socket.io/?EIO=4&transport=polling&t=ve9bp6gr&sid=s0Aa0yq1MSjL_Dw4AAAB HTTP/1.1" 200 -
+2026-05-11 09:18:21,884 [INFO] 127.0.0.1 - - [11/May/2026 09:18:21] "POST /socket.io/?EIO=4&transport=polling&t=ve9bp0mv&sid=s0Aa0yq1MSjL_Dw4AAAB HTTP/1.1" 200 -
+2026-05-11 09:18:21,885 [INFO] 127.0.0.1 - - [11/May/2026 09:18:21] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:18:22,927 [INFO] 127.0.0.1 - - [11/May/2026 09:18:22] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:18:22,929 [INFO] Layout request: POST | asdf | default
+2026-05-11 09:18:22,930 [INFO] Updating layout ID 1
+2026-05-11 09:18:22,931 [INFO] 127.0.0.1 - - [11/May/2026 09:18:22] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:20:27,611 [INFO] Starte Log-Manager
+2026-05-11 09:20:27,613 [INFO] A:\Fahrsimulator_Projekte
+2026-05-11 09:20:27,627 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-05-11 09:20:42,069 [INFO] 127.0.0.1 - - [11/May/2026 09:20:42] "GET /socket.io/?EIO=4&transport=websocket&sid=s0Aa0yq1MSjL_Dw4AAAB HTTP/1.1" 200 -
+2026-05-11 09:20:42,197 [INFO] 127.0.0.1 - - [11/May/2026 09:20:42] "GET /socket.io/?EIO=4&transport=polling&t=vh9l38oc HTTP/1.1" 200 -
+2026-05-11 09:20:42,199 [INFO] 127.0.0.1 - - [11/May/2026 09:20:42] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 09:20:42,199 [INFO] 127.0.0.1 - - [11/May/2026 09:20:42] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 09:20:42,199 [INFO] 127.0.0.1 - - [11/May/2026 09:20:42] "GET /socket.io/?EIO=4&transport=polling&t=vh9l4a4m HTTP/1.1" 200 -
+2026-05-11 09:20:42,202 [INFO] 127.0.0.1 - - [11/May/2026 09:20:42] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 09:20:42,203 [INFO] 127.0.0.1 - - [11/May/2026 09:20:42] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 09:20:42,224 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 09:20:42,225 [INFO] Layout request: GET | asdf | default
+2026-05-11 09:20:42,225 [INFO] 127.0.0.1 - - [11/May/2026 09:20:42] "POST /socket.io/?EIO=4&transport=polling&t=vh9m1a3s&sid=6npDqO8PdHc1RZNAAAAE HTTP/1.1" 200 -
+2026-05-11 09:20:42,226 [INFO] 127.0.0.1 - - [11/May/2026 09:20:42] "GET /socket.io/?EIO=4&transport=polling&t=vh9m2uk6&sid=6npDqO8PdHc1RZNAAAAE HTTP/1.1" 200 -
+2026-05-11 09:20:42,228 [INFO] 127.0.0.1 - - [11/May/2026 09:20:42] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:20:43,247 [INFO] 127.0.0.1 - - [11/May/2026 09:20:43] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:20:43,249 [INFO] Layout request: POST | asdf | default
+2026-05-11 09:20:43,251 [INFO] Updating layout ID 1
+2026-05-11 09:20:43,252 [INFO] 127.0.0.1 - - [11/May/2026 09:20:43] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:31:05,632 [INFO] Starte Log-Manager
+2026-05-11 09:31:05,632 [INFO] A:\Fahrsimulator_Projekte
+2026-05-11 09:31:05,635 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-05-11 09:32:02,096 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "GET /socket.io/?EIO=4&transport=websocket&sid=6npDqO8PdHc1RZNAAAAE HTTP/1.1" 200 -
+2026-05-11 09:32:02,192 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 09:32:02,196 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 09:32:02,197 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "GET /socket.io/?EIO=4&transport=polling&t=vvu9y3rp HTTP/1.1" 200 -
+2026-05-11 09:32:02,198 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "GET /socket.io/?EIO=4&transport=polling&t=vvu9yxtu HTTP/1.1" 200 -
+2026-05-11 09:32:02,205 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 09:32:02,207 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 09:32:02,207 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 09:32:02,208 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "POST /socket.io/?EIO=4&transport=polling&t=vvuagjdy&sid=9VDU6bP6EIEK05_8AAAH HTTP/1.1" 200 -
+2026-05-11 09:32:02,208 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "GET /socket.io/?EIO=4&transport=polling&t=vvuagndh&sid=9VDU6bP6EIEK05_8AAAH HTTP/1.1" 200 -
+2026-05-11 09:32:02,220 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "GET /socket.io/?EIO=4&transport=polling&t=vvuascyx&sid=9VDU6bP6EIEK05_8AAAH HTTP/1.1" 200 -
+2026-05-11 09:32:02,221 [INFO] Layout request: GET | asdf | default
+2026-05-11 09:32:02,222 [INFO] 127.0.0.1 - - [11/May/2026 09:32:02] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:32:03,266 [INFO] 127.0.0.1 - - [11/May/2026 09:32:03] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:32:03,268 [INFO] Layout request: POST | asdf | default
+2026-05-11 09:32:03,269 [INFO] Updating layout ID 1
+2026-05-11 09:32:03,269 [INFO] 127.0.0.1 - - [11/May/2026 09:32:03] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:32:22,947 [INFO] Starte Log-Manager
+2026-05-11 09:32:22,948 [INFO] A:\Fahrsimulator_Projekte
+2026-05-11 09:32:22,951 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-05-11 09:32:29,894 [INFO] 127.0.0.1 - - [11/May/2026 09:32:29] "GET /socket.io/?EIO=4&transport=websocket&sid=9VDU6bP6EIEK05_8AAAH HTTP/1.1" 200 -
+2026-05-11 09:32:29,981 [INFO] 127.0.0.1 - - [11/May/2026 09:32:29] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 09:32:29,987 [INFO] 127.0.0.1 - - [11/May/2026 09:32:29] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 09:32:29,988 [INFO] 127.0.0.1 - - [11/May/2026 09:32:29] "GET /socket.io/?EIO=4&transport=polling&t=vwfpykv8 HTTP/1.1" 200 -
+2026-05-11 09:32:29,990 [INFO] 127.0.0.1 - - [11/May/2026 09:32:29] "GET /socket.io/?EIO=4&transport=polling&t=vwfpynld HTTP/1.1" 200 -
+2026-05-11 09:32:29,991 [INFO] Layout request: GET | asdf | default
+2026-05-11 09:32:29,992 [INFO] 127.0.0.1 - - [11/May/2026 09:32:29] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 09:32:29,996 [INFO] 127.0.0.1 - - [11/May/2026 09:32:29] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 09:32:29,998 [INFO] 127.0.0.1 - - [11/May/2026 09:32:29] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:32:30,000 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 09:32:30,001 [INFO] 127.0.0.1 - - [11/May/2026 09:32:30] "POST /socket.io/?EIO=4&transport=polling&t=vwfqipry&sid=vPiL3HQdcSCXWH24AAAK HTTP/1.1" 200 -
+2026-05-11 09:32:30,001 [INFO] 127.0.0.1 - - [11/May/2026 09:32:30] "GET /socket.io/?EIO=4&transport=polling&t=vwfqj1s9&sid=vPiL3HQdcSCXWH24AAAK HTTP/1.1" 200 -
+2026-05-11 09:32:31,017 [INFO] 127.0.0.1 - - [11/May/2026 09:32:31] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:32:31,021 [INFO] Layout request: POST | asdf | default
+2026-05-11 09:32:31,024 [INFO] Updating layout ID 1
+2026-05-11 09:32:31,025 [INFO] 127.0.0.1 - - [11/May/2026 09:32:31] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:33:42,229 [INFO] 127.0.0.1 - - [11/May/2026 09:33:42] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:33:42,233 [INFO] Layout request: POST | asdf | default
+2026-05-11 09:33:42,236 [INFO] Updating layout ID 1
+2026-05-11 09:33:42,242 [INFO] 127.0.0.1 - - [11/May/2026 09:33:42] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:33:50,476 [INFO] 127.0.0.1 - - [11/May/2026 09:33:50] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:33:50,481 [INFO] Layout request: POST | asdf | default
+2026-05-11 09:33:50,484 [INFO] Updating layout ID 1
+2026-05-11 09:33:50,489 [INFO] 127.0.0.1 - - [11/May/2026 09:33:50] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:34:08,849 [INFO] Starte Log-Manager
+2026-05-11 09:34:08,849 [INFO] A:\Fahrsimulator_Projekte
+2026-05-11 09:34:08,851 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-05-11 09:34:24,913 [INFO] 127.0.0.1 - - [11/May/2026 09:34:24] "GET /socket.io/?EIO=4&transport=websocket&sid=vPiL3HQdcSCXWH24AAAK HTTP/1.1" 200 -
+2026-05-11 09:34:25,002 [INFO] 127.0.0.1 - - [11/May/2026 09:34:25] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 09:34:25,007 [INFO] 127.0.0.1 - - [11/May/2026 09:34:25] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 09:34:25,008 [INFO] 127.0.0.1 - - [11/May/2026 09:34:25] "GET /socket.io/?EIO=4&transport=polling&t=vywh0dbs HTTP/1.1" 200 -
+2026-05-11 09:34:25,009 [INFO] 127.0.0.1 - - [11/May/2026 09:34:25] "GET /socket.io/?EIO=4&transport=polling&t=vywh172o HTTP/1.1" 200 -
+2026-05-11 09:34:25,012 [INFO] 127.0.0.1 - - [11/May/2026 09:34:25] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 09:34:25,015 [INFO] 127.0.0.1 - - [11/May/2026 09:34:25] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 09:34:25,049 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 09:34:25,049 [INFO] 127.0.0.1 - - [11/May/2026 09:34:25] "POST /socket.io/?EIO=4&transport=polling&t=vywhsmgk&sid=Dxwxql7v04yHHsrvAAAN HTTP/1.1" 200 -
+2026-05-11 09:34:25,063 [INFO] 127.0.0.1 - - [11/May/2026 09:34:25] "GET /socket.io/?EIO=4&transport=polling&t=vywht1bw&sid=Dxwxql7v04yHHsrvAAAN HTTP/1.1" 200 -
+2026-05-11 09:34:25,064 [INFO] Layout request: GET | asdf | default
+2026-05-11 09:34:25,067 [INFO] 127.0.0.1 - - [11/May/2026 09:34:25] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:34:26,085 [INFO] 127.0.0.1 - - [11/May/2026 09:34:26] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 09:34:26,087 [INFO] Layout request: POST | asdf | default
+2026-05-11 09:34:26,088 [INFO] Updating layout ID 1
+2026-05-11 09:34:26,089 [INFO] 127.0.0.1 - - [11/May/2026 09:34:26] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:01:32,299 [INFO] 127.0.0.1 - - [11/May/2026 10:01:32] "GET /socket.io/?EIO=4&transport=websocket&sid=Dxwxql7v04yHHsrvAAAN HTTP/1.1" 200 -
+2026-05-11 10:01:32,465 [INFO] 127.0.0.1 - - [11/May/2026 10:01:32] "GET /socket.io/?EIO=4&transport=polling&t=wxs7s85h HTTP/1.1" 200 -
+2026-05-11 10:01:32,470 [INFO] 127.0.0.1 - - [11/May/2026 10:01:32] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 10:01:32,471 [INFO] 127.0.0.1 - - [11/May/2026 10:01:32] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 10:01:32,471 [INFO] 127.0.0.1 - - [11/May/2026 10:01:32] "GET /socket.io/?EIO=4&transport=polling&t=wxs7t424 HTTP/1.1" 200 -
+2026-05-11 10:01:32,474 [INFO] 127.0.0.1 - - [11/May/2026 10:01:32] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 10:01:32,475 [INFO] 127.0.0.1 - - [11/May/2026 10:01:32] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 10:01:32,491 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 10:01:32,493 [INFO] Layout request: GET | asdf | default
+2026-05-11 10:01:32,496 [INFO] 127.0.0.1 - - [11/May/2026 10:01:32] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:01:32,496 [INFO] 127.0.0.1 - - [11/May/2026 10:01:32] "POST /socket.io/?EIO=4&transport=polling&t=wxs93n7c&sid=TR8vn67S8OTzmk5lAAAQ HTTP/1.1" 200 -
+2026-05-11 10:01:32,496 [INFO] 127.0.0.1 - - [11/May/2026 10:01:32] "GET /socket.io/?EIO=4&transport=polling&t=wxs93fmc&sid=TR8vn67S8OTzmk5lAAAQ HTTP/1.1" 200 -
+2026-05-11 10:01:34,198 [INFO] 127.0.0.1 - - [11/May/2026 10:01:34] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:01:34,201 [INFO] Layout request: POST | asdf | default
+2026-05-11 10:01:34,203 [INFO] Updating layout ID 1
+2026-05-11 10:01:34,204 [INFO] 127.0.0.1 - - [11/May/2026 10:01:34] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:18:58,885 [INFO] 127.0.0.1 - - [11/May/2026 10:18:58] "GET /socket.io/?EIO=4&transport=websocket&sid=TR8vn67S8OTzmk5lAAAQ HTTP/1.1" 200 -
+2026-05-11 10:18:59,064 [INFO] 127.0.0.1 - - [11/May/2026 10:18:59] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 10:18:59,066 [INFO] 127.0.0.1 - - [11/May/2026 10:18:59] "GET /socket.io/?EIO=4&transport=polling&t=xk7sh6z2 HTTP/1.1" 200 -
+2026-05-11 10:18:59,066 [INFO] 127.0.0.1 - - [11/May/2026 10:18:59] "GET /socket.io/?EIO=4&transport=polling&t=xk7sgc4c HTTP/1.1" 200 -
+2026-05-11 10:18:59,079 [INFO] 127.0.0.1 - - [11/May/2026 10:18:59] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 10:18:59,087 [INFO] 127.0.0.1 - - [11/May/2026 10:18:59] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 10:18:59,091 [INFO] 127.0.0.1 - - [11/May/2026 10:18:59] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 10:18:59,092 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 10:18:59,092 [INFO] 127.0.0.1 - - [11/May/2026 10:18:59] "POST /socket.io/?EIO=4&transport=polling&t=xk7t7p3o&sid=vHC9f_y-w1rFxOVrAAAT HTTP/1.1" 200 -
+2026-05-11 10:18:59,093 [INFO] 127.0.0.1 - - [11/May/2026 10:18:59] "GET /socket.io/?EIO=4&transport=polling&t=xk7t7nd7&sid=vHC9f_y-w1rFxOVrAAAT HTTP/1.1" 200 -
+2026-05-11 10:18:59,093 [INFO] Layout request: GET | asdf | default
+2026-05-11 10:18:59,095 [INFO] 127.0.0.1 - - [11/May/2026 10:18:59] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:19:00,983 [INFO] 127.0.0.1 - - [11/May/2026 10:19:00] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:19:00,984 [INFO] Layout request: POST | asdf | default
+2026-05-11 10:19:00,986 [INFO] Updating layout ID 1
+2026-05-11 10:19:00,986 [INFO] 127.0.0.1 - - [11/May/2026 10:19:00] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:53:39,795 [INFO] 127.0.0.1 - - [11/May/2026 10:53:39] "GET /socket.io/?EIO=4&transport=websocket&sid=vHC9f_y-w1rFxOVrAAAT HTTP/1.1" 200 -
+2026-05-11 10:53:39,957 [INFO] 127.0.0.1 - - [11/May/2026 10:53:39] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 10:53:39,959 [INFO] 127.0.0.1 - - [11/May/2026 10:53:39] "GET /socket.io/?EIO=4&transport=polling&t=ystezlwv HTTP/1.1" 200 -
+2026-05-11 10:53:39,961 [INFO] 127.0.0.1 - - [11/May/2026 10:53:39] "GET /socket.io/?EIO=4&transport=polling&t=ystf0i55 HTTP/1.1" 200 -
+2026-05-11 10:53:39,962 [INFO] 127.0.0.1 - - [11/May/2026 10:53:39] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 10:53:39,962 [INFO] 127.0.0.1 - - [11/May/2026 10:53:39] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 10:53:39,972 [INFO] 127.0.0.1 - - [11/May/2026 10:53:39] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 10:53:39,973 [INFO] Layout request: GET | asdf | default
+2026-05-11 10:53:39,974 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 10:53:39,975 [INFO] 127.0.0.1 - - [11/May/2026 10:53:39] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:53:39,975 [INFO] 127.0.0.1 - - [11/May/2026 10:53:39] "POST /socket.io/?EIO=4&transport=polling&t=ystfh32l&sid=IYs84cJmMO3kx5ekAAAW HTTP/1.1" 200 -
+2026-05-11 10:53:39,975 [INFO] 127.0.0.1 - - [11/May/2026 10:53:39] "GET /socket.io/?EIO=4&transport=polling&t=ystfi02z&sid=IYs84cJmMO3kx5ekAAAW HTTP/1.1" 200 -
+2026-05-11 10:53:41,333 [INFO] 127.0.0.1 - - [11/May/2026 10:53:41] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:53:41,336 [INFO] Layout request: POST | asdf | default
+2026-05-11 10:53:41,338 [INFO] Updating layout ID 1
+2026-05-11 10:53:41,340 [INFO] 127.0.0.1 - - [11/May/2026 10:53:41] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:57:24,707 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "GET /socket.io/?EIO=4&transport=websocket&sid=IYs84cJmMO3kx5ekAAAW HTTP/1.1" 200 -
+2026-05-11 10:57:24,865 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 10:57:24,866 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 10:57:24,867 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "GET /socket.io/?EIO=4&transport=polling&t=yxmyhwl7 HTTP/1.1" 200 -
+2026-05-11 10:57:24,867 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "GET /socket.io/?EIO=4&transport=polling&t=yxmyiegj HTTP/1.1" 200 -
+2026-05-11 10:57:24,871 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 10:57:24,876 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 10:57:24,878 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 10:57:24,879 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "POST /socket.io/?EIO=4&transport=polling&t=yxmyx1f7&sid=jDYZUdqRP38H2wg7AAAZ HTTP/1.1" 200 -
+2026-05-11 10:57:24,879 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "GET /socket.io/?EIO=4&transport=polling&t=yxmyxr6d&sid=jDYZUdqRP38H2wg7AAAZ HTTP/1.1" 200 -
+2026-05-11 10:57:24,880 [INFO] Layout request: GET | asdf | default
+2026-05-11 10:57:24,883 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:57:24,884 [INFO] 127.0.0.1 - - [11/May/2026 10:57:24] "GET /socket.io/?EIO=4&transport=polling&t=yxmz5er9&sid=jDYZUdqRP38H2wg7AAAZ HTTP/1.1" 200 -
+2026-05-11 10:57:26,166 [INFO] 127.0.0.1 - - [11/May/2026 10:57:26] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 10:57:26,169 [INFO] Layout request: POST | asdf | default
+2026-05-11 10:57:26,172 [INFO] Updating layout ID 1
+2026-05-11 10:57:26,173 [INFO] 127.0.0.1 - - [11/May/2026 10:57:26] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 11:54:30,936 [INFO] 127.0.0.1 - - [11/May/2026 11:54:30] "GET /socket.io/?EIO=4&transport=websocket&sid=jDYZUdqRP38H2wg7AAAZ HTTP/1.1" 200 -
+2026-05-11 11:54:31,112 [INFO] 127.0.0.1 - - [11/May/2026 11:54:31] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 11:54:31,114 [INFO] 127.0.0.1 - - [11/May/2026 11:54:31] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 11:54:31,115 [INFO] 127.0.0.1 - - [11/May/2026 11:54:31] "GET /socket.io/?EIO=4&transport=polling&t=0z2nqffu HTTP/1.1" 200 -
+2026-05-11 11:54:31,115 [INFO] 127.0.0.1 - - [11/May/2026 11:54:31] "GET /socket.io/?EIO=4&transport=polling&t=0z2nry62 HTTP/1.1" 200 -
+2026-05-11 11:54:31,119 [INFO] 127.0.0.1 - - [11/May/2026 11:54:31] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 11:54:31,120 [INFO] 127.0.0.1 - - [11/May/2026 11:54:31] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 11:54:31,124 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 11:54:31,125 [INFO] 127.0.0.1 - - [11/May/2026 11:54:31] "POST /socket.io/?EIO=4&transport=polling&t=0z2oi1r5&sid=GROZG8hPSXeMsd67AAAc HTTP/1.1" 200 -
+2026-05-11 11:54:31,126 [INFO] 127.0.0.1 - - [11/May/2026 11:54:31] "GET /socket.io/?EIO=4&transport=polling&t=0z2oi9et&sid=GROZG8hPSXeMsd67AAAc HTTP/1.1" 200 -
+2026-05-11 11:54:31,126 [INFO] Layout request: GET | asdf | default
+2026-05-11 11:54:31,128 [INFO] 127.0.0.1 - - [11/May/2026 11:54:31] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 11:54:33,065 [INFO] 127.0.0.1 - - [11/May/2026 11:54:33] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 11:54:33,067 [INFO] Layout request: POST | asdf | default
+2026-05-11 11:54:33,069 [INFO] Updating layout ID 1
+2026-05-11 11:54:33,070 [INFO] 127.0.0.1 - - [11/May/2026 11:54:33] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:13:32,719 [INFO] 127.0.0.1 - - [11/May/2026 12:13:32] "GET /socket.io/?EIO=4&transport=websocket&sid=GROZG8hPSXeMsd67AAAc HTTP/1.1" 200 -
+2026-05-11 12:13:33,936 [INFO] 127.0.0.1 - - [11/May/2026 12:13:33] "GET /socket.io/?EIO=4&transport=polling&t=1nkh7yix HTTP/1.1" 200 -
+2026-05-11 12:13:33,938 [INFO] 127.0.0.1 - - [11/May/2026 12:13:33] "GET /socket.io/?EIO=4&transport=polling&t=1nkh80rf HTTP/1.1" 200 -
+2026-05-11 12:13:33,959 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 12:13:33,960 [INFO] 127.0.0.1 - - [11/May/2026 12:13:33] "GET /socket.io/?EIO=4&transport=polling&t=1nkhtfy4&sid=F7lfDxNP5LLgkPK0AAAf HTTP/1.1" 200 -
+2026-05-11 12:13:33,961 [INFO] 127.0.0.1 - - [11/May/2026 12:13:33] "POST /socket.io/?EIO=4&transport=polling&t=1nkhs3oz&sid=F7lfDxNP5LLgkPK0AAAf HTTP/1.1" 200 -
+2026-05-11 12:13:33,962 [INFO] Layout request: GET | asdf | default
+2026-05-11 12:13:33,973 [INFO] 127.0.0.1 - - [11/May/2026 12:13:33] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:13:34,992 [INFO] 127.0.0.1 - - [11/May/2026 12:13:34] "GET /socket.io/?EIO=4&transport=websocket&sid=F7lfDxNP5LLgkPK0AAAf HTTP/1.1" 200 -
+2026-05-11 12:13:35,121 [INFO] 127.0.0.1 - - [11/May/2026 12:13:35] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:13:35,123 [INFO] 127.0.0.1 - - [11/May/2026 12:13:35] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:13:35,123 [INFO] 127.0.0.1 - - [11/May/2026 12:13:35] "GET /socket.io/?EIO=4&transport=polling&t=1nle5hkb HTTP/1.1" 200 -
+2026-05-11 12:13:35,124 [INFO] 127.0.0.1 - - [11/May/2026 12:13:35] "GET /socket.io/?EIO=4&transport=polling&t=1nle5j6r HTTP/1.1" 200 -
+2026-05-11 12:13:35,129 [INFO] 127.0.0.1 - - [11/May/2026 12:13:35] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:13:35,130 [INFO] 127.0.0.1 - - [11/May/2026 12:13:35] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:13:35,133 [INFO] Layout request: GET | asdf | default
+2026-05-11 12:13:35,136 [INFO] 127.0.0.1 - - [11/May/2026 12:13:35] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:13:35,136 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 12:13:35,137 [INFO] 127.0.0.1 - - [11/May/2026 12:13:35] "POST /socket.io/?EIO=4&transport=polling&t=1nleh6hc&sid=w_AJA6IKqfVFDLhkAAAi HTTP/1.1" 200 -
+2026-05-11 12:13:35,137 [INFO] 127.0.0.1 - - [11/May/2026 12:13:35] "GET /socket.io/?EIO=4&transport=polling&t=1nleh7ul&sid=w_AJA6IKqfVFDLhkAAAi HTTP/1.1" 200 -
+2026-05-11 12:13:35,147 [INFO] 127.0.0.1 - - [11/May/2026 12:13:35] "GET /socket.io/?EIO=4&transport=polling&t=1nlexq9b&sid=w_AJA6IKqfVFDLhkAAAi HTTP/1.1" 200 -
+2026-05-11 12:13:36,109 [INFO] Starte Log-Manager
+2026-05-11 12:13:36,109 [INFO] A:\Fahrsimulator_Projekte
+2026-05-11 12:13:36,117 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-05-11 12:13:36,160 [INFO] 127.0.0.1 - - [11/May/2026 12:13:36] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:13:36,162 [INFO] Layout request: POST | asdf | default
+2026-05-11 12:13:36,164 [INFO] Updating layout ID 1
+2026-05-11 12:13:36,164 [INFO] 127.0.0.1 - - [11/May/2026 12:13:36] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:19:21,331 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "GET /socket.io/?EIO=4&transport=websocket&sid=w_AJA6IKqfVFDLhkAAAi HTTP/1.1" 200 -
+2026-05-11 12:19:21,461 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:19:21,462 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "GET /socket.io/?EIO=4&transport=polling&t=1v0mhn01 HTTP/1.1" 200 -
+2026-05-11 12:19:21,464 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:19:21,464 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "GET /socket.io/?EIO=4&transport=polling&t=1v0mh1d0 HTTP/1.1" 200 -
+2026-05-11 12:19:21,469 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:19:21,473 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:19:21,475 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 12:19:21,475 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "POST /socket.io/?EIO=4&transport=polling&t=1v0n3tyw&sid=sN6YBon1v220E3t2AAAl HTTP/1.1" 200 -
+2026-05-11 12:19:21,475 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "GET /socket.io/?EIO=4&transport=polling&t=1v0n4qx0&sid=sN6YBon1v220E3t2AAAl HTTP/1.1" 200 -
+2026-05-11 12:19:21,492 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "GET /socket.io/?EIO=4&transport=polling&t=1v0nkawz&sid=sN6YBon1v220E3t2AAAl HTTP/1.1" 200 -
+2026-05-11 12:19:21,492 [INFO] Layout request: GET | asdf | default
+2026-05-11 12:19:21,508 [INFO] 127.0.0.1 - - [11/May/2026 12:19:21] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:19:23,263 [INFO] 127.0.0.1 - - [11/May/2026 12:19:23] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:19:23,267 [INFO] Layout request: POST | asdf | default
+2026-05-11 12:19:23,270 [INFO] Updating layout ID 1
+2026-05-11 12:19:23,271 [INFO] 127.0.0.1 - - [11/May/2026 12:19:23] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:21:08,077 [INFO] 127.0.0.1 - - [11/May/2026 12:21:08] "GET /socket.io/?EIO=4&transport=websocket&sid=sN6YBon1v220E3t2AAAl HTTP/1.1" 200 -
+2026-05-11 12:21:08,139 [INFO] 127.0.0.1 - - [11/May/2026 12:21:08] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:21:08,144 [INFO] 127.0.0.1 - - [11/May/2026 12:21:08] "GET /socket.io/?EIO=4&transport=polling&t=1xaxwjpo HTTP/1.1" 200 -
+2026-05-11 12:21:08,145 [INFO] 127.0.0.1 - - [11/May/2026 12:21:08] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:21:08,146 [INFO] 127.0.0.1 - - [11/May/2026 12:21:08] "GET /socket.io/?EIO=4&transport=polling&t=1xaxw5e9 HTTP/1.1" 200 -
+2026-05-11 12:21:08,155 [INFO] 127.0.0.1 - - [11/May/2026 12:21:08] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:21:08,157 [INFO] 127.0.0.1 - - [11/May/2026 12:21:08] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:21:08,157 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 12:21:08,158 [INFO] 127.0.0.1 - - [11/May/2026 12:21:08] "POST /socket.io/?EIO=4&transport=polling&t=1xayep59&sid=RomdG7yKhbXqIrzEAAAo HTTP/1.1" 200 -
+2026-05-11 12:21:08,158 [INFO] Layout request: GET | asdf | default
+2026-05-11 12:21:08,159 [INFO] 127.0.0.1 - - [11/May/2026 12:21:08] "GET /socket.io/?EIO=4&transport=polling&t=1xayfrwh&sid=RomdG7yKhbXqIrzEAAAo HTTP/1.1" 200 -
+2026-05-11 12:21:08,161 [INFO] 127.0.0.1 - - [11/May/2026 12:21:08] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:21:09,175 [INFO] 127.0.0.1 - - [11/May/2026 12:21:09] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:21:09,178 [INFO] Layout request: POST | asdf | default
+2026-05-11 12:21:09,180 [INFO] Updating layout ID 1
+2026-05-11 12:21:09,180 [INFO] 127.0.0.1 - - [11/May/2026 12:21:09] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:22:11,753 [INFO] 127.0.0.1 - - [11/May/2026 12:22:11] "GET /socket.io/?EIO=4&transport=websocket&sid=RomdG7yKhbXqIrzEAAAo HTTP/1.1" 200 -
+2026-05-11 12:22:11,758 [INFO] 127.0.0.1 - - [11/May/2026 12:22:11] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:22:11,758 [INFO] 127.0.0.1 - - [11/May/2026 12:22:11] "GET /socket.io/?EIO=4&transport=polling&t=1yo12m8d HTTP/1.1" 200 -
+2026-05-11 12:22:11,759 [INFO] 127.0.0.1 - - [11/May/2026 12:22:11] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:22:11,760 [INFO] Layout request: GET | asdf | default
+2026-05-11 12:22:11,763 [INFO] 127.0.0.1 - - [11/May/2026 12:22:11] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:22:11,765 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 12:22:11,765 [INFO] 127.0.0.1 - - [11/May/2026 12:22:11] "GET /socket.io/?EIO=4&transport=polling&t=1yo1ehbk&sid=qftcLxLsUdgwbcnRAAAq HTTP/1.1" 200 -
+2026-05-11 12:22:11,765 [INFO] 127.0.0.1 - - [11/May/2026 12:22:11] "POST /socket.io/?EIO=4&transport=polling&t=1yo1ewwc&sid=qftcLxLsUdgwbcnRAAAq HTTP/1.1" 200 -
+2026-05-11 12:22:47,382 [INFO] 127.0.0.1 - - [11/May/2026 12:22:47] "GET /socket.io/?EIO=4&transport=websocket&sid=qftcLxLsUdgwbcnRAAAq HTTP/1.1" 200 -
+2026-05-11 12:22:47,385 [INFO] 127.0.0.1 - - [11/May/2026 12:22:47] "GET /socket.io/?EIO=4&transport=polling&t=1zfitgoq HTTP/1.1" 200 -
+2026-05-11 12:22:47,385 [INFO] 127.0.0.1 - - [11/May/2026 12:22:47] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:22:47,386 [INFO] Layout request: GET | asdf | default
+2026-05-11 12:22:47,391 [INFO] 127.0.0.1 - - [11/May/2026 12:22:47] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:22:47,394 [INFO] 127.0.0.1 - - [11/May/2026 12:22:47] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:22:47,395 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 12:22:47,396 [INFO] 127.0.0.1 - - [11/May/2026 12:22:47] "POST /socket.io/?EIO=4&transport=polling&t=1zfj05gf&sid=4IhLWzodLO6iACS6AAAs HTTP/1.1" 200 -
+2026-05-11 12:22:47,397 [INFO] 127.0.0.1 - - [11/May/2026 12:22:47] "GET /socket.io/?EIO=4&transport=polling&t=1zfj0ll6&sid=4IhLWzodLO6iACS6AAAs HTTP/1.1" 200 -
+2026-05-11 12:28:46,104 [INFO] Starte Log-Manager
+2026-05-11 12:28:46,104 [INFO] A:\Fahrsimulator_Projekte
+2026-05-11 12:28:46,107 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-05-11 12:30:50,052 [INFO] Starte Log-Manager
+2026-05-11 12:30:50,052 [INFO] A:\Fahrsimulator_Projekte
+2026-05-11 12:30:50,056 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-05-11 12:30:55,260 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "GET /socket.io/?EIO=4&transport=websocket&sid=4IhLWzodLO6iACS6AAAs HTTP/1.1" 200 -
+2026-05-11 12:30:55,358 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:30:55,360 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:30:55,361 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "GET /socket.io/?EIO=4&transport=polling&t=29w1hlnd HTTP/1.1" 200 -
+2026-05-11 12:30:55,362 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "GET /socket.io/?EIO=4&transport=polling&t=29w1irn3 HTTP/1.1" 200 -
+2026-05-11 12:30:55,365 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:30:55,368 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:30:55,404 [INFO] Layout request: GET | asdf | default
+2026-05-11 12:30:55,404 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 12:30:55,405 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "POST /socket.io/?EIO=4&transport=polling&t=29w29c9g&sid=14N_swMNYw83yoBZAAAv HTTP/1.1" 200 -
+2026-05-11 12:30:55,405 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "GET /socket.io/?EIO=4&transport=polling&t=29w2a5re&sid=14N_swMNYw83yoBZAAAv HTTP/1.1" 200 -
+2026-05-11 12:30:55,407 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:30:55,421 [INFO] 127.0.0.1 - - [11/May/2026 12:30:55] "GET /socket.io/?EIO=4&transport=polling&t=29w377tt&sid=14N_swMNYw83yoBZAAAv HTTP/1.1" 200 -
+2026-05-11 12:30:56,426 [INFO] 127.0.0.1 - - [11/May/2026 12:30:56] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:30:56,431 [INFO] Layout request: POST | asdf | default
+2026-05-11 12:30:56,434 [INFO] Updating layout ID 1
+2026-05-11 12:30:56,435 [INFO] 127.0.0.1 - - [11/May/2026 12:30:56] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:31:06,481 [INFO] Starte Log-Manager
+2026-05-11 12:31:06,482 [INFO] A:\Fahrsimulator_Projekte
+2026-05-11 12:31:06,485 [WARNING] Fallback to mock sensor stream: No module named 'tobii_research'
+2026-05-11 12:39:06,605 [INFO] 127.0.0.1 - - [11/May/2026 12:39:06] "GET /socket.io/?EIO=4&transport=websocket&sid=14N_swMNYw83yoBZAAAv HTTP/1.1" 200 -
+2026-05-11 12:39:06,716 [INFO] 127.0.0.1 - - [11/May/2026 12:39:06] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:39:06,717 [INFO] 127.0.0.1 - - [11/May/2026 12:39:06] "GET /socket.io/?EIO=4&transport=polling&t=2kf68kjs HTTP/1.1" 200 -
+2026-05-11 12:39:06,717 [INFO] 127.0.0.1 - - [11/May/2026 12:39:06] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:39:06,720 [INFO] 127.0.0.1 - - [11/May/2026 12:39:06] "GET /socket.io/?EIO=4&transport=polling&t=2kf68vpm HTTP/1.1" 200 -
+2026-05-11 12:39:06,722 [INFO] 127.0.0.1 - - [11/May/2026 12:39:06] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:39:06,725 [INFO] 127.0.0.1 - - [11/May/2026 12:39:06] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:39:06,756 [INFO] Layout request: GET | asdf | default
+2026-05-11 12:39:06,759 [INFO] 127.0.0.1 - - [11/May/2026 12:39:06] "GET /socket.io/?EIO=4&transport=polling&t=2kf7i0ac&sid=osGWUmYdBMTEgxNDAAAy HTTP/1.1" 200 -
+2026-05-11 12:39:06,760 [INFO] 127.0.0.1 - - [11/May/2026 12:39:06] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:39:06,760 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 12:39:06,760 [INFO] 127.0.0.1 - - [11/May/2026 12:39:06] "POST /socket.io/?EIO=4&transport=polling&t=2kf7h19m&sid=osGWUmYdBMTEgxNDAAAy HTTP/1.1" 200 -
+2026-05-11 12:39:07,779 [INFO] 127.0.0.1 - - [11/May/2026 12:39:07] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:39:07,782 [INFO] Layout request: POST | asdf | default
+2026-05-11 12:39:07,786 [INFO] Updating layout ID 1
+2026-05-11 12:39:07,787 [INFO] 127.0.0.1 - - [11/May/2026 12:39:07] "POST /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:40:31,490 [INFO] 127.0.0.1 - - [11/May/2026 12:40:31] "GET /socket.io/?EIO=4&transport=websocket&sid=osGWUmYdBMTEgxNDAAAy HTTP/1.1" 200 -
+2026-05-11 12:40:31,635 [INFO] 127.0.0.1 - - [11/May/2026 12:40:31] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:40:31,648 [INFO] 127.0.0.1 - - [11/May/2026 12:40:31] "GET /socket.io/?EIO=4&transport=polling&t=2m8pa56h HTTP/1.1" 200 -
+2026-05-11 12:40:31,650 [INFO] 127.0.0.1 - - [11/May/2026 12:40:31] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:40:31,652 [INFO] 127.0.0.1 - - [11/May/2026 12:40:31] "GET /socket.io/?EIO=4&transport=polling&t=2m8pa2aw HTTP/1.1" 200 -
+2026-05-11 12:40:31,653 [INFO] 127.0.0.1 - - [11/May/2026 12:40:31] "GET /api/layouts/full-db HTTP/1.1" 200 -
+2026-05-11 12:40:31,654 [INFO] 127.0.0.1 - - [11/May/2026 12:40:31] "GET /api/layouts/asdf HTTP/1.1" 200 -
+2026-05-11 12:40:31,664 [INFO] Client connected to server 10.19.136.182:9999
+2026-05-11 12:40:31,665 [INFO] Layout request: GET | asdf | default
+2026-05-11 12:40:31,665 [INFO] 127.0.0.1 - - [11/May/2026 12:40:31] "POST /socket.io/?EIO=4&transport=polling&t=2m8q3lbz&sid=Nz-arv2SBzQ5KtjlAAA1 HTTP/1.1" 200 -
+2026-05-11 12:40:31,666 [INFO] 127.0.0.1 - - [11/May/2026 12:40:31] "GET /socket.io/?EIO=4&transport=polling&t=2m8q394y&sid=Nz-arv2SBzQ5KtjlAAA1 HTTP/1.1" 200 -
+2026-05-11 12:40:31,668 [INFO] 127.0.0.1 - - [11/May/2026 12:40:31] "GET /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:40:33,262 [INFO] 127.0.0.1 - - [11/May/2026 12:40:33] "OPTIONS /api/layout/asdf/default HTTP/1.1" 200 -
+2026-05-11 12:40:33,266 [INFO] Layout request: POST | asdf | default
+2026-05-11 12:40:33,269 [INFO] Updating layout ID 1
+2026-05-11 12:40:33,270 [INFO] 127.0.0.1 - - [11/May/2026 12:40:33] "POST /api/layout/asdf/default HTTP/1.1" 200 -

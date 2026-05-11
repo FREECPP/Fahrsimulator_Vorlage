@@ -206,13 +206,12 @@ function ShimmerChart({ shimmer, running }) {
         <span>
           {!running
             ? "No live data"
-            : "Primary values + trends"}
+            : "Live data"}
         </span>
       </div>
 
       <div className="shimmer-section-title">
         <h4>Primary indicators</h4>
-        <p>Heart rate, HRV, and skin resistance at a glance.</p>
       </div>
 
       <div className="shimmer-primary-grid">
@@ -265,7 +264,7 @@ function ShimmerChart({ shimmer, running }) {
 
       <div className="shimmer-section-title">
         <h4>HRV trend</h4>
-        <p>RMSSD and SDNN stability over the same 60-second window.</p>
+        <p>RMSSD and SDNN stability over the last 60 seconds.</p>
       </div>
 
       <div className="shimmer-chart-wrap">

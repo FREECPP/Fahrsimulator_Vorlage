@@ -5,7 +5,7 @@ import { getModeOptions, getNormalizedMode, getSensorTitle, SENSOR_WIDGETS } fro
 
 const ShimmerChart = lazy(() => import("./ShimmerChart"))
 
-function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, connected, running }) {
+function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, running }) {
   const imageRef = useRef(null)
   const modeOptions = useMemo(() => getModeOptions(widget.view), [widget.view])
   const mode = getNormalizedMode(widget.view, widget.mode)
@@ -40,10 +40,8 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
   if (widget.view === "silab") {
     if (mode === "raw") {
       body = <pre className="raw-payload">{JSON.stringify(silab ?? {}, null, 2)}</pre>
-    } else if (mode === "pedals") {
-      body = <SilabCockpit silab={silab} connected={connected} running={running} variant="pedals" />
     } else {
-      body = <SilabCockpit silab={silab} connected={connected} running={running} />
+      body = <SilabCockpit silab={silab} />
     }
   }
 
@@ -108,12 +106,6 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
     <article className="widget-card">
       <header className="widget-header">
         <div className="widget-title-group">
-          <strong>{getSensorTitle(widget.view)}</strong>
-          <span className="widget-size-badge" title="Current widget size">
-            {widget.w} x {widget.h}
-          </span>
-        </div>
-        <div className="widget-actions">
           <select value={widget.view} onChange={(event) => onChangeView(widget.i, event.target.value)}>
             {SENSOR_WIDGETS.map((sensor) => (
               <option key={sensor.key} value={sensor.key}>
@@ -121,6 +113,8 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
               </option>
             ))}
           </select>
+        </div>
+        <div className="widget-actions">
           <select value={mode} onChange={(event) => onChangeMode(widget.i, event.target.value)}>
             {modeOptions.map((option) => (
               <option key={option.value} value={option.value}>
@@ -153,7 +147,6 @@ function hasSameWidgetIdentity(prevWidget, nextWidget) {
 
 function areWidgetPropsEqual(prevProps, nextProps) {
   if (!hasSameWidgetIdentity(prevProps.widget, nextProps.widget)) return false
-  if (prevProps.connected !== nextProps.connected) return false
   if (prevProps.running !== nextProps.running) return false
 
   const view = nextProps.widget.view
@@ -166,7 +159,7 @@ function areWidgetPropsEqual(prevProps, nextProps) {
   const nextData = nextProps.sensorData || {}
 
   if (view === "silab") {
-    if (mode === "pedals" || mode === "cockpit") {
+    if (mode === "cockpit" || mode === "pedals") {
       return (
         prevData.silab?.speed === nextData.silab?.speed &&
         prevData.silab?.steering === nextData.silab?.steering &&
