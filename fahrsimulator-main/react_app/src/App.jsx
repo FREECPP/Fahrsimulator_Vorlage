@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function ProjectManager() {
     const navigate = useNavigate();
-
+    const [deleteCandidate, setDeleteCandidate] = useState(null);
     const [participants, setParticipants] = useState([]);
     const [_selectedProject, setSelectedProject] = useState("");
     const [confirmedProject, setConfirmedProject] = useState(null);
@@ -46,22 +46,19 @@ export default function ProjectManager() {
     }, [confirmedProject]);
 
     // Participant löschen
-    const handleDeleteParticipant = (id) => {
-        if (
-            !window.confirm(
-                "Sind Sie sich sicher, dass Sie den Probanden und dessen Daten löschen wollen?"
-            )
-        ) {
-            return;
-        }
+    const confirmDeleteParticipant = () => {
+        if (!deleteCandidate) return;
 
-        fetch(`http://localhost:9999/api/participant/${id}`, {
+        fetch(`http://localhost:9999/api/participant/${deleteCandidate.id}`, {
             method: "DELETE"
         })
             .then((res) => res.json())
             .then((data) => {
                 if (data.success) {
-                    setParticipants((prev) => prev.filter((p) => p.id !== id));
+                    setParticipants((prev) =>
+                        prev.filter((p) => p.id !== deleteCandidate.id)
+                    );
+
                     toast.success("Participant gelöscht");
                 } else {
                     toast.error(data.message);
@@ -70,6 +67,9 @@ export default function ProjectManager() {
             .catch((err) => {
                 console.error(err);
                 toast.error("Fehler beim Löschen");
+            })
+            .finally(() => {
+                setDeleteCandidate(null);
             });
     };
 
@@ -84,6 +84,20 @@ export default function ProjectManager() {
             toast.error("Kein Projekt ausgewählt");
             return;
         }
+
+        const alreadyExists = participants.some(
+            (p) =>
+                p.name.trim().toLowerCase() ===
+                newParticipantName.trim().toLowerCase()
+        );
+
+        if (alreadyExists) {
+            toast.warning(
+                `Proband "${newParticipantName}" existiert für dieses Projekt bereits`
+            );
+            return;
+        }
+
 
         fetch("http://localhost:9999/api/participant/create", {
             method: "POST",
@@ -231,7 +245,7 @@ export default function ProjectManager() {
                                                 className="delete-btn"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    handleDeleteParticipant(p.id);
+                                                    setDeleteCandidate(p);
                                                 }}
                                             >
                                                 🗑️
@@ -282,12 +296,48 @@ export default function ProjectManager() {
                                 />
 
                                 <div className="modalActions">
-                                    <button onClick={handleCreateParticipant}>
+                                    <button className="btn primary"
+                                            onClick={handleCreateParticipant}>
                                         OK
                                     </button>
 
                                     <button
+                                        className="btn secondary"
                                         onClick={() => setShowModal(false)}
+                                    >
+                                        Abbrechen
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    {/* Delete Confirm Modal */}
+                    {deleteCandidate && (
+                        <div className="modalOverlay">
+                            <div className="deleteModal">
+                                <div className="warningIcon">!</div>
+
+                                <h3>Participant löschen?</h3>
+
+                                <p>
+                                    Der Proband{" "}
+                                    <b>{deleteCandidate.name}</b> und alle
+                                    zugehörigen Daten werden dauerhaft gelöscht.
+                                </p>
+
+                                <div className="modalActions">
+                                    <button
+                                        className="btn danger"
+                                        onClick={confirmDeleteParticipant}
+                                    >
+                                        Löschen
+                                    </button>
+
+                                    <button
+                                        className="btn secondary"
+                                        onClick={() =>
+                                            setDeleteCandidate(null)
+                                        }
                                     >
                                         Abbrechen
                                     </button>
