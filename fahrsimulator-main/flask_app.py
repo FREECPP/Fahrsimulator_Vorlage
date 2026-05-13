@@ -177,14 +177,16 @@ def handle_start_recording(data):
     global stream_thread
     global current_participant_id
 
+
     participant = data.get("participant")
-    project = data.get("project")
 
     if not participant:
         printlog("Kein Participant erhalten", "error")
         return
 
     participant_id = participant.get("id")
+    participant_name = participant.get("name")
+    project_name = data.get("projectName")
 
     current_participant_id = participant_id
 
@@ -209,12 +211,14 @@ def handle_start_recording(data):
     try:
         from logger.log_manager import LogManager  # Lazy-import to support preview mode without sensors
         now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        logging_manager = LogManager(directory=project_path, data_queues=data_queues, timestamp=now)
+        logging_manager = LogManager(directory=project_path, data_queues=data_queues, timestamp=now,
+                                     participant_name=participant_name, project_name=project_name, )
         is_running = logging_manager.start_logging_async()
         socketio.emit('is_running', is_running)
 
         stream_stop_event.clear()
-        stream_thread = threading.Thread(target=read_queue, args=(logging_manager, stream_stop_event), daemon=True)
+        stream_thread = threading.Thread(target=read_queue, args=(logging_manager, stream_stop_event), daemon=True,
+                                         project_name=project_name, participant_name=participant_name)
         stream_thread.start()
     except Exception as e:
         # If hardware/SDK dependencies are unavailable, run mock stream for UI preview.
