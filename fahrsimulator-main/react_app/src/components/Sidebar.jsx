@@ -4,6 +4,8 @@ import {SENSOR_WIDGETS} from "./widgetConfig";
 const API_URL = "http://localhost:9999";
 
 function Sidebar({
+                     sidebarCollapsed,
+                     setSidebarCollapsed,
                      onAddWidget,
                      onClearWidgets,
                      setLayout,
@@ -148,83 +150,95 @@ function Sidebar({
         currentLayoutName.split("::")[1] === layoutName.trim();
 
     return (
-        <aside className="sidebar">
-            <h2>Widget Library</h2>
-            <p>Add widgets and arrange them by drag and resize.</p>
-
-            <div className="sidebar-actions">
-                {SENSOR_WIDGETS.map((sensor) => (
-                    <button key={sensor.key} onClick={() => onAddWidget(sensor.key)}>
-                        Add {sensor.label}
-                    </button>
-                ))}
-            </div>
-
-            <button className="danger" onClick={onClearWidgets}>
-                Clear Dashboard
+        <aside className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+            <button
+                className="sidebar-toggle"
+                onClick={() => setSidebarCollapsed(prev => !prev)}
+            >
+                {sidebarCollapsed ? ">" : "<"}
             </button>
+            {!sidebarCollapsed && (
+                <>
+                    <h2>Sensoren</h2>
+                    <div className="sidebar-button-group">
 
-            <div className="sidebar-bottom">
-                <h3>Layouts</h3>
+                        <div className="sidebar-actions">
+                            {SENSOR_WIDGETS.map((sensor) => (
+                                <button key={sensor.key} onClick={() => onAddWidget(sensor.key)}>
+                                    Add {sensor.label}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="sidebar-actions">
+                            <button className="danger" onClick={onClearWidgets}>
+                                Clear Dashboard
+                            </button>
+                        </div>
+                        <div className="sidebar-bottom">
+                            <h3>Layouts</h3>
 
-                <div className="layout-current">
-                    Current layout: {currentLayoutName || "-"}
-                </div>
+                            <div className="layout-current">
+                                Current layout: {currentLayoutName || "-"}
+                            </div>
 
-                {/* 🔥 Hinweis */}
-                {isForeignLayout && (
-                    <div style={{color: "orange", fontSize: "0.9em", margin: "12px 0"}}>
-                        Dieses Layout gehört zu einem anderen Projekt. Du kannst es unter einem anderen Namen speichern
+                            {/* 🔥 Hinweis */}
+                            {isForeignLayout && (
+                                <div style={{color: "orange", fontSize: "0.9em", margin: "12px 0"}}>
+                                    Dieses Layout gehört zu einem anderen Projekt. Du kannst es unter einem anderen
+                                    Namen speichern
+                                </div>
+                            )}
+
+                            <input
+                                type="text"
+                                placeholder="Layout name"
+                                value={layoutName}
+                                onChange={(e) => setLayoutName(e.target.value)}
+                            />
+
+                            <button
+                                onClick={saveLayoutAs}
+                                disabled={
+                                    !layoutName.trim() ||
+                                    (isForeignLayout && isSameNameAsLoaded)
+                                }
+                            >
+                                {isForeignLayout ? "Save as new layout" : "Save Layout"}
+                            </button>
+
+                            <select
+                                value={currentLayoutName || ""}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setCurrentLayoutName(value);
+
+                                    if (!value) return;
+
+                                    const [projectName, layoutNameOnly] = value.split("::");
+
+                                    loadLayout(projectName, layoutNameOnly);
+                                }}
+                            >
+                                <option value="">Layout auswählen</option>
+
+                                {layouts.map((l) => (
+                                    <option key={l.id} value={`${l.project_name}::${l.name}`}>
+                                        {l.name} ({l.project_name})
+                                    </option>
+                                ))}
+                            </select>
+
+                            <button
+                                className="danger"
+                                onClick={deleteSelectedLayout}
+                                disabled={!currentLayoutName || isForeignLayout}
+                            >
+                                Delete Layout
+                            </button>
+                        </div>
                     </div>
-                )}
-
-                <input
-                    type="text"
-                    placeholder="Layout name"
-                    value={layoutName}
-                    onChange={(e) => setLayoutName(e.target.value)}
-                />
-
-                <button
-                    onClick={saveLayoutAs}
-                    disabled={
-                        !layoutName.trim() ||
-                        (isForeignLayout && isSameNameAsLoaded)
-                    }
-                >
-                    {isForeignLayout ? "Save as new layout" : "Save Layout"}
-                </button>
-
-                <select
-                    value={currentLayoutName || ""}
-                    onChange={(e) => {
-                        const value = e.target.value;
-                        setCurrentLayoutName(value);
-
-                        if (!value) return;
-
-                        const [projectName, layoutNameOnly] = value.split("::");
-
-                        loadLayout(projectName, layoutNameOnly);
-                    }}
-                >
-                    <option value="">Layout auswählen</option>
-
-                    {layouts.map((l) => (
-                        <option key={l.id} value={`${l.project_name}::${l.name}`}>
-                            {l.name} ({l.project_name})
-                        </option>
-                    ))}
-                </select>
-
-                <button
-                    className="danger"
-                    onClick={deleteSelectedLayout}
-                    disabled={!currentLayoutName || isForeignLayout}
-                >
-                    Delete Layout
-                </button>
-            </div>
+                </>
+            )}
         </aside>
     );
 }
