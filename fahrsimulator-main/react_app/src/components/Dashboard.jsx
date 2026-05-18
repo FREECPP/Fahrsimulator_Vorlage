@@ -94,6 +94,9 @@ function Dashboard() {
     const [widgets, setWidgets] = useState([])
     const [layout, setLayout] = useState([])
 
+    const [sidebarCollapsed, setSidebarCollapsed] =
+        useState(false)
+
     const [layoutReady, setLayoutReady] =
         useState(false)
 
@@ -409,9 +412,17 @@ function Dashboard() {
     }
 
     return (
-        <div className="app-shell">
+        <div
+            className={`app-shell ${
+                sidebarCollapsed
+                    ? "sidebar-is-collapsed"
+                    : ""
+            }`}
+        >
 
             <Sidebar
+                sidebarCollapsed={sidebarCollapsed}
+                setSidebarCollapsed={setSidebarCollapsed}
                 setLayout={setLayout}
                 setWidgets={setWidgets}
 
@@ -469,15 +480,7 @@ function Dashboard() {
             <main className="dashboard-area">
 
                 <header className="topbar">
-
-                    <div>
-                        <h1>
-                            Fahrsimulator Dashboard
-                        </h1>
-                    </div>
-
-                    <div className="topbar-right">
-
+                    
                         <div className="simulation-controls">
 
                             <button
@@ -598,11 +601,11 @@ function Dashboard() {
 
                         </div>
 
-                    </div>
 
                 </header>
 
                 <DashboardGrid
+                    sidebarCollapsed={sidebarCollapsed}
                     layout={layout}
                     setLayout={setLayout}
 

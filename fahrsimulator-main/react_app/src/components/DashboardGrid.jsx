@@ -8,6 +8,7 @@ import {getPreferredWidgetSize, getWidgetConstraints} from "./widgetSizing"
 import {debounce} from "lodash"
 
 function DashboardGrid({
+                           sidebarCollapsed,
                            widgets,
                            setWidgets,
                            sensorData,
@@ -18,33 +19,33 @@ function DashboardGrid({
                            currentLayoutName,
                            layoutProject
                        }) {
-    const [gridWidth, setGridWidth] = useState(1000)
+    const [gridWidth, setGridWidth] = useState(window.innerWidth)
 
     const API_URL = "http://localhost:9999"
 
-const saveLayout = useMemo(
-    () =>
-        debounce((layout, widgets) => {
-            const layoutNameOnly = currentLayoutName?.split("::")[1];
+    const saveLayout = useMemo(
+        () =>
+            debounce((layout, widgets) => {
+                const layoutNameOnly = currentLayoutName?.split("::")[1];
 
-            if (!layoutNameOnly) return;
+                if (!layoutNameOnly) return;
 
-            fetch(`${API_URL}/api/layout/${project}/${layoutNameOnly}`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({
-                    layout,
-                    widgets,
-                }),
-            }).catch((err) =>
-                console.error("Fehler beim Speichern:", err)
-            )
-        }, 1000),
-    [project, currentLayoutName]
-)
+                fetch(`${API_URL}/api/layout/${project}/${layoutNameOnly}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        layout,
+                        widgets,
+                    }),
+                }).catch((err) =>
+                    console.error("Fehler beim Speichern:", err)
+                )
+            }, 1000),
+        [project, currentLayoutName]
+    )
     useEffect(() => {
         return () => {
             saveLayout.cancel()
@@ -53,16 +54,24 @@ const saveLayout = useMemo(
 
 
     useEffect(() => {
+
         const updateGridWidth = () => {
-            const sidebarOffset = window.innerWidth <= 1024 ? 40 : 340
-            setGridWidth(Math.max(320, window.innerWidth - sidebarOffset))
-        }
+
+            const dashboard =
+                document.querySelector(".dashboard-area")
+
+            if (!dashboard) return
+
+            setGridWidth(dashboard.clientWidth  - 32)        }
 
         updateGridWidth()
-        window.addEventListener("resize", updateGridWidth)
-        return () => window.removeEventListener("resize", updateGridWidth)
-    }, [])
 
+        window.addEventListener("resize", updateGridWidth)
+
+        return () =>
+            window.removeEventListener("resize", updateGridWidth)
+
+    }, [sidebarCollapsed, widgets])
     const layout = widgets.map((widget) => {
         const constraints = getWidgetConstraints(widget.view, widget.mode)
         return {

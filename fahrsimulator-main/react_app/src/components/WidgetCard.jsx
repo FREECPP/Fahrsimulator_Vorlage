@@ -1,7 +1,8 @@
 import { lazy, memo, Suspense, useEffect, useMemo, useRef } from "react"
 import SilabCockpit from "./SilabCockpit"
 import EyeTrackerSummary from "./EyeTrackerSummary"
-import { getModeOptions, getNormalizedMode, getSensorTitle, SENSOR_WIDGETS } from "./widgetConfig"
+import {getModeOptions, getNormalizedMode, getSensorTitle, SENSOR_WIDGETS} from "./widgetConfig"
+import {Trash2} from "lucide-react"
 
 const ShimmerChart = lazy(() => import("./ShimmerChart"))
 
@@ -102,34 +103,55 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
     }
   }
 
-  return (
-    <article className="widget-card">
-      <header className="widget-header">
-        <div className="widget-title-group">
-          <select value={widget.view} onChange={(event) => onChangeView(widget.i, event.target.value)}>
-            {SENSOR_WIDGETS.map((sensor) => (
-              <option key={sensor.key} value={sensor.key}>
-                {sensor.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="widget-actions">
-          <select value={mode} onChange={(event) => onChangeMode(widget.i, event.target.value)}>
-            {modeOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <button className="danger" onClick={() => onDelete(widget.i)}>
-            Remove
-          </button>
-        </div>
-      </header>
-      <section className="widget-body">{body}</section>
-    </article>
-  )
+    return (
+        <article className="widget-card">
+            <header className="widget-header">
+
+                <div className="widget-title-group">
+                    <select //Select1
+                        className="compact-control"
+                        value={widget.view}
+                        onChange={(event) => onChangeView(widget.i, event.target.value)}
+                    >
+                        {SENSOR_WIDGETS.map((sensor) => (
+                            <option key={sensor.key} value={sensor.key}>
+                                {sensor.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="widget-actions">
+
+                    <select //Select2
+                        className="compact-control"
+                        value={mode}
+                        onChange={(event) => onChangeMode(widget.i, event.target.value)}
+                    >
+                        {modeOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                                {option.label}
+                            </option>
+                        ))}
+                    </select>
+
+                    <button
+                        className="danger icon-button compact-control"
+                        onClick={() => onDelete(widget.i)}
+                    >
+                        <Trash2 size={14}/>
+                    </button>
+
+                </div>
+
+            </header>
+
+            <section className="widget-body">
+                {body}
+            </section>
+
+        </article>
+    )
 }
 
 function hasSameWidgetIdentity(prevWidget, nextWidget) {
