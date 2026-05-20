@@ -1,4 +1,12 @@
+from tkinter import Event
+
 from logger.logger import Logger, LOG_TIME_KEY
+
+from multiprocessing import (
+    Process,
+    Event,
+    Queue
+)
 
 import numpy as np
 import imageio
@@ -134,7 +142,7 @@ class TiefenCamLogger(Logger):
             print("TOF Camera started")
 
     def start_sensor(
-            self) -> None:  # Prüft ob Kamera gestartet ist, ansonsten wird die Funktion connect_camera() aufgerufen
+            self, stop_event, log_event) -> None:  # Prüft ob Kamera gestartet ist, ansonsten wird die Funktion connect_camera() aufgerufen
         """
         Ensures the camera is connected and started. Implements the abstract Logger.start_sensor method.
 
@@ -148,6 +156,7 @@ class TiefenCamLogger(Logger):
         except Exception as e:
             print("TiefenCamLogger.start_sensor failed:", e)
             raise
+        self.start_logging(stop_event,log_event)
 
     def get_latency(self, val_amount_mean_calc: int) -> None:
         test_list = []
@@ -174,27 +183,32 @@ class TiefenCamLogger(Logger):
         self.mean_latency = mean_val / 2
         print(f"ToF-Latency: {self.mean_latency / 1e6:.2f} ms")
 
-    def start_logging(self, stop_event):
+    def start_logging(self, stop_event, log_event):
         """
         Starts the logging process, including video recording and frame processing.
 
         This method continuously requests frames from the camera, processes them,
         and sends them to the frame processor.
 
+        IMPORTANT: this function will also be called from start_sensor(). Therefore
+        the "starting_sensors_flag" exists, to make clear who is the caller.
+        If it will be called form start_sensor(), the logging-functionality will be
+        deactivated.
+
         Raises:
             Exception: If there is an error during frame processing.
         """
         super().start_logging()
 
+        self.get_latency(100)
         self._video_file = Path(self.video_output_dir / "tof_recording.mp4")
         self._video_writer = imageio.get_writer(str(self._video_file), fps=self.fps, codec="libx264", quality=8)
         self._running = True
-        self.get_latency(100)
+
         try:
             while self._running and not stop_event.is_set():
                 try:
                     frame = tof.Frame()
-
                     status = self.camera.requestFrame(frame)  # Ein Frame wird geholt
                     # Korrigierter Aufnahmezeitpunkt in Sekunden: Empfangszeit minus gemessene Latenz
                     ts = time.time() - self.mean_latency / 1e9
@@ -204,8 +218,8 @@ class TiefenCamLogger(Logger):
                         image = np.array(frame.getData("depth"), copy=False)
                         image_ab = np.array(frame.getData("ab"), copy=False)
 
-                        q_tof = self.queues.get("tof")
-                        q_pose = self.queues.get("pose_queue")
+                        q_tof = self.queues.get("tof") # Vermutlich nicht gebraucht
+                        q_pose = self.queues.get("pose_queue") # Geht an merged_skelett... und wird damit wahrscheinlich mit dem Model verarbeitet
 
                         # Daten werden in dict abgelegt
                         data_packet = {
@@ -214,17 +228,18 @@ class TiefenCamLogger(Logger):
                             "ab": image_ab
                         }
 
-                        frame_path = f"frames_tof/tof_frame_{ts}.npy"
                         if q_tof is not None:
                             put_latest(q_tof, (image, ts))
                         if q_pose is not None:
                             put_latest(q_pose, data_packet)
 
-                        self.write_row({
-                            LOG_TIME_KEY: ts,
-                            "timestamp": ts,
-                            "frame_path": frame_path
-                        })
+                        if log_event.is_set():
+                            frame_path = f"frames_tof/tof_frame_{ts}.npy"
+                            self.write_row({
+                                LOG_TIME_KEY: ts,
+                                "timestamp": ts,
+                                "frame_path": frame_path
+                            })
 
                         time.sleep(0.05)  # Dadurch gehen bewusst Frames verloren?
 

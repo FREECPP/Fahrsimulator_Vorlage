@@ -1,9 +1,13 @@
+from sqlalchemy.testing.plugin.plugin_base import stop_test_class_outside_fixtures
+
 from logger.logger import Logger, LOG_TIME_KEY
 from pathlib import Path
 from typing import Union, Optional
 import tobii_research
 import time
 import queue as _queue
+import json
+from multiprocessing import Event
 
 from utils.queue_utils import put_latest
 
@@ -51,6 +55,8 @@ class EyetrackerLogger(Logger):
         self._latency_cal_samples = []
         # Wird True gesetzt sobald die Kalibrierung abgeschlossen ist
         self._latency_cal_done = False
+        self.log_event = None
+        self.x = 0
 
     def _gaze_callback(self, gaze_data):
         # Empfangszeit so früh wie möglich messen um Verarbeitungszeit nicht einzurechnen
@@ -59,9 +65,15 @@ class EyetrackerLogger(Logger):
         if device_ts is not None:
             self._update_latency(device_ts, recv_ns)
         #print(f"Tobii-Device-Timestamp: {device_ts}")
-        self.process_data(gaze_data)
+        if self.log_event.is_set():
+            if self.x == 0:
+                self.start_logging()
+                x = 1
+        if self.capture_time is not None:
+            self.process_data(gaze_data)
         if self.eyetracker_queue is not None:
-            put_latest(self.eyetracker_queue, gaze_data)
+            cleaned_data = json.loads(json.dumps(gaze_data, allow_nan=False, default=lambda v: None))
+            put_latest(self.eyetracker_queue, cleaned_data)
 
     def _sync_callback(self, sync_data):
         #print(f"System_time_synced: {sync_data}")
@@ -109,11 +121,9 @@ class EyetrackerLogger(Logger):
 
         raise ValueError(f"Unexpected data type: {type(data)}")
 
-    def start_sensor(self) -> None:
+    def start_sensor(self, stop_event, log_event) -> None:
         super().start_sensor()
-
-    def start_logging(self, stop_event) -> None:
-        super().start_logging()
+        self.log_event = log_event
 
         try:
             found_eyetrackers = tobii_research.find_all_eyetrackers()
@@ -130,6 +140,11 @@ class EyetrackerLogger(Logger):
 
         except Exception as e:
             print(f"Error in EyetrackerLogger: {e}")
+
+    def start_logging(self) -> None:
+        super().start_logging()
+
+
 
     def stop_logging(self) -> None:
         """Stop eyetracker subscription."""

@@ -94,9 +94,6 @@ function Dashboard() {
     const [widgets, setWidgets] = useState([])
     const [layout, setLayout] = useState([])
 
-    const [sidebarCollapsed, setSidebarCollapsed] =
-        useState(false)
-
     const [layoutReady, setLayoutReady] =
         useState(false)
 
@@ -117,7 +114,7 @@ function Dashboard() {
 
     const [lastPacketTime, setLastPacketTime] =
         useState(null)
-
+    /*
     // ===== Debug =====
     console.log("====================================================")
     console.log("📥 DASHBOARD LOADED")
@@ -145,7 +142,7 @@ function Dashboard() {
     console.log(location.state?.path)
 
     console.log("====================================================")
-
+    */
     // ===== Init =====
     useEffect(() => {
 
@@ -344,7 +341,7 @@ function Dashboard() {
         socketRef.current.emit(
             "start_recording",
             {
-                participant: participantName,
+                participant: participant,
                 project: projectName,
             }
         )
@@ -368,12 +365,16 @@ function Dashboard() {
         if (
             !socketRef.current
             || !connected
-            || !running
+            || running
         ) {
             return
         }
 
-        socketRef.current.emit("start_sensor")
+        socketRef.current.emit("start_sensor",
+            {
+                participant: participant,
+                project: projectName,
+            })
     }
 
     const handleStartLogging = () => {
@@ -386,7 +387,11 @@ function Dashboard() {
             return
         }
 
-        socketRef.current.emit("start_logging")
+        socketRef.current.emit("start_logging",
+            {
+                participant: participant,
+                project: projectName,
+            })
     }
 
     const handleStartPC = () => {
@@ -412,17 +417,9 @@ function Dashboard() {
     }
 
     return (
-        <div
-            className={`app-shell ${
-                sidebarCollapsed
-                    ? "sidebar-is-collapsed"
-                    : ""
-            }`}
-        >
+        <div className="app-shell">
 
             <Sidebar
-                sidebarCollapsed={sidebarCollapsed}
-                setSidebarCollapsed={setSidebarCollapsed}
                 setLayout={setLayout}
                 setWidgets={setWidgets}
 
@@ -480,7 +477,15 @@ function Dashboard() {
             <main className="dashboard-area">
 
                 <header className="topbar">
-                    
+
+                    <div>
+                        <h1>
+                            Fahrsimulator Dashboard
+                        </h1>
+                    </div>
+
+                    <div className="topbar-right">
+
                         <div className="simulation-controls">
 
                             <button
@@ -516,7 +521,7 @@ function Dashboard() {
 
                                 disabled={
                                     !connected
-                                    || !running
+                                    || running
                                 }
                             >
                                 Start Sensor
@@ -601,11 +606,11 @@ function Dashboard() {
 
                         </div>
 
+                    </div>
 
                 </header>
 
                 <DashboardGrid
-                    sidebarCollapsed={sidebarCollapsed}
                     layout={layout}
                     setLayout={setLayout}
 

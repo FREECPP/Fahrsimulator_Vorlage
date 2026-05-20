@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional, Union
 import socket
 import threading
+from multiprocessing import Event
 
 from utils.queue_utils import put_latest
 from utils.silab_parser import parse_silab_data
@@ -44,46 +45,20 @@ class SilabLogger(Logger):
         self.silab_model_queue = self.queues.get("silab_model")
 
 
-    def start_sensor(self) -> None:
+    def start_sensor(self, stop_event, log_event) -> None:
         super().start_sensor()
-
-    def start_logging(self, stop_event) -> None:
-        """Initialize the UDP socket for SiLab data, then start the background thread."""
-        super().start_logging()
-
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._socket.bind((self.udp_ip, self.udp_port))
         self._socket.settimeout(self.timeout)
         self._running.set()
 
         print(f"SiLab logger listening on {self.udp_ip}:{self.udp_port}")
+        self._run_loop(stop_event, log_event)
 
-        while not stop_event.is_set():
-            try:
-                data, addr = self._socket.recvfrom(1024)
-                parsed = parse_silab_data(data)
-                parsed[LOG_TIME_KEY] = parsed["sim_time"]
-                self.write_row(parsed)
+    def start_logging(self, stop_event, log_event) -> None:
+        """Initialize the UDP socket for SiLab data, then start the background thread."""
+        super().start_logging()
 
-                if self.silab_queue is not None:
-                    put_latest(self.silab_queue, parsed)
-
-                if self.silab_model_queue is not None:
-                    put_latest(self.silab_model_queue, parsed)
-                time.sleep(0.01)
-
-                # if self.data_processor:
-                #     self.data_processor.set_data(parsed)
-
-            except socket.timeout:
-                continue
-            except ValueError as e:
-                print(f"Parse error: {e}")
-                continue
-        
-
-        self._thread = threading.Thread(target=self._run_loop, args=(stop_event,), daemon=True)
-        self._thread.start()
 
     def stop_logging(self) -> None:
         """Stop background thread, close UDP socket and file."""
@@ -99,21 +74,30 @@ class SilabLogger(Logger):
 
         super().stop_logging()
 
-    def _run_loop(self, stop_event) -> None:
+    def _run_loop(self, stop_event, log_event) -> None:
         """Background thread loop that receives and logs SiLab UDP packets."""
         try:
-            while self._running.is_set():
+            # start_logging flag damit diese Funktion einmalig aufgerufen wird
+            x = 0
+            while self._running.is_set() and not stop_event.is_set():
                 try:
                     data, addr = self._socket.recvfrom(1024)
                     parsed = parse_silab_data(data)
                     parsed[LOG_TIME_KEY] = parsed["sim_time"]
-                    self.write_row(parsed)
+
+                    if log_event.is_set():
+                        if x == 0:
+                            self.start_logging(stop_event, log_event)
+                            x = 1
+                        self.write_row(parsed)
                 
                     if self.silab_queue is not None:
                         put_latest(self.silab_queue, parsed)
                     
                     if  self.silab_model_queue is not None:
                         put_latest(self.silab_model_queue, parsed)
+                    time.sleep(0.01)
+
                     
                     
                     # if self.data_processor:
