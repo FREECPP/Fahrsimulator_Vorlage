@@ -1,7 +1,25 @@
+import os
+import logging
+
+# Google glog / ADI ToF SDK
+os.environ["GLOG_minloglevel"] = "2"
+os.environ["GLOG_logtostderr"] = "0"
+
+# TensorFlow / MediaPipe / TFLite
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+# libwebsocket (falls unterstützt)
+os.environ["LWS_LOG_LEVEL"] = "0"
+
+# Flask / Werkzeug logs reduzieren
+logging.getLogger('werkzeug').setLevel(logging.ERROR)
+
 from utils.app_logging_utils import printlog
 from flask import Flask, Response, request, render_template, jsonify
 from flask_socketio import SocketIO
 from flask_cors import CORS
+
+import logging
 
 from datetime import datetime
 from multiprocessing import Queue
@@ -38,7 +56,7 @@ CORS(app, supports_credentials=True)
 app.register_blueprint(verzeichnis_bp, url_prefix="/")
 app.register_blueprint(layout_bp)
 
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", logger=False, engineio_logger=False)
 
 port = int(os.getenv('PORT', 9999))
 host = "0.0.0.0"
@@ -88,19 +106,6 @@ data_queues = {
 
 }
 
-
-def deleteAndRecreateDB():
-    with app.app_context():
-        # Alte DB löschen (falls vorhanden)
-        if os.path.exists(DB_PATH):
-            os.remove(DB_PATH)
-            print("🗑️ Alte DB gelöscht")
-
-        # Neue DB erstellen
-        db.create_all()
-        print("✅ Neue DB erstellt")
-
-
 # ==================================================================================
 # Helper function for loading 'config.ini' Data
 # ==================================================================================
@@ -138,7 +143,7 @@ def index():
 # Nicht mehr vorhanden
 @app.route("/stop_logging", methods=["POST"])
 def stop_logging():
-    print("stopped")
+    print("logging stopped")
     return render_template("index.html")
 
 
@@ -154,7 +159,7 @@ def show_dashboard():
 @socketio.on('connect')
 def handle_connect():
     server_ip = get_server_ip()
-    printlog(f"Client connected to server {server_ip}:{port}")
+    #printlog(f"Client connected to server {server_ip}:{port}")
 
 
 def get_server_ip():
@@ -204,7 +209,7 @@ def handle_start_recording(data):
         socketio.emit('is_running', True)
         return
 
-    printlog(message="Starte Log-Manager", debug_lvl="info", std_print=True)
+    #printlog(message="Starte Log-Manager", debug_lvl="info", std_print=True)
     from controllers.projectController import project_path
     printlog(message=str(project_path), debug_lvl="info", std_print=True)
 
@@ -550,7 +555,11 @@ def mock_sensor_stream(stop_event):
         time.sleep(0.1)
 
 
+
 # Main entry-point for application
 if __name__ == '__main__':
     load_config()
+
+    log = logging.getLogger('werkzeug')
+    log.setLevel(logging.ERROR)
     socketio.run(app, port=port, debug=False, allow_unsafe_werkzeug=True)
