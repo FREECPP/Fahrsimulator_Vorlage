@@ -295,59 +295,59 @@ class LogManager:
     # ===== Start Sensors =====
     def start_sensors(self) -> None:
 
-        print("Starting sensors...")
+        #print("Starting sensors...")
 
         for logger in self.loggers:
-
+            """
             print(
                 f"Starting "
                 f"{logger.__class__.__name__}..."
             )
-
+            """
             try:
                 logger.start_sensor()
 
             except Exception as e:
-
+                """
                 print(
                     f"Error starting "
                     f"{logger.__class__.__name__}: {e}"
                 )
-
-        print("Sensors started.")
+                """
+        #print("Sensors started.")
 
         return None
 
     # ===== Start Models =====
     def start_models(self) -> None:
 
-        print("Starting models...")
+        #print("Starting models...")
 
         for model in self.models:
-
+            """
             print(
                 f"Starting "
                 f"{model.__class__.__name__})..."
             )
-
+            """
             try:
                 model.run()
 
             except Exception as e:
-
+                """
                 print(
                     f"Error starting "
                     f"{model.__class__.__name__}: {e}"
                 )
-
-        print("Models started.")
+                """
+        #print("Models started.")
 
         return None
 
     # ===== Start Logging =====
     def start_logging_async(self):
 
-        print(f"Log directory: {self.run_log_dir}")
+        #print(f"Log directory: {self.run_log_dir}")
 
         is_running = self._start_logger_processes()
 
@@ -355,7 +355,7 @@ class LogManager:
 
     def _start_logger_processes(self) -> bool:
 
-        print("\nStarting logger processes...")
+        #print("\nStarting logger processes...")
 
         self.stop_event = Event()
 
@@ -376,12 +376,12 @@ class LogManager:
             p.start()
 
             self._process.append(p)
-
+            """
             print(
                 f"{writer_cls.__name__} "
                 f"process started"
             )
-
+            """
         for logger_cls, kwargs, queues in self.loggers:
             p = Process(
                 target=run_logger_process,
@@ -397,12 +397,12 @@ class LogManager:
             p.start()
 
             self._process.append(p)
-
+            """
             print(
                 f"{logger_cls.__name__} "
                 f"process started"
             )
-
+            """
         for model_cls, kwargs, queues in self.models:
             p = Process(
                 target=run_model_process,
@@ -418,18 +418,18 @@ class LogManager:
             p.start()
 
             self._process.append(p)
-
+            """
             print(
                 f"{model_cls.__name__} "
                 f"process started"
             )
-
+            """
         return True
 
     # ===== Stop Logging =====
     def _stop_logger_processes(self) -> None:
 
-        print("\nStopping logger processes...")
+        #print("\nStopping logger processes...")
 
         self.stop_event.set()
 
@@ -438,23 +438,24 @@ class LogManager:
             p.join(timeout=10)
 
             if p.is_alive():
+                """
                 print(
                     f"Prozess {p.name} "
                     f"hat nicht rechtzeitig beendet "
                     f"– wird zwangsbeendet."
                 )
-
+                """
                 p.terminate()
 
                 p.join(timeout=3)
 
         self._process.clear()
 
-        print("\nAll loggers stopped.")
+        #print("\nAll loggers stopped.")
 
         try:
 
-            print("\nFühre Sensor-Logs zusammen...")
+            #print("\nFühre Sensor-Logs zusammen...")
 
             combined = merge_logs(
                 self.run_log_dir
@@ -469,19 +470,19 @@ class LogManager:
                 output_path,
                 index=False
             )
-
+            """
             print(
                 f"Combined log gespeichert: "
                 f"{output_path}"
             )
-
+            """
         except Exception as e:
-
+            """
             print(
                 f"Fehler beim Zusammenführen "
                 f"der Logs: {e}"
             )
-
+            """
 
 # ===== Logger Process =====
 def run_logger_process(

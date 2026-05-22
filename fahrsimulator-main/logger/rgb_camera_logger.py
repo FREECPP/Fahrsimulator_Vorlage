@@ -77,9 +77,9 @@ class RgbCameraLogger(Logger):
         self.video_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         self._cam = cv2.VideoCapture(self._camera_index)
-        print("Kamera: ", self._cam)
+        #print("Kamera: ", self._cam)
         if not self._cam.isOpened():
-            print(f"Kann Kamera {self._camera_index} nicht öffnen.")
+            #print(f"Kann Kamera {self._camera_index} nicht öffnen.")
             raise SystemExit(1)
 
         fps = self._cam.get(cv2.CAP_PROP_FPS) or 20.0
@@ -117,11 +117,12 @@ class RgbCameraLogger(Logger):
                 time.sleep(0.5)
 
         except Exception as e:
-            print("Frame processing error:", e)
+            pass
+            #print("Frame processing error:", e)
 
         mean_val = np.mean(test_list)
         self.mean_latency = mean_val / 2
-        print(f"RGB-Latency {self._camera_index}: {self.mean_latency / 1e6:.2f} ms")
+        #print(f"RGB-Latency {self._camera_index}: {self.mean_latency / 1e6:.2f} ms")
 
     def start_logging(self, stop_event):
         super().start_logging()

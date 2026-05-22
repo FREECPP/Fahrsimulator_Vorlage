@@ -91,11 +91,13 @@ class DepthPoseClass:
                 self.fy = float(self.K_depth[1, 1])
                 self.cx = float(self.K_depth[0, 2])
                 self.cy = float(self.K_depth[1, 2])
-                print(f"Kalibrierung geladen: fx={self.fx:.1f}, fy={self.fy:.1f}")
+                """print(f"Kalibrierung geladen: fx={self.fx:.1f}, fy={self.fy:.1f}")"""
             except Exception as e:
-                print(f"Fehler beim Laden der Kalibrierung: {e}")
+                pass
+                #print(f"Fehler beim Laden der Kalibrierung: {e}")
         else:
-            print("Keine calibration_data.npz gefunden, nutze Standardwerte.")
+            pass
+            #print("Keine calibration_data.npz gefunden, nutze Standardwerte.")
 
         # 3. 3D VIS VARIABLES
         self.vis = None
@@ -285,7 +287,7 @@ class DepthPoseClass:
 
 
     def run(self, stop_event):
-        print(f"Starte PoseToDepthApp (Modus: {VIEW_MODE})")
+        #print(f"Starte PoseToDepthApp (Modus: {VIEW_MODE})")
 
         # Indizes für Datenspeicherung
         landmark_indices = list(range(33)) + [99] + [98]
@@ -401,7 +403,7 @@ class DepthPoseClass:
             if self.vis:
                 self.vis.destroy_window()
             cv2.destroyAllWindows()
-            print("Beende DepthPoseClass.")
+            #print("Beende DepthPoseClass.")
 
 
 # 6. MAIN & LOGGER SETUP
@@ -417,7 +419,7 @@ if __name__ == "__main__":
     os.makedirs(log_dir, exist_ok=True)
 
     # 2. ToF Logger/Sensor starten
-    print("Initialisiere ToF Kamera...")
+    #print("Initialisiere ToF Kamera...")
     tof_logger = TiefenCamLogger(
         config="config_adsd3500_adsd3030.json",
         mode="lr-qnative",
@@ -446,7 +448,7 @@ if __name__ == "__main__":
     # 5. Logging Threads starten (notwendig damit die Processors Daten bekommen)
     logging_thread_tof = threading.Thread(target=tof_logger.start_logging, daemon=True)
     logging_thread_tof.start()
-    print("TOF LOGGING STARTED ========================================")
+    #print("TOF LOGGING STARTED ========================================")
 
     # logging_thread_rgb = threading.Thread(target=rgb_logger.start_logging, daemon=True)
     # logging_thread_rgb.start()
@@ -459,9 +461,10 @@ if __name__ == "__main__":
         # App läuft im Main-Thread
         app.run()
     except KeyboardInterrupt:
-        print("Unterbrochen durch Benutzer.")
+        pass
+        #print("Unterbrochen durch Benutzer.")
     finally:
-        print("Beende Logging...")
+        #print("Beende Logging...")
         tof_logger.stop_logging()
         logging_thread_tof.join()
-        print("Fertig.")
+        #print("Fertig.")
