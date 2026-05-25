@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
-import {SENSOR_WIDGETS} from "./widgetConfig";
+import {getDefaultMode, getSensorTitle, SENSOR_WIDGETS} from "./widgetConfig";
+import {getPreferredWidgetSize} from "./widgetSizing.js";
 
 const API_URL = "http://localhost:9999";
 
@@ -19,6 +20,53 @@ function Sidebar({
                  }) {
     const [layouts, setLayouts] = useState([]);
     const [layoutName, setLayoutName] = useState("");
+
+    function createDefaultWidgets() {
+        const DEFAULT_WIDGET_LAYOUT = [
+            {view: "silab", x: 0, y: 0},
+            {view: "eyetracker", x: 6, y: 0},
+            {view: "tof", x: 0, y: 3},
+            {view: "rgb_front", x: 4, y: 3},
+            {view: "rgb_back", x: 8, y: 3},
+            {view: "shimmer", x: 0, y: 6},
+        ]
+
+
+// ===== Widget =====
+        function createWidget(view) {
+
+            const id =
+                `${Date.now()}-${Math.round(Math.random() * 10000)}`
+
+            const mode = getDefaultMode(view)
+
+            const preferredSize =
+                getPreferredWidgetSize(view, mode)
+
+            return {
+                i: id,
+                x: 0,
+                y: Infinity,
+                w: preferredSize.w,
+                h: preferredSize.h,
+                view,
+                mode,
+                title: getSensorTitle(view),
+            }
+        }
+
+        return DEFAULT_WIDGET_LAYOUT.map(
+            ({view, x, y}) => ({
+                ...createWidget(view),
+                x,
+                y,
+            })
+        )
+    }
+
+    const resetDashboardLayout = () => {
+        setWidgets(createDefaultWidgets())
+    }
 
     // 🔄 Layoutliste laden
     const fetchLayouts = async () => {
@@ -149,6 +197,20 @@ function Sidebar({
         layoutName &&
         currentLayoutName.split("::")[1] === layoutName.trim();
 
+
+    const sortedLayouts = [...layouts].sort((a, b) => {
+        const aOwn = a.project_name === project;
+        const bOwn = b.project_name === project;
+
+        // Eigenes Projekt zuerst
+        if (aOwn && !bOwn) return -1;
+        if (!aOwn && bOwn) return 1;
+
+        // danach alphabetisch
+        return a.name.localeCompare(b.name);
+    });
+
+
     return (
         <aside className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
             <button
@@ -177,9 +239,9 @@ function Sidebar({
                         <div className="sidebar-bottom">
                             <h3>Layouts</h3>
 
-                            <div className="layout-current">
+                            {/*<div className="layout-current">
                                 Current layout: {currentLayoutName || "-"}
-                            </div>
+                            </div>*/}
 
                             {/* 🔥 Hinweis */}
                             {isForeignLayout && (
@@ -188,24 +250,6 @@ function Sidebar({
                                     Namen speichern
                                 </div>
                             )}
-
-                            <input
-                                type="text"
-                                placeholder="Layout name"
-                                value={layoutName}
-                                onChange={(e) => setLayoutName(e.target.value)}
-                            />
-
-                            <button
-                                onClick={saveLayoutAs}
-                                disabled={
-                                    !layoutName.trim() ||
-                                    (isForeignLayout && isSameNameAsLoaded)
-                                }
-                            >
-                                {isForeignLayout ? "Save as new layout" : "Save Layout"}
-                            </button>
-
                             <select
                                 value={currentLayoutName || ""}
                                 onChange={(e) => {
@@ -220,20 +264,56 @@ function Sidebar({
                                 }}
                             >
                                 <option value="">Layout auswählen</option>
-
-                                {layouts.map((l) => (
-                                    <option key={l.id} value={`${l.project_name}::${l.name}`}>
+                                {sortedLayouts.map((l) => (
+                                    <option
+                                        key={l.id}
+                                        value={`${l.project_name}::${l.name}`}
+                                        className={
+                                            l.project_name === project
+                                                ? "own-layout"
+                                                : "foreign-layout"
+                                        }
+                                    >
                                         {l.name} ({l.project_name})
                                     </option>
                                 ))}
                             </select>
+                            <input
+                                type="text"
+                                placeholder="Layout name"
+                                className="layoutName"
+                                value={layoutName}
+                                onChange={(e) => setLayoutName(e.target.value)}
+                            />
 
                             <button
-                                className="danger"
+                                className="save-layout-button"
+                                onClick={saveLayoutAs}
+                                disabled={
+                                    !layoutName.trim() ||
+                                    (isForeignLayout && isSameNameAsLoaded)
+                                }
+                            >
+                                {isForeignLayout ? "Save as new layout" : "Save Layout"}
+                            </button>
+
+
+                            <button
+                                className="delete-layout-button"
                                 onClick={deleteSelectedLayout}
                                 disabled={!currentLayoutName || isForeignLayout}
                             >
                                 Delete Layout
+                            </button>
+
+                            <button
+                                className="control-btn reset"
+
+                                onClick={
+                                    resetDashboardLayout
+                                }
+                            >
+                                Reset Layout
                             </button>
                         </div>
                     </div>

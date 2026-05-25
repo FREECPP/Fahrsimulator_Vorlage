@@ -3,11 +3,14 @@
     --color-buttons: #9f9f9f;
     --color-header: #454545;
     --color-dashboard: #cccccc;
-    --color-highlights: rgb(154 154 154 / 0.94);
+    --color-highlights: rgb(142 142 142 / 0.94);
+    --sidebar-width: 180px;
+
 }
+
 .app-shell {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: var(--sidebar-width) 1fr;
     min-height: 100vh;
     background: var(--color-dashboard);
 }
@@ -19,9 +22,11 @@
     padding: 16px;
     display: flex;
     flex-direction: column; /* wichtig */
-    width: max-content;
+    /*width: max-content;*/
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    max-width: var(--sidebar-width);
     align-items: center;
-    min-width: unset;
     position: relative;
     transition: width 0.35s ease,
     padding 0.35s ease,
@@ -86,7 +91,7 @@
 
 .sidebar-button-group {
     display: grid;
-    width: max-content;
+    width: 100%;
 }
 
 .sidebar-button-group button {
@@ -157,7 +162,7 @@
     margin-top: 16px;
     display: grid;
     gap: 10px;
-    width: max-content;
+    width: 100%;
 }
 
 .sidebar-bottom h3 {
@@ -176,30 +181,39 @@
     width: 100%;
     box-sizing: border-box;
     border-radius: 10px;
-    padding: 10px 12px;
+    padding-top: 10px;
+    padding-bottom: 10px;
     background: var(--color-highlights);
     color: #ffffff;
     border: 2px solid rgb(53 53 53 / 0.18);
     /*appearance: none;  entfernt Standard-Styling */
     cursor: pointer;
+        text-align: left !important;
+
 }
 
 .sidebar-bottom input::placeholder {
-    color: #ffffff;
+    color: #3e3e3e;
     opacity: 1;
+    text-align: left !important;
+
 }
 
 .sidebar-bottom input {
     width: 100%;
+    height: 30px;
     box-sizing: border-box;
     border-radius: 10px;
-    padding: 10px 12px;
+    /*padding: 10px 12px;*/
     background: var(--color-highlights);
-    color: #eaeaea;
+    color: #3e3e3e;
     border: 2px solid rgb(53 53 53 / 0.18);
     margin-bottom: 10px;
 }
 
+.layoutName {
+    background: white !important;
+}
 
 .sidebar-bottom select:hover {
     border-color: rgba(255, 255, 255, 0.4);
@@ -213,10 +227,42 @@
 
 select {
     color: black; /* oder #000 */
+        text-align: left !important;
 }
 
 select option {
     color: black;
+}
+
+.delete-layout-button {
+    background: #971717d1 !important;
+    color: white !important;
+    border-color: #7d2035 !important;
+}
+
+.save-layout-button,
+.delete-layout-button {
+    /*width: 120px !important;*/
+    height: 36px;
+    justify-self: center;
+
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 10px;
+}
+
+select option.own-layout {
+    background: #e3e3e3;
+    color: #000000;
+    font-weight: 700;
+}
+
+select option.foreign-layout {
+    background: #E3E3E3FF;
+    color: #ff8132;
 }
 
 .sidebar-bottom input:focus {
@@ -239,6 +285,7 @@ select option {
 .app-shell.sidebar-is-collapsed .topbar {
     padding-left: 32px;
 }
+
 .topbar {
     display: flex;
     justify-content: space-between;
@@ -289,7 +336,7 @@ select option {
 }
 
 .control-btn.reset {
-    background: #27485f;
+    background: #515151;
 }
 
 .control-btn:disabled {
@@ -302,6 +349,7 @@ select option {
     flex-wrap: wrap;
     gap: 8px;
 }
+
 .compact-control {
     height: 38px;
     min-height: 38px;
@@ -319,6 +367,7 @@ select option {
     min-width: 170px;
     padding-right: 30px;
 }
+
 /* Header Layout */
 .widget-header {
     display: flex;
@@ -332,6 +381,7 @@ select option {
     align-items: center;
     gap: 8px;
 }
+
 /* Beide Controls nebeneinander */
 .widget-actions {
     margin-left: auto;
@@ -341,6 +391,7 @@ select option {
 .widget-actions select {
     min-width: 140px;
 }
+
 /* Trash Button ganz rechts */
 .icon-button {
     width: 38px;
@@ -365,6 +416,7 @@ select option {
     display: flex;
     align-items: center;
 }
+
 .badge {
     font-size: 0.84rem;
     border-radius: 999px;
@@ -392,26 +444,52 @@ select option {
     border-color: #e4cea1;
 }
 
+/* =========================
+   Widget Card
+========================= */
+
 .widget-card {
+    position: relative;
     height: 100%;
     display: flex;
     flex-direction: column;
     border: 1px solid #d3d9e0;
-    /*border-radius: 12px;*/
+    /* border-radius: 12px; */
     overflow: hidden;
     background: #ffffff;
-
-    /*box-shadow: 0 8px 24px rgba(33, 59, 82, 0.12);*/
+    /* box-shadow: 0 8px 24px rgba(33, 59, 82, 0.12); */
 }
 
+/* =========================
+   Hover Header Overlay
+========================= */
+
 .widget-header {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    z-index: 10;
+
     display: flex;
     align-items: center;
     gap: 8px;
     padding: 10px 12px;
+
     background: var(--color-header);
     color: #f7fdff;
     cursor: move;
+
+    /* Hover-Verhalten */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+}
+
+/* Header erscheint nur bei Hover */
+.widget-card:hover .widget-header {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .widget-title-group {
@@ -436,12 +514,12 @@ select option {
     right 10px top 55%;
     background-size: 6px 6px, 6px 6px;
     background-repeat: no-repeat;
-    /*box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);*/
+    /* box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08); */
 }
 
 .widget-title-group select:hover {
     border-color: rgba(255, 255, 255, 0.75);
-    /*box-shadow: 0 0 0 2px rgba(127, 183, 227, 0.35);*/
+    /* box-shadow: 0 0 0 2px rgba(127,183,227,0.35); */
 }
 
 .widget-title-group select:focus-visible {
@@ -466,6 +544,7 @@ select option {
 .widget-actions {
     margin-left: auto;
 }
+
 .widget-actions select {
     background: #f3f8fd;
     color: #173247;
@@ -483,9 +562,12 @@ select option {
     outline-offset: 1px;
 }
 
+/* Body bekommt etwas Abstand,
+   damit Overlay nicht über Inhalt liegt */
 .widget-body {
-     flex: unset;
+    flex: unset;
     padding: 12px;
+    padding-top: 20px;
     overflow: auto;
 }
 
@@ -525,8 +607,6 @@ select option {
 .placeholder {
     height: 100%;
     display: grid;
-    place-items: center;
-    text-align: center;
     color: #424242;
     background: repeating-linear-gradient(
             -45deg,
@@ -536,7 +616,8 @@ select option {
             #edf2f7 16px
     );
     border-radius: 8px;
-    padding: 8px;
+    text-align: left !important;
+
 }
 
 .raw-payload {
@@ -803,7 +884,8 @@ select option {
 
 .silab-wheel-panel {
     display: grid;
-   place-items: center;    gap: 8px;
+    place-items: center;
+    gap: 8px;
 }
 
 .wheel-stage {

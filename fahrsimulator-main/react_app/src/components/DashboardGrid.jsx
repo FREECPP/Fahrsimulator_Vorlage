@@ -1,4 +1,4 @@
-import {useEffect, useState, useMemo} from "react"
+import {useEffect, useState, useMemo, useRef} from "react"
 import GridLayout from "react-grid-layout"
 import "react-grid-layout/css/styles.css"
 import "react-resizable/css/styles.css"
@@ -20,7 +20,7 @@ function DashboardGrid({
                            layoutProject
                        }) {
     const [gridWidth, setGridWidth] = useState(window.innerWidth)
-
+    const widgetSaveInit = useRef(true)
     const API_URL = "http://localhost:9999"
 
     const saveLayout = useMemo(
@@ -52,7 +52,23 @@ function DashboardGrid({
         }
     }, [saveLayout])
 
+useEffect(() => {
 
+    if (widgetSaveInit.current) {
+        widgetSaveInit.current = false
+        return
+    }
+
+    if (
+        !saveEnabled ||
+        project !== layoutProject
+    ) {
+        return
+    }
+
+    saveLayout(layout, widgets)
+
+}, [widgets])
     useEffect(() => {
 
         const updateGridWidth = () => {
