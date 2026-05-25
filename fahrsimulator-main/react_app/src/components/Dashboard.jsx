@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useRef, useState} from "react"
 import {useLocation} from "react-router-dom"
 import {io} from "socket.io-client"
-
+import { FaPlay, FaStop } from "react-icons/fa"
 import DashboardGrid from "./DashboardGrid"
 import Sidebar from "./Sidebar"
 
@@ -52,16 +52,7 @@ function createWidget(view) {
     }
 }
 
-function createDefaultWidgets() {
 
-    return DEFAULT_WIDGET_LAYOUT.map(
-        ({view, x, y}) => ({
-            ...createWidget(view),
-            x,
-            y,
-        })
-    )
-}
 
 function getDefaultHorizontalPosition(
     widgetCount,
@@ -407,9 +398,7 @@ function Dashboard() {
 
     }, [lastPacketTime])
 
-    const resetDashboardLayout = () => {
-        setWidgets(createDefaultWidgets())
-    }
+
 
     return (
         <div
@@ -493,7 +482,8 @@ function Dashboard() {
                                     || running
                                 }
                             >
-                                Start Simulation
+                                    <FaPlay  style={{ marginRight: "6px" }} />
+                                Sim
                             </button>
 
                             <button
@@ -506,7 +496,8 @@ function Dashboard() {
                                     || !running
                                 }
                             >
-                                Stop Simulation
+                                 <FaStop  style={{ marginRight: "6px" }} />
+                                Sim
                             </button>
 
                             <button
@@ -553,15 +544,6 @@ function Dashboard() {
                                 Start Sim on PC2
                             </button>
 
-                            <button
-                                className="control-btn reset"
-
-                                onClick={
-                                    resetDashboardLayout
-                                }
-                            >
-                                Reset Layout
-                            </button>
 
                         </div>
 
