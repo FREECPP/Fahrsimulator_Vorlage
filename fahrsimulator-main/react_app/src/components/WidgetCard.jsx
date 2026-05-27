@@ -1,6 +1,7 @@
 import { lazy, memo, Suspense, useEffect, useMemo, useRef } from "react"
 import SilabCockpit from "./SilabCockpit"
 import EyeTrackerSummary from "./EyeTrackerSummary"
+import SpeedChart from "./SpeedChart"
 import {getModeOptions, getNormalizedMode, getSensorTitle, SENSOR_WIDGETS} from "./widgetConfig"
 import {Trash2} from "lucide-react"
 
@@ -41,6 +42,8 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
   if (widget.view === "silab") {
     if (mode === "raw") {
       body = <pre className="raw-payload">{JSON.stringify(silab ?? {}, null, 2)}</pre>
+    } else if (mode === "line") {
+      body = <SpeedChart silab={silab} />
     } else {
       body = <SilabCockpit silab={silab} />
     }
@@ -181,6 +184,9 @@ function areWidgetPropsEqual(prevProps, nextProps) {
   const nextData = nextProps.sensorData || {}
 
   if (view === "silab") {
+    if (mode === "line") {
+      return prevData.silab?.speed === nextData.silab?.speed && prevData.silab?.steering === nextData.silab?.steering
+    }
     if (mode === "cockpit" || mode === "pedals") {
       return (
         prevData.silab?.speed === nextData.silab?.speed &&

@@ -109,10 +109,19 @@ function formatMetricValue(value, unit) {
   return `${value.toFixed(2)}${unit ? ` ${unit}` : ""}`
 }
 
+function formatElapsed(ms) {
+  if (!Number.isFinite(ms)) return "0:00"
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`
+}
+
 function ShimmerChart({ shimmer, running }) {
   const [history, setHistory] = useState([])
   const [now, setNow] = useState(0)
   const latestValuesRef = useRef({})
+  const startTimeRef = useRef(null)
 
   const shimmerPacket = useMemo(() => shimmer || {}, [shimmer])
 
@@ -136,18 +145,29 @@ function ShimmerChart({ shimmer, running }) {
 
     const intervalId = window.setInterval(() => {
       const timestamp = Date.now()
-      setNow(timestamp)
+      if (!startTimeRef.current) {
+        startTimeRef.current = timestamp
+      }
+
+      const elapsedMs = timestamp - startTimeRef.current
+      setNow(elapsedMs)
 
       const currentValues = latestValuesRef.current
       if (Object.keys(currentValues).length === 0) return
 
       setHistory((currentHistory) => {
-        const nextHistory = [...currentHistory, { timestamp, ...currentValues }]
-        return nextHistory.filter((entry) => timestamp - entry.timestamp <= WINDOW_MS)
+        const nextHistory = [...currentHistory, { elapsedMs, ...currentValues }]
+        return nextHistory.filter((entry) => elapsedMs - entry.elapsedMs <= WINDOW_MS)
       })
     }, 1000)
 
     return () => window.clearInterval(intervalId)
+  }, [running])
+
+  useEffect(() => {
+    if (running) return
+    startTimeRef.current = null
+    setNow(0)
   }, [running])
 
   const primaryCards = useMemo(
@@ -164,13 +184,10 @@ function ShimmerChart({ shimmer, running }) {
     const cutoff = now - WINDOW_MS
 
     return sourceHistory
-      .filter((entry) => entry.timestamp >= cutoff)
+      .filter((entry) => entry.elapsedMs >= cutoff)
       .map((entry) => ({
         ...entry,
-        timeLabel: new Date(entry.timestamp).toLocaleTimeString([], {
-          minute: "2-digit",
-          second: "2-digit",
-        }),
+        timeLabel: formatElapsed(entry.elapsedMs),
       }))
   }, [history, now, running])
 
@@ -178,7 +195,7 @@ function ShimmerChart({ shimmer, running }) {
     () =>
       data
         .map((entry) => ({
-          timestamp: entry.timestamp,
+          elapsedMs: entry.elapsedMs,
           timeLabel: entry.timeLabel,
           hr: entry.hr,
         }))
@@ -190,7 +207,7 @@ function ShimmerChart({ shimmer, running }) {
     () =>
       data
         .map((entry) => ({
-          timestamp: entry.timestamp,
+          elapsedMs: entry.elapsedMs,
           timeLabel: entry.timeLabel,
           rmssd: entry.rmssd,
           sdnn: entry.sdnn,
