@@ -12,6 +12,7 @@ from logger.logger import Logger, LOG_TIME_KEY
 from queue import Empty
 
 from utils.queue_utils import put_latest
+from multiprocessing import Event
 
 
 class RgbCameraLogger(Logger):
@@ -72,8 +73,9 @@ class RgbCameraLogger(Logger):
         # Korrigierter Aufnahmezeitpunkt im time.time()-Format, wird pro Frame aktualisiert
         self.capture_time = None
 
-    def start_sensor(self):
+    def start_sensor(self,stop_event, log_event):
         super().start_sensor()
+        self._running.set()
         self.video_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         self._cam = cv2.VideoCapture(self._camera_index)
@@ -99,6 +101,9 @@ class RgbCameraLogger(Logger):
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5
         )
+        self.get_latency(100)
+        self._run_loop(stop_event, log_event)
+
 
     def get_latency(self, val_amount_mean_calc: int) -> None:
         test_list = []
@@ -124,11 +129,11 @@ class RgbCameraLogger(Logger):
         self.mean_latency = mean_val / 2
         #print(f"RGB-Latency {self._camera_index}: {self.mean_latency / 1e6:.2f} ms")
 
-    def start_logging(self, stop_event):
+    def start_logging(self, stop_event, log_event):
         super().start_logging()
         self._running.set()
         self.fps_time = time.time()
-        self._run_loop(stop_event)
+
 
 
     def stop_logging(self):
@@ -162,9 +167,10 @@ class RgbCameraLogger(Logger):
             cv2.putText(frame, status, (10, 30),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
 
-    def _run_loop(self, stop_event) -> None:
+    def _run_loop(self, stop_event, log_event) -> None:
         try:
-            self.get_latency(100)
+            # Flag um einmal start_logging funktion aufzurufen
+            x = 0
             while self._running.is_set() and not stop_event.is_set():
                 read_successful, frame = self._cam.read()
                 # Aufnahmezeitpunkt berechnen: Empfangszeit minus gemessene Latenz
@@ -194,37 +200,43 @@ class RgbCameraLogger(Logger):
                             put_latest(rgb_queue, buffer.tobytes())
                 except Empty:
                     pass
-                
-                file = f"rgb_camera_{self._camera_index}_frame_{self.capture_time}.npy"
-                if self._camera_index == 0:
-                    path = self.directory / "rgb_frames" / "rgb_camera_1_frames"
-                elif self._camera_index == 1:
-                    path = self.directory / "rgb_frames" / "rgb_camera_2_frames"
-                path.mkdir(parents=True, exist_ok=True)
-                np.save(path / file, frame)
 
-                if self.writer.isOpened():
-                    self.writer.write(frame)
+                if log_event.is_set():
+                    # Start Logging muss einmal aufgerufen werden sonst werden keine Logs in das csv geschrieben
+                    if x == 0:
+                        self.start_logging(stop_event, log_event)
+                        x = 1
 
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                results = self.face_mesh.process(frame_rgb)
-                self.create_mediapipe_image(results, self.fps_time, self._frame_count, frame,
-                                            camera_index=self._camera_index)
+                    file = f"rgb_camera_{self._camera_index}_frame_{self.capture_time}.npy"
+                    if self._camera_index == 0:
+                        path = self.directory / "rgb_frames" / "rgb_camera_1_frames"
+                    elif self._camera_index == 1:
+                        path = self.directory / "rgb_frames" / "rgb_camera_2_frames"
+                    path.mkdir(parents=True, exist_ok=True)
+                    np.save(path / file, frame)
 
-                # Live-Vorschau
-                if self.live_view:
-                    cv2.imshow("Live", frame)
-                    cv2.waitKey(1)
+                    if self.writer.isOpened():
+                        self.writer.write(frame)
 
-                if results.multi_face_landmarks:
-                    landmarks = results.multi_face_landmarks[0]
-                    self.detect_eyes_closed(landmarks)
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    results = self.face_mesh.process(frame_rgb)
+                    self.create_mediapipe_image(results, self.fps_time, self._frame_count, frame,
+                                                camera_index=self._camera_index)
 
-                self.results = results
-                self.frame_rgb = frame_rgb
-                self.write_csv(frame_rgb)
+                    # Live-Vorschau
+                    if self.live_view:
+                        cv2.imshow("Live", frame)
+                        cv2.waitKey(1)
 
-                self._frame_count += 1
+                    if results.multi_face_landmarks:
+                        landmarks = results.multi_face_landmarks[0]
+                        self.detect_eyes_closed(landmarks)
+
+                    self.results = results
+                    self.frame_rgb = frame_rgb
+                    self.write_csv(frame_rgb)
+
+                    self._frame_count += 1
 
         except Exception as e:
             import traceback

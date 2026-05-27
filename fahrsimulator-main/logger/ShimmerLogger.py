@@ -6,6 +6,7 @@ from typing import Union, Optional
 from utils.bt_connector import connect_to_shimmer
 from utils.heart_rate_analyser import get_hr_measures
 import time
+from multiprocessing import Event
 from queue import Full, Empty
 import configparser
 import os
@@ -76,19 +77,26 @@ class ShimmerLogger(Logger):
         self._latency_cal_samples = []
         # Wird True gesetzt sobald die Kalibrierung abgeschlossen ist
         self._latency_cal_done = False
+        # Flag damit start_logging einmalig ausgeführt werden kann
+        self.x = 0
+        self.log_event = None
+        self.stop_event = None
 
-    def start_sensor(self) -> None:
+    def start_sensor(self,stop_event, log_event) -> None:
         super().start_sensor()
+        self.log_event = log_event
+        self.stop_event = stop_event
         self._shimmer_device = connect_to_shimmer(self.shimmer_addr)
         self._shimmer_device.add_stream_callback(self.handler)
-
-    def start_logging(self, stop_event) -> None:
-        super().start_logging()
         # Systemzeit festhalten bevor Streaming startet – dient als Referenz für die Latenzberechnung
         self._stream_start_ns = time.time_ns()
         self._shimmer_device.start_streaming()
         while not stop_event.is_set():
             time.sleep(0.05)
+
+    def start_logging(self) -> None:
+        super().start_logging()
+
 
     def stop_logging(self) -> None:
         print("Stopping Shimmer logger.")
@@ -140,10 +148,16 @@ class ShimmerLogger(Logger):
                 payload["skin_resistance"] = self._latest_gsr_raw
             put_latest(self.shimmer_queue, payload)
 
-        if self.capture_time is not None:
-            mapped_data[LOG_TIME_KEY] = self.capture_time
-        self.write_row(mapped_data)
         self.handle_hrv(mapped_data)
+
+        if self.log_event.is_set():
+            if self.x == 0:
+                self.start_logging()
+                x = 1
+            if self.capture_time is not None:
+                mapped_data[LOG_TIME_KEY] = self.capture_time
+            self.write_row(mapped_data)
+
 
     def _update_latency(self, shimmer_ts: float, recv_ns: int) -> None:
         # Erstes Paket: Shimmer-Timestamp als Takt-Referenz speichern, noch keine Berechnung möglich

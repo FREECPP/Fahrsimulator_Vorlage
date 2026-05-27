@@ -169,7 +169,7 @@ def process_dataframe(df: DataFrame) -> Optional[DataFrame]:
         result_df = pd.DataFrame(processed_groups_list)
         return result_df
     except Exception as e:
-        print(f"Error processing dataframe: {e}")
+        #print(f"Error processing dataframe: {e}")
         return None
 
 

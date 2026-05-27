@@ -30,9 +30,14 @@ from driverDistractionModel.model_train.distractionModel import (
 from utils.tof_csv_writer import FileWriter
 from utils.merge_logs import merge_logs
 
+import time
+
+global are_sensors_started
+are_sensors_started = False
 
 # ===== Log Manager =====
 class LogManager:
+
     UDP_IP_SILAB = "127.0.0.1"
 
     UDP_PORT_SILAB = 6666
@@ -40,40 +45,39 @@ class LogManager:
     SILAB_RECORDING_TIMEOUT = 2.0
 
     distraction_model_path = (
-            Path(__file__).resolve().parents[1]
-            / "driverDistractionModel"
-            / "model"
-            / "xgb_distraction_model.json"
+        Path(__file__).resolve().parents[1]
+        / "driverDistractionModel"
+        / "model"
+        / "xgb_distraction_model.json"
     )
 
     def __init__(
-            self,
-            tof_video: bool = False,
-            data_queues: dict[str, Queue] | None = None,
-            directory: str | None = None,
-            participant_name: str | None = None,
-            project_name: str | None = None,
-            timestamp=None
+        self,
+        tof_video: bool = False,
+        data_queues: dict[str, Queue] | None = None,
+        directory: str | None = None,
+        participant_name: str | None = None,
+        project_name: str | None = None,
+        timestamp=None
     ):
 
         participant_name = (
-                participant_name
-                or "unknown_participant"
+            participant_name
+            or "unknown_participant"
         )
 
         project_name = (
-                project_name
-                or "unknown_project"
+            project_name
+            or "unknown_participant"
         )
 
         self.run_log_dir = (
-                Path(directory)
-                / project_name
-                / participant_name
-                / "logfiles"
-                / timestamp
+            Path(directory)
+            / project_name
+            / participant_name
+            / "logfiles"
+            / timestamp
         )
-
 
         self.run_log_dir.mkdir(
             parents=True,
@@ -362,6 +366,7 @@ class LogManager:
         self._process = []
 
         for writer_cls, kwargs, queues in self.file_writer:
+
             p = Process(
                 target=run_writer_process,
 
@@ -383,6 +388,7 @@ class LogManager:
             )
             """
         for logger_cls, kwargs, queues in self.loggers:
+
             p = Process(
                 target=run_logger_process,
 
@@ -404,6 +410,7 @@ class LogManager:
             )
             """
         for model_cls, kwargs, queues in self.models:
+
             p = Process(
                 target=run_model_process,
 
@@ -462,8 +469,8 @@ class LogManager:
             )
 
             output_path = (
-                    self.run_log_dir
-                    / "combined_log.csv"
+                self.run_log_dir
+                / "combined_log.csv"
             )
 
             combined.to_csv(
@@ -477,6 +484,7 @@ class LogManager:
             )
             """
         except Exception as e:
+            pass
             """
             print(
                 f"Fehler beim Zusammenführen "
@@ -486,11 +494,12 @@ class LogManager:
 
 # ===== Logger Process =====
 def run_logger_process(
-        logger_cls,
-        kwargs,
-        stop_event,
-        queues
+    logger_cls,
+    kwargs,
+    stop_event,
+    queues
 ):
+
     if isinstance(queues, dict):
         qdict = queues
 
@@ -509,13 +518,36 @@ def run_logger_process(
     logger.stop_logging()
 
 
+def run_sensor_start_process(logger_cls, kwargs, stop_event, log_event, queues):
+    if isinstance(queues, dict):
+        qdict = queues
+    else:
+        qdict = {"default": queues}
+
+    logger = logger_cls(**kwargs, queues=qdict)
+    logger.start_sensor(stop_event, log_event)
+    logger.start_logging(stop_event, log_event)
+    logger.stop_logging()
+
+def run_logger_sepperat_process(logger_cls, kwargs,stop_event, queues):
+    if isinstance(queues, dict):
+        qdict = queues
+    else:
+        qdict = {"default": queues}
+
+    logger = logger_cls(**kwargs, queues=qdict)
+
+    logger.start_logging(stop_event)
+
+    logger.stop_logging()
 # ===== Model Process =====
 def run_model_process(
-        model_cls,
-        kwargs,
-        stop_event,
-        queues
+    model_cls,
+    kwargs,
+    stop_event,
+    queues
 ):
+
     if isinstance(queues, dict):
         qdict = queues
 
@@ -528,15 +560,16 @@ def run_model_process(
     )
 
     model.run(stop_event)
-
+    model.run(stop_event)
 
 # ===== Writer Process =====
 def run_writer_process(
-        writer_cls,
-        kwargs,
-        stop_event,
-        queues
+    writer_cls,
+    kwargs,
+    stop_event,
+    queues
 ):
+
     if isinstance(queues, dict):
         qdict = queues
 
