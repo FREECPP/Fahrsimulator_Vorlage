@@ -72,7 +72,12 @@ class EyetrackerLogger(Logger):
         if self.capture_time is not None:
             self.process_data(gaze_data)
         if self.eyetracker_queue is not None:
-            cleaned_data = json.loads(json.dumps(gaze_data, allow_nan=False, default=lambda v: None))
+            # NaN/Infinity (z.B. Blick weg, keine Augen erkannt) -> None, statt das Paket zu verwerfen.
+            # So bleibt der Datenstrom (und damit der Heartbeat) erhalten, solange der Tobii sendet.
+            cleaned_data = json.loads(
+                json.dumps(gaze_data, default=lambda v: None),
+                parse_constant=lambda c: None,
+            )
             put_latest(self.eyetracker_queue, cleaned_data)
 
     def _sync_callback(self, sync_data):
