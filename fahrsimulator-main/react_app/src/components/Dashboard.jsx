@@ -108,35 +108,7 @@ function Dashboard() {
 
     const [lastPacketTime, setLastPacketTime] =
         useState(null)
-
-    // ===== Debug =====
-    console.log("====================================================")
-    console.log("📥 DASHBOARD LOADED")
-    console.log("====================================================")
-
-    console.log("📍 location:")
-    console.log(location)
-
-    console.log("📁 project:")
-    console.log(project)
-
-    console.log("📁 projectName:")
-    console.log(projectName)
-
-    console.log("👤 participant:")
-    console.log(participant)
-
-    console.log("👤 participantName:")
-    console.log(participantName)
-
-    console.log("📦 complete location.state:")
-    console.log(location.state)
-
-    console.log("📂 path:")
-    console.log(location.state?.path)
-
-    console.log("====================================================")
-
+    
     // ===== Init =====
     useEffect(() => {
 
@@ -359,12 +331,16 @@ function Dashboard() {
         if (
             !socketRef.current
             || !connected
-            || !running
+            || running
         ) {
             return
         }
 
-        socketRef.current.emit("start_sensor")
+        socketRef.current.emit("start_sensor",
+            {
+                participant: participant,
+                project: projectName,
+            })
     }
 
     const handleStartLogging = () => {
@@ -377,7 +353,11 @@ function Dashboard() {
             return
         }
 
-        socketRef.current.emit("start_logging")
+        socketRef.current.emit("start_logging",
+            {
+                participant: participant,
+                project: projectName,
+            })
     }
 
     const handleStartPC = () => {
@@ -401,7 +381,7 @@ function Dashboard() {
 
 
     return (
-        <div
+        <div 
             className={`app-shell ${
                 sidebarCollapsed
                     ? "sidebar-is-collapsed"
@@ -469,7 +449,8 @@ function Dashboard() {
             <main className="dashboard-area">
 
                 <header className="topbar">
-                    
+
+
                         <div className="simulation-controls">
 
                             <button
@@ -507,7 +488,7 @@ function Dashboard() {
 
                                 disabled={
                                     !connected
-                                    || !running
+                                    || running
                                 }
                             >
                                 Start Sensor
@@ -583,6 +564,7 @@ function Dashboard() {
 
                         </div>
 
+                   
 
                 </header>
 

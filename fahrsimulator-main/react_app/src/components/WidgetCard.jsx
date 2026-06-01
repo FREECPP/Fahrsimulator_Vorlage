@@ -28,13 +28,23 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
       : null
 
   useEffect(() => {
-    if (mode !== "image" || !imageRef.current) return
+    if (mode !== "image" || !imageRef.current || !selectedImage) return
 
-    if (selectedImage) {
-      imageRef.current.src = `data:image/jpeg;base64,${selectedImage}`
-    } else {
-      imageRef.current.removeAttribute("src")
-    }
+    let objectUrl = null
+    try {
+        const blob = new Blob([selectedImage], {type:"image/jpeg"})
+        objectUrl = URL.createObjectURL(blob)
+        imageRef.current.src = objectUrl
+        }catch(error){
+            console.error("Fehler beim Verarbeiten der Bild-Bytes",error)
+            imageRef.current.removeAttribute("src")
+            }
+
+    return() => {
+        if(objectUrl){
+            URL.revokeObjectURL(objectUrl)
+            }
+        }
   }, [selectedImage, mode])
 
   let body = <div className="placeholder">Unknown widget type.</div>

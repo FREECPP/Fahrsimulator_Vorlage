@@ -105,7 +105,7 @@ class EyetrackerLogger(Logger):
                     # Mittlere Latenz einfrieren – wird für alle weiteren Pakete verwendet
                     self.mean_latency = sum(latency_samples) / len(latency_samples)
                     self._latency_cal_done = True
-                    #print(f"Eyetracker Latenz kalibriert: {self.mean_latency / 1e6:.2f} ms")
+                    print(f"Eyetracker Latenz kalibriert: {self.mean_latency / 1e6:.2f} ms")
             return
 
         # Korrekter Aufnahmezeitpunkt: Empfangszeit minus eingefrorene Latenz, umgerechnet in Sekunden
@@ -128,7 +128,7 @@ class EyetrackerLogger(Logger):
         try:
             found_eyetrackers = tobii_research.find_all_eyetrackers()
             self._device = found_eyetrackers[self.device_index]
-            #print(f"Using eyetracker: {self._device.device_name} @ {self._device.address}")
+            print(f"Using eyetracker: {self._device.device_name} @ {self._device.address}")
 
             # Systemzeit in Nanosekunden festhalten bevor Streaming startet – Referenz für Latenzberechnung
             self._stream_start_ns = time.time_ns()
@@ -139,11 +139,12 @@ class EyetrackerLogger(Logger):
                 time.sleep(0.1)
 
         except Exception as e:
-            pass
-            #print(f"Error in EyetrackerLogger: {e}")
+            print(f"Error in EyetrackerLogger: {e}")
 
     def start_logging(self) -> None:
         super().start_logging()
+
+
 
     def stop_logging(self) -> None:
         """Stop eyetracker subscription."""

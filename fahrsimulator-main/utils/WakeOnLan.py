@@ -1,8 +1,8 @@
 import socket
 import struct
+import time
 
-
-def wake_on_lan(mac_address):
+def wake_on_lan(mac_address, repeat = 3):
     # Formatiere die MAC-Adresse (entferne Trennzeichen)
     if len(mac_address) == 17:
         sep = mac_address[2]
@@ -20,8 +20,11 @@ def wake_on_lan(mac_address):
     # Sende das Paket als Broadcast in das Netzwerk
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        # Port 9 ist der Standard für WoL
-        sock.sendto(send_data, ('255.255.255.255', 9))
+        for i in range(repeat):
+            # Port 9 ist der Standard für WoL
+            sock.sendto(send_data, ('255.255.255.255', 9))
+            if repeat > 1 and i < repeat - 1:
+                time.sleep(0.1)
         print(f"Magic Packet an {mac_address} gesendet!")
 
 

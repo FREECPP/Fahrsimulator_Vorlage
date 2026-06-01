@@ -220,45 +220,45 @@ class LogManager:
                 }
             ),
 
-            (
-                distractionModel,
+            #(
+            #    distractionModel,
+            #
+            #    dict(
+            #        model_path=str(
+            #            self.distraction_model_path
+            #        ),
+            #
+            #        window_s=3.0,
+            #        min_frames=3,
+            #        timestamp_col="timestamp",
+            #    ),
+            #
+            #    {
+            #        "scelet_dict":
+            #            self.data_queues["scelet_dict"],
+            #
+            #        "distraction_model_queue":
+            #            self.data_queues[
+            #                "distraction_model_queue"
+            #            ],
+            #    }
+            #),
 
-                dict(
-                    model_path=str(
-                        self.distraction_model_path
-                    ),
+            #(
+            #    RasanteFahrweisePredictionModel,
 
-                    window_s=3.0,
-                    min_frames=3,
-                    timestamp_col="timestamp",
-                ),
-
-                {
-                    "scelet_dict":
-                        self.data_queues["scelet_dict"],
-
-                    "distraction_model_queue":
-                        self.data_queues[
-                            "distraction_model_queue"
-                        ],
-                }
-            ),
-
-            (
-                RasanteFahrweisePredictionModel,
-
-                dict(),
-
-                {
-                    "silab_model":
-                        self.data_queues["silab_model"],
-
-                    "rasante_fahrweise_model":
-                        self.data_queues[
-                            "rasante_fahrweise_model"
-                        ],
-                }
-            ),
+            #    dict(),
+            #
+            #    {
+            #        "silab_model":
+            #            self.data_queues["silab_model"],
+            #
+            #        "rasante_fahrweise_model":
+            #            self.data_queues[
+            #                "rasante_fahrweise_model"
+            #            ],
+            #    }
+            #),
 
             # (
             #     RealTimeGaze3D,
@@ -299,59 +299,59 @@ class LogManager:
     # ===== Start Sensors =====
     def start_sensors(self) -> None:
 
-        #print("Starting sensors...")
+        print("Starting sensors...")
 
         for logger in self.loggers:
-            """
+
             print(
                 f"Starting "
                 f"{logger.__class__.__name__}..."
             )
-            """
+
             try:
                 logger.start_sensor()
 
             except Exception as e:
-                """
+
                 print(
                     f"Error starting "
                     f"{logger.__class__.__name__}: {e}"
                 )
-                """
-        #print("Sensors started.")
+
+        print("Sensors started.")
 
         return None
 
     # ===== Start Models =====
     def start_models(self) -> None:
 
-        #print("Starting models...")
+        print("Starting models...")
 
         for model in self.models:
-            """
+
             print(
                 f"Starting "
                 f"{model.__class__.__name__})..."
             )
-            """
+
             try:
                 model.run()
 
             except Exception as e:
-                """
+
                 print(
                     f"Error starting "
                     f"{model.__class__.__name__}: {e}"
                 )
-                """
-        #print("Models started.")
+
+        print("Models started.")
 
         return None
 
     # ===== Start Logging =====
     def start_logging_async(self):
 
-        #print(f"Log directory: {self.run_log_dir}")
+        print(f"Log directory: {self.run_log_dir}")
 
         is_running = self._start_logger_processes()
 
@@ -359,7 +359,7 @@ class LogManager:
 
     def _start_logger_processes(self) -> bool:
 
-        #print("\nStarting logger processes...")
+        print("\nStarting logger processes...")
 
         self.stop_event = Event()
 
@@ -381,12 +381,12 @@ class LogManager:
             p.start()
 
             self._process.append(p)
-            """
+
             print(
                 f"{writer_cls.__name__} "
                 f"process started"
             )
-            """
+
         for logger_cls, kwargs, queues in self.loggers:
 
             p = Process(
@@ -403,12 +403,12 @@ class LogManager:
             p.start()
 
             self._process.append(p)
-            """
+
             print(
                 f"{logger_cls.__name__} "
                 f"process started"
             )
-            """
+
         for model_cls, kwargs, queues in self.models:
 
             p = Process(
@@ -425,18 +425,77 @@ class LogManager:
             p.start()
 
             self._process.append(p)
-            """
+
             print(
                 f"{model_cls.__name__} "
                 f"process started"
             )
-            """
+
+        return True
+
+    def start_sepperat_logging_async(self):
+        self.log_event.set()
+        #is_running = self._start_sepperat_logger_processes()
+        #return is_running
+        return True
+
+    def _start_sepperat_logger_processes(self) -> bool:
+
+        self.stop_event = Event()
+        self._process = []
+        for writer_cls, kwargs, queues in self.file_writer:
+            p = Process(target=run_writer_process, args=(writer_cls, kwargs, self.stop_event, queues))
+            p.start()
+            self._process.append(p)
+            print(f"{writer_cls.__name__} process started")
+
+        for logger_cls, kwargs, queues in self.loggers:
+            p = Process(target=run_logger_sepperat_process, args=(logger_cls, kwargs, self.stop_event, queues))
+            p.start()
+            self._process.append(p)
+            print(f"{logger_cls.__name__} process started")
+
+        for model_cls, kwargs, queues in self.models:
+            p = Process(target=run_model_process, args=(model_cls, kwargs, self.stop_event, queues))
+            p.start()
+            self._process.append(p)
+            print(f"{model_cls.__name__} process started")
+
+        return True
+
+    def start_sensors_async(self):
+        are_sensors_connected = self._sensor_start_processes()
+        return are_sensors_connected
+
+    def _sensor_start_processes(self) -> bool:
+        self.stop_event = Event()
+        self.log_event = Event()
+        self._process = []
+
+        for writer_cls, kwargs, queues in self.file_writer:
+            p = Process(target=run_writer_process, args=(writer_cls, kwargs, self.stop_event, queues))
+            p.start()
+            self._process.append(p)
+            print(f"{writer_cls.__name__} process started")
+
+        for logger_cls, kwargs, queues in self.loggers:
+            p = Process(target=run_sensor_start_process, args=(logger_cls, kwargs,self.stop_event, self.log_event, queues))
+            p.start()
+            self._process.append(p)
+            print(f"{logger_cls.__name__} sensor-start-process started")
+
+        for model_cls, kwargs, queues in self.models:
+            p = Process(target=run_model_process, args=(model_cls, kwargs, self.stop_event, queues))
+            p.start()
+            self._process.append(p)
+            print(f"{model_cls.__name__} process started")
+
         return True
 
     # ===== Stop Logging =====
     def _stop_logger_processes(self) -> None:
 
-        #print("\nStopping logger processes...")
+        print("\nStopping logger processes...")
 
         self.stop_event.set()
 
@@ -445,24 +504,24 @@ class LogManager:
             p.join(timeout=10)
 
             if p.is_alive():
-                """
+
                 print(
                     f"Prozess {p.name} "
                     f"hat nicht rechtzeitig beendet "
                     f"– wird zwangsbeendet."
                 )
-                """
+
                 p.terminate()
 
                 p.join(timeout=3)
 
         self._process.clear()
 
-        #print("\nAll loggers stopped.")
+        print("\nAll loggers stopped.")
 
         try:
 
-            #print("\nFühre Sensor-Logs zusammen...")
+            print("\nFühre Sensor-Logs zusammen...")
 
             combined = merge_logs(
                 self.run_log_dir
@@ -477,20 +536,18 @@ class LogManager:
                 output_path,
                 index=False
             )
-            """
+
             print(
                 f"Combined log gespeichert: "
                 f"{output_path}"
             )
-            """
+
         except Exception as e:
-            pass
-            """
+
             print(
                 f"Fehler beim Zusammenführen "
                 f"der Logs: {e}"
             )
-            """
 
 # ===== Logger Process =====
 def run_logger_process(
@@ -526,7 +583,7 @@ def run_sensor_start_process(logger_cls, kwargs, stop_event, log_event, queues):
 
     logger = logger_cls(**kwargs, queues=qdict)
     logger.start_sensor(stop_event, log_event)
-    logger.start_logging(stop_event, log_event)
+    #logger.start_logging(stop_event, log_event)
     logger.stop_logging()
 
 def run_logger_sepperat_process(logger_cls, kwargs,stop_event, queues):

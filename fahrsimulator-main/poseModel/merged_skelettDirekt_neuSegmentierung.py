@@ -27,7 +27,7 @@ def put_latest(q, item):
                 q.get_nowait()
             except _queue.Empty:
                 pass
-            time.sleep(0)
+            time.sleep(0.001)
 
 
 class DepthPoseClass:

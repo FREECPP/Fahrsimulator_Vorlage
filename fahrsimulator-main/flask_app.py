@@ -84,7 +84,7 @@ is_running = False
 are_sensors_running = False
 stream_thread = None
 stream_stop_event = threading.Event()
-EMIT_INTERVAL = 0
+EMIT_INTERVAL = 0.05
 
 # ==================================================================================
 # Initialising Queue for Multiprocessing IPC
@@ -400,7 +400,7 @@ def handle_start_pc():
 
 
 # Helper function to encode depth-data to jpeg for live preview
-def encode_depth_to_jpg(depth: np.ndarray) -> Optional[str]:
+def encode_depth_to_jpg(depth: np.ndarray) -> Optional[bytes]:
     if depth is None:
         return None
     depth = np.nan_to_num(depth)
@@ -411,23 +411,23 @@ def encode_depth_to_jpg(depth: np.ndarray) -> Optional[str]:
     ok, buffer = cv2.imencode(".jpg", depth)
     if not ok:
         return None
-    return base64.b64encode(buffer).decode()
+    return buffer.tobytes()
 
 
-def encode_rgb_stream_frame(rgb_frame) -> Optional[str]:
+def encode_rgb_stream_frame(rgb_frame) -> Optional[bytes]:
     if rgb_frame is None:
         return None
 
     if isinstance(rgb_frame, str):
-        return rgb_frame
+        return base64.b64decode(rgb_frame)
 
     if isinstance(rgb_frame, (bytes, bytearray, memoryview)):
-        return base64.b64encode(bytes(rgb_frame)).decode()
+        return bytes(rgb_frame)
 
     ok, buffer = cv2.imencode(".jpg", rgb_frame)
     if not ok:
         return None
-    return base64.b64encode(buffer.tobytes()).decode()
+    return buffer.tobytes()
 
 
 # Main function to send data per 'socket.emit()' to the dashboard.html

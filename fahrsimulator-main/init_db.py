@@ -13,7 +13,7 @@ from dbModels.projectAndParticipantsDB import (
 from dbModels.dashboardLayoutDB import dashboardLayout
 
 # 👉 Base-Verzeichnis
-BASE_DIR = r"A:\Fahrsimulator_Projekte"
+BASE_DIR = "A:\Fahrsimulator_Projekte"
 
 
 # ==================================================================================

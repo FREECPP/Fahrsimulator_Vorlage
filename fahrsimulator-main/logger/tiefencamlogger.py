@@ -118,8 +118,7 @@ class TiefenCamLogger(Logger):
         status = self.system.getCameraList(cameras, self.ip)
         print(cameras, self.ip)
         if status:
-            pass
-            #print("TOF Camera found on network:", self.ip)
+            print("TOF Camera found on network:", self.ip)
 
         # erste gefundene Kamera auswählen
         self.camera = cameras[0]
@@ -129,20 +128,18 @@ class TiefenCamLogger(Logger):
             os.chdir(cam_bin)
             self.camera.initialize(self.config_path)  # Kamera initialisieren mit durch die Konfig-Datei
         except Exception as e:
-            pass
-            #print("camera.initialize() failed:", e)
+            print("camera.initialize() failed:", e)
 
         self.camera.getAvailableFrameTypes(types)
         self.camera.setFrameType(self.mode)  # Modus setzen
 
         cam_details = tof.CameraDetails()
         status = self.camera.getDetails(cam_details)
-        #print("TOF Camera Details: .getDetails()", status)
-        #print("camera1 details:", "id:", cam_details.cameraId, "connection:", cam_details.connection)
+        print("TOF Camera Details: .getDetails()", status)
+        print("camera1 details:", "id:", cam_details.cameraId, "connection:", cam_details.connection)
         status = self.camera.start()  # Ab hier werden Frames geliefert
         if status:
-            pass
-            #print("TOF Camera started")
+            print("TOF Camera started")
 
     def start_sensor(
             self, stop_event, log_event) -> None:  # Prüft ob Kamera gestartet ist, ansonsten wird die Funktion connect_camera() aufgerufen
@@ -157,7 +154,7 @@ class TiefenCamLogger(Logger):
         try:
             self.connect_camera()
         except Exception as e:
-            #print("TiefenCamLogger.start_sensor failed:", e)
+            print("TiefenCamLogger.start_sensor failed:", e)
             raise
         self.start_logging(stop_event,log_event)
 
@@ -180,12 +177,11 @@ class TiefenCamLogger(Logger):
                 time.sleep(0.5)
 
         except Exception as e:
-            pass
-            #print("Frame processing error:", e)
+            print("Frame processing error:", e)
 
         mean_val = np.mean(test_list)
         self.mean_latency = mean_val / 2
-        #print(f"ToF-Latency: {self.mean_latency / 1e6:.2f} ms")
+        print(f"ToF-Latency: {self.mean_latency / 1e6:.2f} ms")
 
     def start_logging(self, stop_event, log_event):
         """
@@ -248,7 +244,7 @@ class TiefenCamLogger(Logger):
                         time.sleep(0.05)  # Dadurch gehen bewusst Frames verloren?
 
                 except Exception as e:
-                    #print("Frame processing error:", e)
+                    print("Frame processing error:", e)
                     time.sleep(0.005)
         finally:
             pass
@@ -307,11 +303,9 @@ class TiefenCamLogger(Logger):
                     print(
                         f"  files: {file_count}, total: {total_gb:.3f} GB (npz: {npz_gb:.3f} GB, csv: {csv_gb:.3f} GB)")
                 else:
-                    pass
-                    #print("No frames directory found to compute sizes.")
+                    print("No frames directory found to compute sizes.")
             except Exception as e:
-                pass
-                #print("Error computing frames sizes:", e)
+                print("Error computing frames sizes:", e)
         except Exception:
             pass
         finally:

@@ -11,13 +11,13 @@ def start_silab_prozess(exe_pfad = r"D:\SILAB\bin\SILAB.exe", argumente = r"D:\S
         time.sleep(3)
 
         pyautogui.press('enter')
-        time.sleep(15)
+        time.sleep(20)
 
         pyautogui.hotkey('ctrl', 'l')
-        time.sleep(1)
+        time.sleep(3)
 
         pyautogui.press('enter')
-        time.sleep(5)
+        time.sleep(7)
 
         pyautogui.hotkey('ctrl', 's')
 
