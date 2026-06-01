@@ -96,7 +96,6 @@ class SilabLogger(Logger):
                     
                     if  self.silab_model_queue is not None:
                         put_latest(self.silab_model_queue, parsed)
-                    time.sleep(0.01)
 
                     
                     
