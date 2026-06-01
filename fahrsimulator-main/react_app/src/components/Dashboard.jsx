@@ -564,7 +564,30 @@ function Dashboard() {
 
                         </div>
 
-                   
+                        <div
+                            className="badges"
+                            style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}
+                        >
+                            {[
+                                ["silab", "SiLab"],
+                                ["shimmer", "Shimmer"],
+                                ["eyetracker", "Eyetracker"],
+                                ["rgb_frame", "RGB"],
+                                ["rgb_frame2", "RGB 2"],
+                                ["tof_scelet", "TOF"],
+                            ].map(([key, label]) => (
+                                <span
+                                    key={key}
+                                    style={{
+                                        color: (sensorData.heartbeat || {})[key]
+                                            ? "limegreen"
+                                            : "gray",
+                                    }}
+                                >
+                                    ● {label}
+                                </span>
+                            ))}
+                        </div>
 
                 </header>
 

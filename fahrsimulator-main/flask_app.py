@@ -241,12 +241,6 @@ def handle_stop_recording():
     global stream_thread
     global current_participant_id
 
-    stream_stop_event.set()
-
-    if stream_thread and stream_thread.is_alive():
-        stream_thread.join(timeout=1.0)
-    stream_thread = None
-
     if current_participant_id:
         participant_db = db.session.get(
             Participant,
@@ -270,7 +264,12 @@ def handle_stop_recording():
     if logging_manager:
         logging_manager._stop_logger_processes()
         # logging_manager.stop_logging()
-        logging_manager = None
+
+    stream_stop_event.set()
+    if stream_thread and stream_thread.is_alive():
+        stream_thread.join(timeout=1.0)
+    stream_thread = None
+    logging_manager = None
     is_running = False
     socketio.emit('is_running', is_running)
 
@@ -459,8 +458,12 @@ def read_queue(logging_manager, stop_event):
 
     last_emit_time = 0.0
 
+    # Heartbeat: letzter Zeitpunkt mit Daten pro Sensor (monotonic)
+    last_seen = {}
+    HEARTBEAT_TIMEOUT = 2.0  # Sek. ohne Daten -> Sensor gilt als "tot"
+
     while not stop_event.is_set():
-        has_update = False
+        tick = time.monotonic()
 
         # RGB Data-Queue
         if rgb_queue is not None:
@@ -469,7 +472,7 @@ def read_queue(logging_manager, stop_event):
                 encoded = encode_rgb_stream_frame(rgb_frame)
                 if encoded is not None:
                     latest_sensor_data["rgb_frame"] = encoded
-                    has_update = True
+                    last_seen["rgb_frame"] = tick
             except Empty:
                 pass
             except Exception as e:
@@ -481,7 +484,7 @@ def read_queue(logging_manager, stop_event):
                 silab = silab_queue.get_nowait()
                 if silab is not None:
                     latest_sensor_data["silab"] = silab
-                    has_update = True
+                    last_seen["silab"] = tick
             except Empty:
                 pass
             except Exception as e:
@@ -493,7 +496,7 @@ def read_queue(logging_manager, stop_event):
                 eyetracker = eyetracker_queue.get_nowait()
                 if eyetracker is not None:
                     latest_sensor_data["eyetracker"] = eyetracker
-                    has_update = True
+                    last_seen["eyetracker"] = tick
             except Empty:
                 pass
             except Exception as e:
@@ -505,8 +508,7 @@ def read_queue(logging_manager, stop_event):
                 fahrweise = rasante_fahrweise_model_queue.get_nowait()
                 if fahrweise is not None:
                     latest_sensor_data["fahrweise"] = fahrweise
-                    has_update = True
-                    has_update = True
+                    last_seen["fahrweise"] = tick
             except Empty:
                 pass
             except Exception as e:
@@ -529,7 +531,7 @@ def read_queue(logging_manager, stop_event):
                 encoded = encode_depth_to_jpg(depth)
                 if encoded is not None:
                     latest_sensor_data["tof_scelet"] = encoded
-                    has_update = True
+                    last_seen["tof_scelet"] = tick
             except Empty:
                 pass
             except Exception as e:
@@ -542,7 +544,7 @@ def read_queue(logging_manager, stop_event):
                 encoded = encode_rgb_stream_frame(rgb_frame2)
                 if encoded is not None:
                     latest_sensor_data["rgb_frame2"] = encoded
-                    has_update = True
+                    last_seen["rgb_frame2"] = tick
             except Empty:
                 pass
             except Exception as e:
@@ -554,7 +556,7 @@ def read_queue(logging_manager, stop_event):
                 d = distraction_queue.get_nowait()
                 if d is not None:
                     latest_sensor_data["distraction"] = d
-                    has_update = True
+                    last_seen["distraction"] = tick
             except Empty:
                 pass
             except Exception as e:
@@ -566,7 +568,7 @@ def read_queue(logging_manager, stop_event):
                 data = shimmer_queue.get_nowait()
                 if data is not None:
                     latest_sensor_data["shimmer"] = data
-                    has_update = True
+                    last_seen["shimmer"] = tick
             except Empty:
                 pass
             except Exception as e:
@@ -579,7 +581,7 @@ def read_queue(logging_manager, stop_event):
                 ok, buffer2 = cv2.imencode(".jpg", gaze_frame)
                 if ok:
                     latest_sensor_data["gaze"] = base64.b64encode(buffer2.tobytes()).decode()
-                    has_update = True
+                    last_seen["gaze"] = tick
             except Empty:
                 pass
             except Exception as e:
@@ -587,6 +589,10 @@ def read_queue(logging_manager, stop_event):
 
         now = time.monotonic()
         if (now - last_emit_time) >= EMIT_INTERVAL:
+            latest_sensor_data["heartbeat"] = {
+                key: (now - ts) < HEARTBEAT_TIMEOUT
+                for key, ts in last_seen.items()
+            }
             socketio.emit("sensor_update", latest_sensor_data)
             last_emit_time = now
 
