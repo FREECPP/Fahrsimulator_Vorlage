@@ -37,6 +37,7 @@ LOG_FILES = {
     "tof_camera_log.csv":  "tof",
     "rgb_camera1.csv":     "rgb_camera1",
     "rgb_camera2.csv":     "rgb_camera2",
+    "tiefenskelett_log.csv": "skeleton",
 }
 
 # Name der Zeitstempel-Spalte — muss in allen Sensor-CSVs vorhanden sein

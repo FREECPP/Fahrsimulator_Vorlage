@@ -15,6 +15,28 @@ import open3d as o3d
 # ==========================================
 VIEW_MODE = "2D"  # "2D" (sendet Bild an Queue) oder "3D" (öffnet lokales Open3D Fenster)
 
+# Alle 33 MediaPipe-Pose-Landmarks (Index -> Spaltenname).
+LANDMARK_COLUMNS = {
+    0: "nose",
+    1: "left_eye_inner", 2: "left_eye", 3: "left_eye_outer",
+    4: "right_eye_inner", 5: "right_eye", 6: "right_eye_outer",
+    7: "left_ear", 8: "right_ear",
+    9: "mouth_left", 10: "mouth_right",
+    11: "left_shoulder", 12: "right_shoulder",
+    13: "left_elbow", 14: "right_elbow",
+    15: "left_wrist", 16: "right_wrist",
+    17: "left_pinky", 18: "right_pinky",
+    19: "left_index", 20: "right_index",
+    21: "left_thumb", 22: "right_thumb",
+    23: "left_hip", 24: "right_hip",
+    25: "left_knee", 26: "right_knee",
+    27: "left_ankle", 28: "right_ankle",
+    29: "left_heel", 30: "right_heel",
+    31: "left_foot_index", 32: "right_foot_index",
+}
+# Spaltenreihenfolge der Skelett-CSV.
+SKELETON_CSV_FIELDS = ["log_time"] + list(LANDMARK_COLUMNS.values())
+
 
 def put_latest(q, item):
     """Hilfsfunktion für Non-Blocking Queue (Leaky Bucket)"""
@@ -31,8 +53,23 @@ def put_latest(q, item):
 
 
 class DepthPoseClass:
-    def __init__(self, queues):
+    def __init__(self, queues=None, output_dir=None):
         self.queues = queues or {}
+
+        # Skelett-Log: CSV mit allen Landmarks, ein Eintrag pro erkanntem Frame.
+        self._skeleton_lock = threading.Lock()
+        self._skeleton_file = None
+        self._skeleton_writer = None
+        if output_dir is not None:
+            skeleton_path = Path(output_dir) / "tiefenskelett_log.csv"
+            self._skeleton_file = open(
+                skeleton_path, "a", encoding="utf-8", buffering=1, newline=""
+            )
+            self._skeleton_writer = csv.DictWriter(
+                self._skeleton_file, fieldnames=SKELETON_CSV_FIELDS
+            )
+            if self._skeleton_file.tell() == 0:
+                self._skeleton_writer.writeheader()
 
         # MediaPipe Setup
         self.mp_pose = mp.solutions.pose
@@ -105,7 +142,34 @@ class DepthPoseClass:
         self.skeleton_mesh = None
         self.first_frame = True
         self.initialized_3d = False
-        
+
+    def _write_skeleton_row(self, mapped_points, ts):
+        """Schreibt einen Skelett-Frame als CSV-Zeile (alle Landmarks als "(x, y, d)")."""
+        if self._skeleton_writer is None:
+            return
+        row = {"log_time": ts}
+        for idx, name in LANDMARK_COLUMNS.items():
+            val = mapped_points.get(idx)
+            # val ist (x, y, depth) oder None (Keypoint nicht im Bild).
+            # Als Tupel mit nativen Typen schreiben -> CSV-Zelle "(x, y, d)".
+            # Format exakt wie von process_dict.py erwartet (entfernt "()", split ",",
+            # cast x/y=Int, d=Float); native Typen vermeiden numpy-Repr wie np.float32(..).
+            if val is not None:
+                row[name] = (int(val[0]), int(val[1]), float(val[2]))
+            else:
+                row[name] = ""
+        with self._skeleton_lock:
+            self._skeleton_writer.writerow(row)
+
+    def close_skeleton_log(self):
+        """Schließt die Skelett-Logdatei sauber."""
+        with self._skeleton_lock:
+            if self._skeleton_file is not None:
+                self._skeleton_file.flush()
+                self._skeleton_file.close()
+                self._skeleton_file = None
+                self._skeleton_writer = None
+
     # HILFSFUNKTIONEN FÜR 3D RENDERN ZU 2D
     def capture_3d_as_image(self):
         if not self.vis:
@@ -286,7 +350,7 @@ class DepthPoseClass:
                 cv2.line(image, (x1, y1), (x2, y2), c_bgr, 3)
 
 
-    def run(self, stop_event):
+    def run(self, stop_event, log_event=None):
         #print(f"Starte PoseToDepthApp (Modus: {VIEW_MODE})")
 
         # Indizes für Datenspeicherung
@@ -302,18 +366,25 @@ class DepthPoseClass:
             while not stop_event.is_set():
                 img_depth = None
                 img_ab = None
+                ts = None
                 try:
                     # 1. Daten aus Queue holen (Non-blocking check)
                     if pose_queue and not pose_queue.empty():
                         item = pose_queue.get_nowait()
                         img_depth = item.get("depth", None)
                         img_ab = item.get("ab", None)
+                        # Latenz-korrigierter Aufnahmezeitpunkt des TOF-Frames
+                        # (gesetzt vom TiefenCamLogger). Identisch zu tof_camera_log.csv
+                        # und den tof_frame_{ts}.npy-Dateien.
+                        ts = item.get("ts")
 
                     if img_ab is None or img_depth is None:
                         time.sleep(0.005)
                         continue
 
-                    tm = time.time()
+                    # Aufnahmezeitpunkt des Frames; Fallback auf Systemzeit, falls der
+                    # Logger (noch) keinen ts mitliefert.
+                    tm = ts if ts is not None else time.time()
 
                     # 2. Rotation und Vorbereitung
                     ab_map_rot = cv2.rotate(img_ab, cv2.ROTATE_180)
@@ -343,6 +414,12 @@ class DepthPoseClass:
                         if scelet_dict_queue is not None:
                             put_latest(scelet_dict_queue, mapped_points.copy())
                         self.point_dict.append(mapped_points.copy())
+
+                        # Skelett nur schreiben wenn manuelles Logging aktiv ist
+                        # (analog zu den Loggern, die ihr write_row an log_event koppeln).
+                        # Ohne log_event (z.B. Auto-Start) wird immer geloggt.
+                        if log_event is None or log_event.is_set():
+                            self._write_skeleton_row(mapped_points, tm)
 
                     # 5. VISUALISIERUNG (2D oder 3D)
 
@@ -400,6 +477,7 @@ class DepthPoseClass:
                     time.sleep(0.5)
 
         finally:
+            self.close_skeleton_log()
             if self.vis:
                 self.vis.destroy_window()
             cv2.destroyAllWindows()

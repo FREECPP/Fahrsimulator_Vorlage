@@ -229,7 +229,7 @@ class LogManager:
             (
                 DepthPoseClass,
 
-                dict(),
+                dict(output_dir=self.run_log_dir),
 
                 {
                     "pose_queue":
@@ -445,7 +445,8 @@ class LogManager:
                     model_cls,
                     kwargs,
                     self.stop_event,
-                    queues
+                    queues,
+                    getattr(self, "log_event", None)
                 )
             )
 
@@ -483,7 +484,7 @@ class LogManager:
             print(f"{logger_cls.__name__} process started")
 
         for model_cls, kwargs, queues in self.models:
-            p = Process(target=run_model_process, args=(model_cls, kwargs, self.stop_event, queues))
+            p = Process(target=run_model_process, args=(model_cls, kwargs, self.stop_event, queues, getattr(self, "log_event", None)))
             p.start()
             self._process.append(p)
             print(f"{model_cls.__name__} process started")
@@ -512,7 +513,7 @@ class LogManager:
             print(f"{logger_cls.__name__} sensor-start-process started")
 
         for model_cls, kwargs, queues in self.models:
-            p = Process(target=run_model_process, args=(model_cls, kwargs, self.stop_event, queues))
+            p = Process(target=run_model_process, args=(model_cls, kwargs, self.stop_event, queues, self.log_event))
             p.start()
             self._process.append(p)
             print(f"{model_cls.__name__} process started")
@@ -629,7 +630,8 @@ def run_model_process(
     model_cls,
     kwargs,
     stop_event,
-    queues
+    queues,
+    log_event=None
 ):
 
     if isinstance(queues, dict):
@@ -643,8 +645,7 @@ def run_model_process(
         queues=qdict
     )
 
-    model.run(stop_event)
-    model.run(stop_event)
+    model.run(stop_event, log_event)
 
 # ===== Writer Process =====
 def run_writer_process(
