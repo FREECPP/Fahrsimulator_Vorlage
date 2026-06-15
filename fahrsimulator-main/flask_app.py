@@ -241,6 +241,12 @@ def handle_stop_recording():
     global stream_thread
     global current_participant_id
 
+    stream_stop_event.set()
+
+    if stream_thread and stream_thread.is_alive():
+        stream_thread.join(timeout=1.0)
+    stream_thread = None
+
     if current_participant_id:
         participant_db = db.session.get(
             Participant,
@@ -264,12 +270,7 @@ def handle_stop_recording():
     if logging_manager:
         logging_manager._stop_logger_processes()
         # logging_manager.stop_logging()
-
-    stream_stop_event.set()
-    if stream_thread and stream_thread.is_alive():
-        stream_thread.join(timeout=1.0)
-    stream_thread = None
-    logging_manager = None
+        logging_manager = None
     is_running = False
     socketio.emit('is_running', is_running)
 
@@ -458,12 +459,8 @@ def read_queue(logging_manager, stop_event):
 
     last_emit_time = 0.0
 
-    # Heartbeat: letzter Zeitpunkt mit Daten pro Sensor (monotonic)
-    last_seen = {}
-    HEARTBEAT_TIMEOUT = 2.0  # Sek. ohne Daten -> Sensor gilt als "tot"
-
     while not stop_event.is_set():
-        tick = time.monotonic()
+        has_update = False
 
         # RGB Data-Queue
         if rgb_queue is not None:
@@ -472,7 +469,7 @@ def read_queue(logging_manager, stop_event):
                 encoded = encode_rgb_stream_frame(rgb_frame)
                 if encoded is not None:
                     latest_sensor_data["rgb_frame"] = encoded
-                    last_seen["rgb_frame"] = tick
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -484,7 +481,7 @@ def read_queue(logging_manager, stop_event):
                 silab = silab_queue.get_nowait()
                 if silab is not None:
                     latest_sensor_data["silab"] = silab
-                    last_seen["silab"] = tick
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -496,7 +493,7 @@ def read_queue(logging_manager, stop_event):
                 eyetracker = eyetracker_queue.get_nowait()
                 if eyetracker is not None:
                     latest_sensor_data["eyetracker"] = eyetracker
-                    last_seen["eyetracker"] = tick
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -508,7 +505,8 @@ def read_queue(logging_manager, stop_event):
                 fahrweise = rasante_fahrweise_model_queue.get_nowait()
                 if fahrweise is not None:
                     latest_sensor_data["fahrweise"] = fahrweise
-                    last_seen["fahrweise"] = tick
+                    has_update = True
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -531,7 +529,7 @@ def read_queue(logging_manager, stop_event):
                 encoded = encode_depth_to_jpg(depth)
                 if encoded is not None:
                     latest_sensor_data["tof_scelet"] = encoded
-                    last_seen["tof_scelet"] = tick
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -544,7 +542,7 @@ def read_queue(logging_manager, stop_event):
                 encoded = encode_rgb_stream_frame(rgb_frame2)
                 if encoded is not None:
                     latest_sensor_data["rgb_frame2"] = encoded
-                    last_seen["rgb_frame2"] = tick
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -556,7 +554,7 @@ def read_queue(logging_manager, stop_event):
                 d = distraction_queue.get_nowait()
                 if d is not None:
                     latest_sensor_data["distraction"] = d
-                    last_seen["distraction"] = tick
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -568,7 +566,7 @@ def read_queue(logging_manager, stop_event):
                 data = shimmer_queue.get_nowait()
                 if data is not None:
                     latest_sensor_data["shimmer"] = data
-                    last_seen["shimmer"] = tick
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -581,7 +579,7 @@ def read_queue(logging_manager, stop_event):
                 ok, buffer2 = cv2.imencode(".jpg", gaze_frame)
                 if ok:
                     latest_sensor_data["gaze"] = base64.b64encode(buffer2.tobytes()).decode()
-                    last_seen["gaze"] = tick
+                    has_update = True
             except Empty:
                 pass
             except Exception as e:
@@ -589,31 +587,23 @@ def read_queue(logging_manager, stop_event):
 
         now = time.monotonic()
         if (now - last_emit_time) >= EMIT_INTERVAL:
-            latest_sensor_data["heartbeat"] = {
-                key: (now - ts) < HEARTBEAT_TIMEOUT
-                for key, ts in last_seen.items()
-            }
             socketio.emit("sensor_update", latest_sensor_data)
             last_emit_time = now
 
         time.sleep(0.01)
 
 
-def _mock_image_b64(label: str, t: float, width: int = 640, height: int = 360) -> str:
+def _mock_image_bytes(label: str, t: float, width: int = 640, height: int = 360) -> Optional[bytes]:
     frame = np.zeros((height, width, 3), dtype=np.uint8)
     frame[:] = (25, 28, 34)
-
-    # Animated status bar for visual feedback that the stream is live.
-    bar_x = int(((math.sin(t * 1.8) + 1) * 0.5) * (width - 120))
-    cv2.rectangle(frame, (bar_x, height - 40), (bar_x + 100, height - 20), (60, 180, 220), -1)
 
     cv2.putText(frame, f"{label} MOCK", (20, 42), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
     cv2.putText(frame, datetime.now().strftime("%H:%M:%S"), (20, 78), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (180, 220, 255), 2)
 
     ok, buffer = cv2.imencode(".jpg", frame)
     if not ok:
-        return ""
-    return base64.b64encode(buffer.tobytes()).decode()
+        return None
+    return buffer.tobytes()
 
 
 def mock_sensor_stream(stop_event):
@@ -627,7 +617,7 @@ def mock_sensor_stream(stop_event):
         skin_resistance = float(max(800.0, 180000.0 + 25000.0 * math.sin(t * 0.28)))
 
         sensor_data = {
-            "rgb_frame": _mock_image_b64("RGB Front", t),
+            "rgb_frame": _mock_image_bytes("RGB Front", t),
             "tof_frame": None,
             "pose_frame": None,
             "eyetracker": {
@@ -642,8 +632,8 @@ def mock_sensor_stream(stop_event):
                 "acc_pedal": float(max(0.0, 0.6 + 0.35 * math.sin(t * 1.1))),
                 "brake_pedal": float(max(0.0, 0.3 * math.sin(t * 1.7 - 1.0))),
             },
-            "rgb_frame2": _mock_image_b64("RGB Back", t + 1.0),
-            "tof_scelet": _mock_image_b64("TOF", t + 2.0),
+            "rgb_frame2": _mock_image_bytes("RGB Back", t + 1.0),
+            "tof_scelet": _mock_image_bytes("TOF", t + 2.0),
             "distraction": {
                 "label": int((math.sin(t * 0.7) > 0.35)),
                 "prob_distracted": float((math.sin(t * 0.7) + 1.0) * 0.5),

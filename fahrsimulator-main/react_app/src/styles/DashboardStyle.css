@@ -895,6 +895,16 @@ select option.foreign-layout {
     color: #173247;
 }
 
+.silab-line-chart-controls input {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid #c7d4e1;
+    background: #f3f8fd;
+    color: #173247;
+    width: 72px;
+}
+
 .silab-line-chart-label {
     font-size: 0.8rem;
     color: #425566;
@@ -914,6 +924,9 @@ select option.foreign-layout {
 }
 
 .silab-line-chart-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
     font-size: 0.82rem;
     font-weight: 600;
     color: #2b465c;
@@ -1117,3 +1130,4 @@ select option.foreign-layout {
         grid-template-columns: 1fr;
     }
 }
+    

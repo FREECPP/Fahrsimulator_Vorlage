@@ -33,7 +33,6 @@ export const SENSOR_WIDGETS = [
     defaultMode: "image",
     modes: [
       { value: "image", label: "Image" },
-      { value: "packet", label: "Packet" },
     ],
   },
   {
@@ -42,7 +41,6 @@ export const SENSOR_WIDGETS = [
     defaultMode: "image",
     modes: [
       { value: "image", label: "Image" },
-      { value: "packet", label: "Packet" },
     ],
   },
   {
@@ -51,7 +49,6 @@ export const SENSOR_WIDGETS = [
     defaultMode: "image",
     modes: [
       { value: "image", label: "Image" },
-      { value: "packet", label: "Packet" },
     ],
   },
 ]
