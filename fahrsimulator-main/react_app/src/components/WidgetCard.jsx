@@ -2,7 +2,7 @@ import { lazy, memo, Suspense, useEffect, useMemo, useRef } from "react"
 import SilabCockpit from "./SilabCockpit"
 import EyeTrackerSummary from "./EyeTrackerSummary"
 import SpeedChart from "./SpeedChart"
-import {getModeOptions, getNormalizedMode, getSensorTitle, SENSOR_WIDGETS} from "./widgetConfig"
+import {getModeOptions, getNormalizedMode, SENSOR_WIDGETS} from "./widgetConfig"
 import {Trash2} from "lucide-react"
 
 const ShimmerChart = lazy(() => import("./ShimmerChart"))
@@ -81,39 +81,13 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
   }
 
   if (["tof", "rgb_front", "rgb_back"].includes(widget.view)) {
-    const frameBySensor = {
-      tof: tofFrame,
-      rgb_front: rgbFrame,
-      rgb_back: rgbBackFrame,
-    }
-    const packetPayload = frameBySensor[widget.view] || ""
-
-    if (mode === "image") {
-      body = selectedImage ? (
-        <div className="widget-stack image-widget">
-          <img ref={imageRef} className="stream-image" alt="Live sensor stream" />
-        </div>
-      ) : (
-        <div className="placeholder">No frame yet. Start recording to receive frames.</div>
-      )
-    } else {
-      body = (
-        <div className="widget-stack">
-          <div className="status-row">
-            <span>Sensor</span>
-            <strong>{getSensorTitle(widget.view)}</strong>
-          </div>
-          <div className="status-row">
-            <span>Frame Available</span>
-            <strong>{packetPayload ? "Yes" : "No"}</strong>
-          </div>
-          <div className="status-row">
-            <span>Payload Length</span>
-            <strong>{packetPayload.length || 0}</strong>
-          </div>
-        </div>
-      )
-    }
+    body = selectedImage ? (
+      <div className="widget-stack image-widget">
+        <img ref={imageRef} className="stream-image" alt="Live sensor stream" />
+      </div>
+    ) : (
+      <div className="placeholder">No frame yet. Start recording to receive frames.</div>
+    )
   }
 
     return (

@@ -663,21 +663,17 @@ def read_queue(logging_manager, stop_event):
         time.sleep(0.01)
 
 
-def _mock_image_b64(label: str, t: float, width: int = 640, height: int = 360) -> str:
+def _mock_image_bytes(label: str, t: float, width: int = 640, height: int = 360) -> Optional[bytes]:
     frame = np.zeros((height, width, 3), dtype=np.uint8)
     frame[:] = (25, 28, 34)
-
-    # Animated status bar for visual feedback that the stream is live.
-    bar_x = int(((math.sin(t * 1.8) + 1) * 0.5) * (width - 120))
-    cv2.rectangle(frame, (bar_x, height - 40), (bar_x + 100, height - 20), (60, 180, 220), -1)
 
     cv2.putText(frame, f"{label} MOCK", (20, 42), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2)
     cv2.putText(frame, datetime.now().strftime("%H:%M:%S"), (20, 78), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (180, 220, 255), 2)
 
     ok, buffer = cv2.imencode(".jpg", frame)
     if not ok:
-        return ""
-    return base64.b64encode(buffer.tobytes()).decode()
+        return None
+    return buffer.tobytes()
 
 
 def mock_sensor_stream(stop_event):
@@ -691,7 +687,7 @@ def mock_sensor_stream(stop_event):
         skin_resistance = float(max(800.0, 180000.0 + 25000.0 * math.sin(t * 0.28)))
 
         sensor_data = {
-            "rgb_frame": _mock_image_b64("RGB Front", t),
+            "rgb_frame": _mock_image_bytes("RGB Front", t),
             "tof_frame": None,
             "pose_frame": None,
             "eyetracker": {
@@ -706,8 +702,8 @@ def mock_sensor_stream(stop_event):
                 "acc_pedal": float(max(0.0, 0.6 + 0.35 * math.sin(t * 1.1))),
                 "brake_pedal": float(max(0.0, 0.3 * math.sin(t * 1.7 - 1.0))),
             },
-            "rgb_frame2": _mock_image_b64("RGB Back", t + 1.0),
-            "tof_scelet": _mock_image_b64("TOF", t + 2.0),
+            "rgb_frame2": _mock_image_bytes("RGB Back", t + 1.0),
+            "tof_scelet": _mock_image_bytes("TOF", t + 2.0),
             "distraction": {
                 "label": int((math.sin(t * 0.7) > 0.35)),
                 "prob_distracted": float((math.sin(t * 0.7) + 1.0) * 0.5),
