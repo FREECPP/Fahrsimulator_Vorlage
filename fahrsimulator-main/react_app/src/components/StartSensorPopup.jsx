@@ -91,6 +91,11 @@ function StartSensorPopup({
     const [connectedTimes, setConnectedTimes] =
         useState({})
 
+    // Pro Sensor: Zeitpunkt, bis zu dem nach einem Reconnect der noch alte
+    // Heartbeat ignoriert wird (ueberbrueckt das ~2s Heartbeat-Timeout-Fenster).
+    const [ignoreHeartbeatUntil, setIgnoreHeartbeatUntil] =
+        useState({})
+
     const [now, setNow] =
         useState(Date.now())
 
@@ -99,6 +104,7 @@ function StartSensorPopup({
         if (!open) {
             setStartTimes({})
             setConnectedTimes({})
+            setIgnoreHeartbeatUntil({})
             return
         }
 
@@ -151,10 +157,16 @@ function StartSensorPopup({
                 const alreadyConnected =
                     updated[sensor.key] !== undefined
 
+                // Direkt nach einem Reconnect den noch alten Heartbeat ignorieren,
+                // bis der alte Prozess wirklich tot ist (Heartbeat-Timeout).
+                const ignoreHeartbeat =
+                    ignoreHeartbeatUntil[sensor.key] > Date.now()
+
                 if (
                     hasHeartbeat &&
                     !alreadyConnected &&
-                    startTimes[sensor.key]
+                    startTimes[sensor.key] &&
+                    !ignoreHeartbeat
                 ) {
 
                     updated[sensor.key] =
@@ -170,7 +182,7 @@ function StartSensorPopup({
                 : prev
         })
 
-    }, [heartbeat, startTimes, open])
+    }, [heartbeat, startTimes, open, ignoreHeartbeatUntil])
 
     if (!open) {
         return null
@@ -290,9 +302,28 @@ function StartSensorPopup({
 
             <button
                 className="popupBtn"
-                onClick={() =>
+                onClick={() => {
+                    // Sensor als "nicht verbunden" markieren, damit wieder
+                    // der Spinner ("Suche...") statt "Verbunden" angezeigt wird
+                    setConnectedTimes(prev => {
+                        const u = { ...prev }
+                        delete u[sensor.key]
+                        return u
+                    })
+                    // Startzeit zuruecksetzen, damit der Timer neu zaehlt
+                    setStartTimes(prev => ({
+                        ...prev,
+                        [sensor.key]: Date.now()
+                    }))
+                    // Noch alten Heartbeat 2,2s ignorieren (> Heartbeat-Timeout),
+                    // damit nicht sofort wieder "Verbunden (0s)" erscheint
+                    setIgnoreHeartbeatUntil(prev => ({
+                        ...prev,
+                        [sensor.key]: Date.now() + 2200
+                    }))
+                    // Reconnect im Backend ausloesen
                     onRestartSensor?.(sensor.key)
-                }
+                }}
             >
                 Restart
             </button>

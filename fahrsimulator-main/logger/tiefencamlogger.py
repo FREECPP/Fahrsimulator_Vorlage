@@ -214,7 +214,7 @@ class TiefenCamLogger(Logger):
                     test_list.append(ts_2 - ts_1)
 
                 # Warten damit der Frame-Aufruf nicht Blockiert und so das Latenz Ergebnis verfälscht
-                time.sleep(0.5)
+                time.sleep(0.01)
 
         except Exception as e:
             print("Frame processing error:", e)

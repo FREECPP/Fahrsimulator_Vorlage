@@ -666,6 +666,10 @@ function Dashboard() {
                     sensorLatency={
         sensorData.sensor_latency || {}
     }
+                onRestartSensor={(key) =>
+                    // Reconnect nur fuer diesen einen Sensor anstossen
+                    socketRef.current?.emit("restart_sensor", { key })
+                }
             />
         </div>
     )

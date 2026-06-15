@@ -495,10 +495,31 @@ class LogManager:
         are_sensors_connected = self._sensor_start_processes()
         return are_sensors_connected
 
+    # ===== Sensor-Key Mapping =====
+    @staticmethod
+    def _sensor_key_for(logger_cls, kwargs):
+        # Ordnet einer Logger-Klasse den im Frontend verwendeten Sensor-Key zu.
+        # Wird benoetigt, damit der Reconnect-Button (z.B. "rgb_frame") den
+        # passenden Logger-Prozess findet.
+        name = logger_cls.__name__
+        # RGB-Kameras teilen sich die Klasse, werden aber ueber camera_index unterschieden
+        if name == "RgbCameraLogger":
+            return "rgb_frame" if kwargs.get("camera_index") == 0 else "rgb_frame2"
+        return {
+            "TiefenCamLogger": "tof_scelet",
+            "EyetrackerLogger": "eyetracker",
+            "SilabLogger": "silab",
+            "ShimmerLogger": "shimmer",
+        }.get(name, name)
+
     def _sensor_start_processes(self) -> bool:
         self.stop_event = Event()
         self.log_event = Event()
         self._process = []
+        # Pro Sensor merken: Logger-Definition (fuer Neustart) + aktiver Prozess.
+        # Damit kann restart_sensor() gezielt einen einzelnen Sensor neu starten.
+        self._sensor_loggers = {}
+        self._sensor_processes = {}
 
         for writer_cls, kwargs, queues in self.file_writer:
             p = Process(target=run_writer_process, args=(writer_cls, kwargs, self.stop_event, queues))
@@ -510,6 +531,10 @@ class LogManager:
             p = Process(target=run_sensor_start_process, args=(logger_cls, kwargs,self.stop_event, self.log_event, queues))
             p.start()
             self._process.append(p)
+            # Sensor-Key bestimmen und Definition + Prozess fuer spaeteren Reconnect ablegen
+            key = self._sensor_key_for(logger_cls, kwargs)
+            self._sensor_loggers[key] = (logger_cls, kwargs, queues)
+            self._sensor_processes[key] = p
             print(f"{logger_cls.__name__} sensor-start-process started")
 
         for model_cls, kwargs, queues in self.models:
@@ -518,6 +543,39 @@ class LogManager:
             self._process.append(p)
             print(f"{model_cls.__name__} process started")
 
+        return True
+
+    # ===== Reconnect einzelner Sensor =====
+    def restart_sensor(self, sensor_key: str) -> bool:
+        """Beendet nur den Prozess des angegebenen Sensors und startet ihn neu.
+        Die anderen Sensoren laufen unverändert weiter."""
+        # Logger-Definition zum Key nachschlagen (cls, kwargs, queues)
+        entry = getattr(self, "_sensor_loggers", {}).get(sensor_key)
+        if entry is None:
+            print(f"restart_sensor: unbekannter Sensor {sensor_key}")
+            return False
+
+        # Alten Sensor-Prozess hart beenden und aus der Prozessliste entfernen
+        old = self._sensor_processes.get(sensor_key)
+        if old is not None and old.is_alive():
+            old.terminate()
+            old.join(timeout=5)
+        if old in self._process:
+            self._process.remove(old)
+
+        logger_cls, kwargs, queues = entry
+        # Neuer Prozess mit gleichem stop_event/log_event und gleichen kwargs:
+        # => Logging-Zustand und Logdatei bleiben unveraendert, der Sensor laeuft
+        #    sofort wieder im selben Modus weiter
+        p = Process(
+            target=run_sensor_start_process,
+            args=(logger_cls, kwargs, self.stop_event, self.log_event, queues)
+        )
+        p.start()
+        # Referenzen aktualisieren, damit ein weiterer Reconnect erneut funktioniert
+        self._sensor_processes[sensor_key] = p
+        self._process.append(p)
+        print(f"Sensor {sensor_key} neu gestartet")
         return True
 
     # ===== Stop Logging =====

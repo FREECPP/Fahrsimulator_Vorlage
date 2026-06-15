@@ -331,6 +331,19 @@ def handle_start_sensor(data):
         printlog(f"Sensoren könnten nicht gestartet werden: {e}", "warning")
 
 
+# Reconnect-Button im Sensor-Popup: startet nur den einen Sensor neu,
+# die uebrigen laufenden Sensoren bleiben unberuehrt.
+@socketio.on('restart_sensor')
+def handle_restart_sensor(data):
+    global logging_manager
+    sensor_key = data.get("key")
+    # Ohne aktiven LogManager oder ohne Key gibt es nichts neu zu starten
+    if logging_manager is None or not sensor_key:
+        print("restart_sensor: kein logging_manager oder kein key")
+        return
+    logging_manager.restart_sensor(sensor_key)
+
+
 @socketio.on('start_logging')
 def handle_start_logging(data):
     global logging_manager, is_running, stream_thread
