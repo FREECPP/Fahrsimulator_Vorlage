@@ -55,8 +55,10 @@ class RgbCameraLogger(Logger):
         self.back_camera = back_camera
         self._frame_count = 0
         self.directory = directory
+        # Eindeutiger Dateiname pro Kamera, sonst schreiben beide Logger-Instanzen
+        # (Index 0 und 1) in dieselbe Datei und die Frames werden verschachtelt.
         self.video_file_path = Path(
-            directory / "video" / "rgb_camera_recordings" / f"logitech_camera.avi")  # AVI Format
+            directory / "video" / "rgb_camera_recordings" / f"logitech_camera_{camera_index}.avi")  # AVI Format
 
         self.EAR_THRESHOLD = load_ear()
         self.LEFT_EYE = [33, 160, 158, 133, 153, 144]  # Eye-Landmarks
