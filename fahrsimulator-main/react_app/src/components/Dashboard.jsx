@@ -1,9 +1,10 @@
 import {useEffect, useMemo, useRef, useState} from "react"
 import {useLocation} from "react-router-dom"
 import {io} from "socket.io-client"
-import { FaPlay, FaStop } from "react-icons/fa"
+import {FaPlay, FaStop} from "react-icons/fa"
 import DashboardGrid from "./DashboardGrid"
 import Sidebar from "./Sidebar"
+import StartSensorPopup from "./StartSensorPopup"
 
 import {
     getDefaultMode,
@@ -53,7 +54,6 @@ function createWidget(view) {
 }
 
 
-
 function getDefaultHorizontalPosition(
     widgetCount,
     widgetWidth = 4,
@@ -87,7 +87,8 @@ function Dashboard() {
 
     const [sidebarCollapsed, setSidebarCollapsed] =
         useState(false)
-
+    const [sensorPopupOpen, setSensorPopupOpen] =
+        useState(false)
     const [layoutReady, setLayoutReady] =
         useState(false)
 
@@ -108,7 +109,7 @@ function Dashboard() {
 
     const [lastPacketTime, setLastPacketTime] =
         useState(null)
-    
+
     // ===== Init =====
     useEffect(() => {
 
@@ -174,6 +175,10 @@ function Dashboard() {
         socket.on(
             "sensor_update",
             (payload) => {
+                console.log(payload.heartbeat)
+
+                console.log("LATENCIES", payload.sensor_latency)
+
                 setSensorData(payload || {})
                 setLastPacketTime(new Date())
             }
@@ -327,7 +332,6 @@ function Dashboard() {
     }
 
     const handleStartSensor = () => {
-
         if (
             !socketRef.current
             || !connected
@@ -335,12 +339,22 @@ function Dashboard() {
         ) {
             return
         }
-
-        socketRef.current.emit("start_sensor",
+        setSensorPopupOpen(true)
+        socketRef.current.emit(
+            "start_sensor",
             {
-                participant: participant,
+                participant,
                 project: projectName,
-            })
+            }
+        )
+    }
+
+
+    const handleConfirmStartSensor = () => {
+
+        console.log("CONFIRM CLICK POPUP")
+
+        setSensorPopupOpen(false)
     }
 
     const handleStartLogging = () => {
@@ -365,7 +379,21 @@ function Dashboard() {
     }
 
     const handleStartSimulation = () => {
-        socketRef.current.emit("start_simulation")
+
+        if (!participant?.simulation_path) {
+            console.error(
+                "Keine Simulation hinterlegt"
+            )
+            return
+        }
+
+        socketRef.current.emit(
+            "start_simulation",
+            {
+                simulation_path:
+                participant.simulation_path
+            }
+        )
     }
 
     const packetLabel = useMemo(() => {
@@ -379,9 +407,8 @@ function Dashboard() {
     }, [lastPacketTime])
 
 
-
     return (
-        <div 
+        <div
             className={`app-shell ${
                 sidebarCollapsed
                     ? "sidebar-is-collapsed"
@@ -451,84 +478,83 @@ function Dashboard() {
                 <header className="topbar">
 
 
-                        <div className="simulation-controls">
+                    <div className="simulation-controls">
 
-                            <button
-                                className="control-btn start"
+                        <button
+                            className="control-btn start"
 
-                                onClick={handleStart}
+                            onClick={handleStart}
 
-                                disabled={
-                                    !connected
-                                    || running
-                                }
-                            >
-                                    <FaPlay  style={{ marginRight: "6px" }} />
-                                Sim
-                            </button>
+                            disabled={
+                                !connected
+                                || running
+                            }
+                        >
+                            <FaPlay style={{marginRight: "6px"}}/>
+                            Sim
+                        </button>
 
-                            <button
-                                className="control-btn stop"
+                        <button
+                            className="control-btn stop"
 
-                                onClick={handleStop}
+                            onClick={handleStop}
 
-                                disabled={
-                                    !connected
-                                    || !running
-                                }
-                            >
-                                 <FaStop  style={{ marginRight: "6px" }} />
-                                Sim
-                            </button>
+                            disabled={
+                                !connected
+                                || !running
+                            }
+                        >
+                            <FaStop style={{marginRight: "6px"}}/>
+                            Sim
+                        </button>
 
-                            <button
-                                className="start sensor"
+                        <button
+                            className="start sensor"
 
-                                onClick={handleStartSensor}
+                            onClick={handleStartSensor}
 
-                                disabled={
-                                    !connected
-                                    || running
-                                }
-                            >
-                                Start Sensor
-                            </button>
+                            disabled={
+                                !connected
+                                || running
+                            }
+                        >
+                            Start Sensor
+                        </button>
 
-                            <button
-                                className="start logging"
+                        <button
+                            className="start logging"
 
-                                onClick={handleStartLogging}
+                            onClick={handleStartLogging}
 
-                                disabled={
-                                    !connected
-                                    || !running
-                                }
-                            >
-                                Start logging
-                            </button>
+                            disabled={
+                                !connected
+                                || !running
+                            }
+                        >
+                            Start logging
+                        </button>
 
-                            <button
-                                className="start PC"
+                        <button
+                            className="start PC"
 
-                                onClick={handleStartPC}
-                            >
-                                Start PC
-                            </button>
+                            onClick={handleStartPC}
+                        >
+                            Start PC
+                        </button>
 
-                            <button
-                                className="start Simulation"
+                        <button
+                            className="start Simulation"
 
-                                onClick={
-                                    handleStartSimulation
-                                }
-                            >
-                                Start Sim on PC2
-                            </button>
+                            onClick={
+                                handleStartSimulation
+                            }
+                        >
+                            Start Sim on PC2
+                        </button>
 
+                    </div>
 
-                        </div>
-
-                        <div className="badges">
+                    <div className="badges">
 
                             <span
                                 className={
@@ -544,13 +570,13 @@ function Dashboard() {
                                 }
                             </span>
 
-                            <span
-                                className={
-                                    running
-                                        ? "badge ok"
-                                        : "badge idle"
-                                }
-                            >
+                        <span
+                            className={
+                                running
+                                    ? "badge ok"
+                                    : "badge idle"
+                            }
+                        >
                                 {
                                     running
                                         ? "Recording running"
@@ -558,37 +584,47 @@ function Dashboard() {
                                 }
                             </span>
 
-                            <span className="badge">
+                        <span className="badge">
                                 Last packet: {packetLabel}
                             </span>
 
-                        </div>
+                    </div>
 
-                        <div
-                            className="badges"
-                            style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}
-                        >
-                            {[
-                                ["silab", "SiLab"],
-                                ["shimmer", "Shimmer"],
-                                ["eyetracker", "Eyetracker"],
-                                ["rgb_frame", "RGB"],
-                                ["rgb_frame2", "RGB 2"],
-                                ["tof_scelet", "TOF"],
-                            ].map(([key, label]) => (
-                                <span
-                                    key={key}
-                                    style={{
-                                        color: (sensorData.heartbeat || {})[key]
-                                            ? "limegreen"
-                                            : "gray",
-                                    }}
-                                >
+                    <div
+                        className="badges"
+                        style={{display: "flex", gap: "12px", flexWrap: "wrap"}}
+                    >
+                        {[
+                            ["silab", "SiLab"],
+                            ["shimmer", "Shimmer"],
+                            ["eyetracker", "Eyetracker"],
+                            ["rgb_frame", "RGB Front"],
+                            ["rgb_frame2", "RGB Back"],
+                            ["tof_scelet", "TOF"],
+                        ].map(([key, label]) => (
+                            <span
+                                key={key}
+                                style={{
+                                    color: (sensorData.heartbeat || {})[key]
+                                        ? "limegreen"
+                                        : "gray",
+                                }}
+                            >
                                     ● {label}
                                 </span>
-                            ))}
+                        ))}
+                    </div>
+                    <div className="drive-stats">
+                        <div>
+                            Strecke:{" "}
+                            {sensorData?.silab?.distance_km?.toFixed(2) ?? "0.00"} km
                         </div>
 
+                        <div>
+                            Zeit:{" "}
+                            {sensorData?.silab?.drive_time ?? "--:--"}
+                        </div>
+                    </div>
                 </header>
 
                 <DashboardGrid
@@ -616,7 +652,21 @@ function Dashboard() {
                 />
 
             </main>
-
+            <StartSensorPopup
+                open={sensorPopupOpen}
+                onClose={() =>
+                    setSensorPopupOpen(false)
+                }
+                onConfirm={
+                    handleConfirmStartSensor
+                }
+                heartbeat={
+                    sensorData.heartbeat || {}
+                }
+                    sensorLatency={
+        sensorData.sensor_latency || {}
+    }
+            />
         </div>
     )
 }

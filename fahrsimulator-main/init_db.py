@@ -13,7 +13,7 @@ from dbModels.projectAndParticipantsDB import (
 from dbModels.dashboardLayoutDB import dashboardLayout
 
 # 👉 Base-Verzeichnis
-BASE_DIR = "A:\Fahrsimulator_Projekte"
+BASE_DIR = "C:\Fahrsimulator_Projekte"
 
 
 # ==================================================================================
@@ -114,6 +114,8 @@ def print_database_structure():
         "run_duration_seconds",
         "file_size",
         "project_id"
+    "simulation_path"
+
     ]
 
     for col in participant_columns:

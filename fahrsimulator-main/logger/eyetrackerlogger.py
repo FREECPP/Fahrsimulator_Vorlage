@@ -38,9 +38,10 @@ class EyetrackerLogger(Logger):
         self.device_index = device_index
         self.as_dictionary = as_dictionary
         self.queues = queues or {}
-
+        self.connection_started_at = None
         self.eyetracker_queue = self.queues.get("eyetracker")
-
+        self.status_queue = self.queues.get("sensor_status")
+        self.sensor_latency_queue = self.queues.get("sensor_latency")
         # Korrigierter Aufnahmezeitpunkt im time.time()-Format, wird pro Paket aktualisiert
         self.capture_time = None
         # Systemzeit in Nanosekunden direkt vor subscribe_to() als Referenzpunkt für die Latenzberechnung
@@ -110,6 +111,12 @@ class EyetrackerLogger(Logger):
                     # Mittlere Latenz einfrieren – wird für alle weiteren Pakete verwendet
                     self.mean_latency = sum(latency_samples) / len(latency_samples)
                     self._latency_cal_done = True
+                    if self.sensor_latency_queue:
+                        self.sensor_latency_queue.put({
+                            "key": "eyetracker",
+                            "latency_ms": round(self.mean_latency / 1e6, 2),
+
+                        })
                     print(f"Eyetracker Latenz kalibriert: {self.mean_latency / 1e6:.2f} ms")
             return
 
@@ -127,6 +134,20 @@ class EyetrackerLogger(Logger):
         raise ValueError(f"Unexpected data type: {type(data)}")
 
     def start_sensor(self, stop_event, log_event) -> None:
+
+        self.connection_started_at = time.time()
+
+        if self.status_queue:
+            self.status_queue.put({
+                "key": "eyetracker",
+                "name": "Eyetracker",
+                "status": "loading",
+                "duration": 0,
+                "error": "",
+                "ready": False,
+                "started_at": self.connection_started_at
+            })
+
         super().start_sensor()
         self.log_event = log_event
 
@@ -135,6 +156,16 @@ class EyetrackerLogger(Logger):
             self._device = found_eyetrackers[self.device_index]
             print(f"Using eyetracker: {self._device.device_name} @ {self._device.address}")
 
+            if self.status_queue:
+                self.status_queue.put({
+                    "key": "eyetracker",
+                    "name": "Eyetracker",
+                    "status": "success",
+                    "duration": (time.time() - self.connection_started_at),
+                    "error": "",
+                    "ready": True,
+
+                })
             # Systemzeit in Nanosekunden festhalten bevor Streaming startet – Referenz für Latenzberechnung
             self._stream_start_ns = time.time_ns()
             self._device.subscribe_to(tobii_research.EYETRACKER_TIME_SYNCHRONIZATION_DATA, self._sync_callback,
@@ -144,6 +175,17 @@ class EyetrackerLogger(Logger):
                 time.sleep(0.1)
 
         except Exception as e:
+
+            if self.status_queue:
+                self.status_queue.put({
+                    "key": "eyetracker",
+                    "name": "Eyetracker",
+                    "status": "error",
+                    "duration": (time.time() - self.connection_started_at),
+                    "error": str(e),
+                    "ready": False,
+
+                })
             print(f"Error in EyetrackerLogger: {e}")
 
     def start_logging(self) -> None:

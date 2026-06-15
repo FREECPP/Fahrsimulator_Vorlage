@@ -1,13 +1,27 @@
 import pyautogui
 import time
 import subprocess
-import os
 
 
-def start_silab_prozess(exe_pfad = r"D:\SILAB\bin\SILAB.exe", argumente = r"D:\SILAB\Projects\SILABDemo\SILABDemo_Highway.cfg", arbeitsverzeichnis = r"D:\SILAB\bin"):
-   
+def start_silab_prozess(simulation_path,exe_pfad=r"D:\SILAB\bin\SILAB.exe",arbeitsverzeichnis=r"D:\SILAB\bin"):
+
+    print("\n===== SILAB START =====")
+    print(f"EXE: {exe_pfad}")
+    print(f"CFG: {simulation_path}")
+    print(f"CWD: {arbeitsverzeichnis}")
+
     try:
-        subprocess.Popen([exe_pfad, argumente], cwd=arbeitsverzeichnis)
+
+
+        print(
+            f"Starte SiLab mit: {simulation_path}"
+        )
+
+        subprocess.Popen(
+            [exe_pfad, simulation_path],
+            cwd=arbeitsverzeichnis
+        )
+
         time.sleep(3)
 
         pyautogui.press('enter')

@@ -34,7 +34,8 @@ def parse_silab_data(data: bytes) -> dict:
         pitch, roll = unpacked[6], unpacked[7]
         steering = unpacked[8]
         acc_pedal, brake_pedal, clutch_pedal = unpacked[9], unpacked[10], unpacked[11]
-
+        total_distance_m = 0.0
+        last_pos = None
         # Return a structured dictionary with numeric values
         return {
             "sim_time": sim_time, # Updates seemingly correctly

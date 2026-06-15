@@ -74,6 +74,11 @@ class Participant(db.Model):
         back_populates="participants"
     )
 
+    simulation_path = db.Column(
+        db.String(1000),
+        nullable=True
+    )
+
     # ===== Folder Size =====
     def calculate_folder_size(self):
         total_size = 0
@@ -126,5 +131,7 @@ class Participant(db.Model):
 
             "project":
                 self.project.name
-                if self.project else None
+                if self.project else None,
+
+            "simulation_path": self.simulation_path,
         }

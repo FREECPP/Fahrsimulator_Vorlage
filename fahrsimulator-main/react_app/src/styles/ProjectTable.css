@@ -24,6 +24,21 @@
     position: relative;
 }
 
+.popupBtn.primary{
+    background: #666;
+    color:white
+}
+
+.popupBtn.primary.ready{
+background: #28a745}
+
+.popupBtn.primary:disabled{
+    background: #666;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+
 .dropdown-toggle {
     position: absolute;
     right: 12px;

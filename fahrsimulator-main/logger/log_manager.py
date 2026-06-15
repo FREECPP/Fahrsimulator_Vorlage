@@ -107,6 +107,10 @@ class LogManager:
                 {
                     "eyetracker":
                         self.data_queues["eyetracker"],
+                    "sensor_status":
+                        self.data_queues["sensor_status"],
+                    "sensor_latency":
+                        self.data_queues["sensor_latency"],
                 }
             ),
 
@@ -126,6 +130,10 @@ class LogManager:
 
                     "silab_model":
                         self.data_queues["silab_model"],
+                    "sensor_status":
+                        self.data_queues["sensor_status"],
+                    "sensor_latency":
+                        self.data_queues["sensor_latency"],
                 }
             ),
 
@@ -139,6 +147,10 @@ class LogManager:
                 {
                     "shimmer":
                         self.data_queues["shimmer"],
+                    "sensor_status":
+                        self.data_queues["sensor_status"],
+                    "sensor_latency":
+                        self.data_queues["sensor_latency"],
                 }
             ),
 
@@ -159,9 +171,12 @@ class LogManager:
                 {
                     "tof":
                         self.data_queues["tof"],
-
                     "pose_queue":
-                        self.data_queues["pose_queue"]
+                        self.data_queues["pose_queue"],
+                    "sensor_status":
+                        self.data_queues["sensor_status"],
+                    "sensor_latency":
+                        self.data_queues["sensor_latency"],
                 }
             ),
 
@@ -179,6 +194,10 @@ class LogManager:
                 {
                     "rgb_frame":
                         self.data_queues["rgb"],
+                    "sensor_status":
+                        self.data_queues["sensor_status"],
+                    "sensor_latency":
+                        self.data_queues["sensor_latency"],
                 }
             ),
 
@@ -196,6 +215,10 @@ class LogManager:
                 {
                     "rgb_frame2":
                         self.data_queues["rgb2"],
+                    "sensor_status":
+                        self.data_queues["sensor_status"],
+                    "sensor_latency":
+                        self.data_queues["sensor_latency"],
                 }
             )
         ]
@@ -217,6 +240,8 @@ class LogManager:
 
                     "scelet_dict":
                         self.data_queues["scelet_dict"],
+                    "sensor_status":
+                        self.data_queues["sensor_status"],
                 }
             ),
 
@@ -292,6 +317,8 @@ class LogManager:
                 {
                     "tof":
                         self.data_queues["tof"],
+                    "sensor_status":
+                        self.data_queues["sensor_status"],
                 }
             ),
         ]

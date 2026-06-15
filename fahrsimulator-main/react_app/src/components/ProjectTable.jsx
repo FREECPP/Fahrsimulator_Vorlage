@@ -146,6 +146,14 @@ export default function ProjectTable({onChange, onConfirm}) {
                     placeholder="Wählen oder erstellen Sie ein Projekt..."
                     value={ProjectName}
                     className="input"
+                        /* title={`
+                        - Maximal 255 Zeichen
+                        - Verbotene Zeichen: < > : " / \\ | ? *
+                        - Nicht mit Leerzeichen oder Punkt enden
+                        - Reservierte Namen wie CON, PRN, AUX sind verboten
+                        `} */
+
+
 
                     onFocus={() => {
                         setShowAll(false);
@@ -164,6 +172,8 @@ export default function ProjectTable({onChange, onConfirm}) {
                         onChange?.({name: val});
                     }}
                 />
+
+
 
                 <button
                     type="button"

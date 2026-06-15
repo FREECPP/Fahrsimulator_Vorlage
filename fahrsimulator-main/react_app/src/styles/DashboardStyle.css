@@ -14,7 +14,91 @@
     min-height: 100vh;
     background: var(--color-dashboard);
 }
+/* ===== Overlay ===== */
+.popupOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 9999;
+}
+
+/* ===== Popup ===== */
+.popup {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+
+    min-width: 420px;
+    max-width: 650px;
+    width: 90vw;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    overflow: hidden;
+}
+
+/* ===== Header ===== */
+.popupHeader {
+    padding: 18px 22px;
+    border-bottom: 1px solid #eee;
+    background: #fafafa;
+}
+
+.popupHeader h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.popupSub {
+    margin-top: 4px;
+    font-size: 12px;
+    color: #777;
+}
+
+/* ===== Content ===== */
+.popupBody {
+    padding: 22px;
+    color: #333;
+}
+
+/* ===== Footer ===== */
+.popupActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+
+    padding: 16px 22px;
+    border-top: 1px solid #eee;
+    background: #fafafa;
+}
+
+/* ===== Buttons ===== */
+.popupBtn {
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.popupBtn:hover {
+    background: #f2f2f2;
+}
+
+.popupBtn.primary {
+    background: #808080;
+    color: white;
+    border-color: #808080;
+}
+
+.popupBtn.primary:hover {
+    opacity: 0.9;
+}
 .sidebar {
     border-right: 1px solid #d5d9df;
     background: var(--color-sidebar);
@@ -1082,6 +1166,22 @@ select option.foreign-layout {
     background: #f5f9fc;
 }
 
+.drive-stats {
+    margin-left: auto;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    gap: 0;
+
+    font-size: 0.8rem;
+    font-weight: 500;
+
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
 @media (max-width: 1024px) {
     .app-shell {
         grid-template-columns: 1fr;
@@ -1116,4 +1216,5 @@ select option.foreign-layout {
     .shimmer-primary-grid {
         grid-template-columns: 1fr;
     }
+
 }

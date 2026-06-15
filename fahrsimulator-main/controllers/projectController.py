@@ -2,7 +2,7 @@ import os
 import logging
 from datetime import datetime
 
-from flask import (Blueprint, render_template, request,jsonify)
+from flask import (Blueprint, render_template, request, jsonify)
 from flask_cors import cross_origin, CORS
 
 from extensions import db
@@ -14,7 +14,7 @@ from utils.verzeichnis_utils import (
     create_directory
 )
 
-from dbModels.projectAndParticipantsDB import (Project,Participant)
+from dbModels.projectAndParticipantsDB import (Project, Participant)
 
 # ===== Logging =====
 logging.basicConfig(level=logging.INFO)
@@ -30,18 +30,21 @@ verzeichnis_bp = Blueprint(
 
 CORS(verzeichnis_bp)
 base_dir = init_base_dir()
-project_path = "A:\\Fahrsimulator_Projekte"
+project_path = "C:\\Fahrsimulator_Projekte"
+
 
 # ===== Index =====
 @verzeichnis_bp.route('/')
 def index():
     directories = get_directories(base_dir)
-    return render_template('index.html',directories=directories)
+    return render_template('index.html', directories=directories)
+
 
 # ===== API Directories =====
-@verzeichnis_bp.route('/api/verzeichnisse',methods=['GET'])
+@verzeichnis_bp.route('/api/verzeichnisse', methods=['GET'])
 def get_dirs():
     return jsonify(get_directories(base_dir))
+
 
 # ===== API Projects =====
 @verzeichnis_bp.route('/api/projects', methods=['GET'])
@@ -50,8 +53,9 @@ def get_projects():
     projects = Project.query.all()
     return jsonify([p.to_dict() for p in projects])
 
+
 # ===== API Full DB =====
-@verzeichnis_bp.route('/api/full-db',methods=['GET'])
+@verzeichnis_bp.route('/api/full-db', methods=['GET'])
 def get_full_db():
     projects = Project.query.all()
 
@@ -62,10 +66,11 @@ def get_full_db():
 
         result.append({
             "project": project.to_dict(),
-            "participants": [p.to_dict()for p in participants]
+            "participants": [p.to_dict() for p in participants]
         })
 
     return jsonify(result)
+
 
 # ===== Create Project =====
 @verzeichnis_bp.route(
@@ -73,7 +78,6 @@ def get_full_db():
     methods=['POST']
 )
 def create():
-
     verzeichnis = request.form.get(
         'projektverzeichnis',
         ''
@@ -143,13 +147,13 @@ def create():
             'error': 'Interner Fehler'
         }), 500
 
+
 # ===== Select Project =====
 @verzeichnis_bp.route(
     '/vz_select',
     methods=['POST']
 )
 def select():
-
     global project_path
 
     projekt_verzeichnis = request.form.get(
@@ -189,12 +193,12 @@ def select():
 
     return jsonify({'success': True})
 
+
 # ===== Get Participants =====
 @verzeichnis_bp.route(
     "/api/participants/<int:project_id>"
 )
 def get_participants_by_project(project_id):
-
     participants = Participant.query.filter_by(
         project_id=project_id
     ).all()
@@ -204,9 +208,9 @@ def get_participants_by_project(project_id):
         for p in participants
     ])
 
+
 # ===== Sync Availability =====
 def sync_project_availability():
-
     projects = Project.query.all()
 
     for project in projects:
@@ -218,13 +222,13 @@ def sync_project_availability():
 
     db.session.commit()
 
+
 # ===== Upload =====
 @verzeichnis_bp.route(
     "/api/upload",
     methods=["POST"]
 )
 def upload():
-
     files = request.files.getlist("files")
     paths = request.form.getlist("paths")
 
@@ -243,7 +247,6 @@ def upload():
     base_path = project.path
 
     for file, rel_path in zip(files, paths):
-
         rel_path = (
             rel_path
             if rel_path
@@ -264,13 +267,13 @@ def upload():
 
     return jsonify({"success": True})
 
+
 # ===== Delete Participant =====
 @verzeichnis_bp.route(
     "/api/participant/<int:participant_id>",
     methods=["DELETE"]
 )
 def delete_participant(participant_id):
-
     participant = db.session.get(
         Participant,
         participant_id
@@ -282,8 +285,8 @@ def delete_participant(participant_id):
         }), 404
 
     if (
-        participant.path
-        and os.path.exists(participant.path)
+            participant.path
+            and os.path.exists(participant.path)
     ):
         import shutil
 
@@ -295,6 +298,7 @@ def delete_participant(participant_id):
 
     return jsonify({"success": True})
 
+
 # ===== Create Participant =====
 @verzeichnis_bp.route(
     "/api/participant/create",
@@ -302,7 +306,6 @@ def delete_participant(participant_id):
 )
 @cross_origin()
 def create_participant():
-
     data = request.get_json()
 
     name = data.get(
@@ -311,7 +314,9 @@ def create_participant():
     ).strip()
 
     project_id = data.get("project_id")
-
+    simulation_path = data.get(
+        "simulation_path"
+    )
     project = db.session.get(
         Project,
         project_id
@@ -337,7 +342,9 @@ def create_participant():
     new_participant = Participant(
         name=name,
         path=participant_path,
-        project_id=project.id
+        project_id=project.id,
+        simulation_path=simulation_path
+
     )
 
     db.session.add(new_participant)

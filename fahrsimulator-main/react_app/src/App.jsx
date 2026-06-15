@@ -4,6 +4,8 @@ import ProjectTable from "./components/ProjectTable.jsx";
 import {useNavigate} from "react-router-dom";
 import {ToastContainer, toast} from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SilabSimulationSelect from "./components/SilabSimulationSelect.jsx";
+
 
 export default function ProjectManager() {
     const navigate = useNavigate();
@@ -14,7 +16,8 @@ export default function ProjectManager() {
     const [showModal, setShowModal] = useState(false);
     const [newParticipantName, setNewParticipantName] = useState("");
     const [selectedParticipant, setSelectedParticipant] = useState(null);
-
+    const [selectedSimulation, setSelectedSimulation] =
+    useState(null);
     // Teilnehmer laden
     const loadParticipants = async (projectId) => {
         const url = `http://localhost:9999/api/participants/${projectId}`;
@@ -44,9 +47,7 @@ export default function ProjectManager() {
         setSelectedParticipant(null);
         void loadParticipants(confirmedProject.id);
     }, [confirmedProject]);
-
-    // Participant löschen
-    const handleDeleteParticipant = (id) => {
+const handleDeleteParticipant = (id) => {
         if (
             !window.confirm(
                 "Sind Sie sich sicher, dass Sie den Probanden und dessen Daten löschen wollen?"
@@ -73,51 +74,63 @@ export default function ProjectManager() {
             });
     };
 
-    // Participant erstellen
-    const handleCreateParticipant = () => {
-        if (!newParticipantName.trim()) {
-            toast.error("Bitte Namen eingeben");
-            return;
-        }
+    // Participant löschen
+const handleCreateParticipant = () => {
+    if (!newParticipantName.trim()) {
+        toast.error("Bitte Namen eingeben");
+        return;
+    }
 
-        if (!confirmedProject) {
-            toast.error("Kein Projekt ausgewählt");
-            return;
-        }
+    if (!confirmedProject) {
+        toast.error("Kein Projekt ausgewählt");
+        return;
+    }
 
-        fetch("http://localhost:9999/api/participant/create", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                name: newParticipantName,
-                project_id: confirmedProject.id
-            })
+    if (!selectedSimulation) {
+        toast.error("Bitte eine Datei auswählen");
+        return;
+    }
+
+    fetch("http://localhost:9999/api/participant/create", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: newParticipantName,
+            project_id: confirmedProject.id,
+            simulation_path: selectedSimulation.path
         })
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    toast.success("Participant erstellt");
+    })
+        .then((res) => res.json())
+        .then((data) => {
+            if (data.success) {
 
-                    const participant = data.participant;
+                toast.success("Participant erstellt");
 
-                    setShowModal(false);
-                    setNewParticipantName("");
+                const participant =
+                    data.participant;
 
-                    navigate("/dashboard", {
-                        state: {
-                            project: confirmedProject,
-                            participant,
-                            path: participant.path
-                        }
-                    });
-                } else {
-                    toast.error(data.message);
-                }
-            })
-            .catch(() => toast.error("Fehler beim Erstellen"));
-    };
+                setShowModal(false);
+                setNewParticipantName("");
+                setSelectedSimulation(null);
+
+                navigate("/dashboard", {
+                    state: {
+                        project: confirmedProject,
+                        participant,
+                        path: participant.path
+                    }
+                });
+
+            } else {
+                toast.error(data.message);
+            }
+        })
+        .catch(() =>
+            toast.error("Fehler beim Erstellen")
+        );
+};
 
     // Dashboard öffnen
     const openDashboard = () => {
@@ -165,7 +178,7 @@ export default function ProjectManager() {
                             <thead>
                             <tr>
                                 <th>Name</th>
-                                <th>Pfad</th>
+                                <th>Simulation</th>
                                 <th>Datum</th>
                                 <th>Dauer</th>
                                 <th>Größe</th>
@@ -198,9 +211,9 @@ export default function ProjectManager() {
 
                                         <td
                                             className="path-cell"
-                                            title={p.path}
+                                            title={p.simulation_path}
                                         >
-                                            {p.path.replace(`\\${p.name}`, "")}
+                                            {p.simulation_path.split(/[\\/]/).pop()}
                                         </td>
 
                                         <td>
@@ -270,31 +283,101 @@ export default function ProjectManager() {
 
                     {/* Modal */}
                     {showModal && (
-                        <div className="modalOverlay">
-                            <div className="modal">
-                                <h3>Neuer Proband</h3>
+    <div className="modalOverlay">
 
-                                <input
-                                    value={newParticipantName}
-                                    onChange={(e) =>
-                                        setNewParticipantName(e.target.value)
-                                    }
-                                />
+        <div
+            className="modal"
+            style={{
+                minWidth: "400px",
+                maxWidth: "600px"
+            }}
+        >
 
-                                <div className="modalActions">
-                                    <button onClick={handleCreateParticipant}>
-                                        OK
-                                    </button>
+            <h3>Neuer Proband</h3>
 
-                                    <button
-                                        onClick={() => setShowModal(false)}
-                                    >
-                                        Abbrechen
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+            <input
+                value={newParticipantName}
+                placeholder="Name des Probanden"
+                onChange={(e) =>
+                    setNewParticipantName(
+                        e.target.value
+                    )
+                }
+            />
+
+            <div
+                style={{
+                    marginTop: "15px"
+                }}
+            >
+                <label
+                    style={{
+                        display: "block",
+                        marginBottom: "8px",
+                        fontWeight: 600
+                    }}
+                >
+                    Simulation auswählen
+                </label>
+
+                <SilabSimulationSelect
+                    onConfirm={(file) => {
+                        console.log(
+                            "Datei ausgewählt:",
+                            file
+                        );
+
+                        setSelectedSimulation(
+                            file
+                        );
+                    }}
+                />
+            </div>
+
+            {selectedSimulation && (
+                <div
+                    style={{
+                        marginTop: "10px",
+                        fontSize: "12px",
+                        color: "#666"
+                    }}
+                >
+                </div>
+            )}
+
+            <div className="modalActions">
+
+                <button
+                    onClick={
+                        handleCreateParticipant
+                    }
+                >
+                    OK
+                </button>
+
+                <button
+                    onClick={() => {
+
+                        setShowModal(false);
+
+                        setSelectedSimulation(
+                            null
+                        );
+
+                        setNewParticipantName(
+                            ""
+                        );
+                    }}
+                >
+                    Abbrechen
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+)}
                 </section>
             </div>
 

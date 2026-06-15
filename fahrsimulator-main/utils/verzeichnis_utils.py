@@ -29,6 +29,38 @@ def validate_name(name):
     pattern = r"^[A-Za-z0-9_-]{4,}$"
     return bool(re.match(pattern, name))
 
+"""
+def validate_name(name):
+
+    if not name:
+        return False
+
+    name = name.strip()
+
+    # Länge begrenzen
+    if len(name) > 255:
+        return False
+
+    # Verbotene Windows-Zeichen
+    invalid_chars = '<>:"/\\|?*'
+
+    if any(char in invalid_chars for char in name):
+        return False
+
+    # Darf nicht mit Leerzeichen oder Punkt enden
+    if name.endwith(" ") or name.endswith("."):
+        return False
+
+    # Reservierte Windwows-Namen
+    reserved_names = {
+        "CON", "PRN", "AUX", "NUL", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"    }
+
+    if name.upper() in reserved_names:
+        return False
+
+    return True"""
+
 def directory_exists(base_dir, name):
     """Prüft ob ein Verzeichnis existiert"""
     dir_path = os.path.join(base_dir, name)

@@ -33,6 +33,8 @@ from utils.sim_start import start_silab_prozess
 # from flask_blueprints.verzeichnis import verzeichnis_bp
 from controllers.projectController import verzeichnis_bp
 from controllers.layoutController import layout_bp
+from controllers.silabSimulationController import silab_bp
+
 from extensions import db
 from dbModels.dashboardLayoutDB import dashboardLayout
 from dbModels.projectAndParticipantsDB import Participant
@@ -55,6 +57,7 @@ CORS(app, supports_credentials=True)
 
 app.register_blueprint(verzeichnis_bp, url_prefix="/")
 app.register_blueprint(layout_bp)
+app.register_blueprint(silab_bp)
 
 socketio = SocketIO(app, cors_allowed_origins="*", logger=False, engineio_logger=False)
 
@@ -104,6 +107,8 @@ data_queues = {
     "shimmer": Queue(maxsize=1),
     "rasante_fahrweise_model": Queue(maxsize=1),
     "gaze_distribution_model": Queue(maxsize=1),
+    "sensor_status": Queue(maxsize=100),
+    "sensor_latency": Queue(maxsize=100),
 
 }
 
@@ -390,8 +395,19 @@ def handle_start_logging(data):
         """
 
 @socketio.on('start_simulation')
-def handle_start_simulation():
-    start_silab_prozess()
+def handle_start_simulation(data):
+
+    simulation_path = data.get(
+        "simulation_path"
+    )
+
+    print(
+        f"Simulation: {simulation_path}"
+    )
+
+    start_silab_prozess(
+        simulation_path
+    )
 
 @socketio.on('start_pc')
 def handle_start_pc():
@@ -431,6 +447,11 @@ def encode_rgb_stream_frame(rgb_frame) -> Optional[bytes]:
 
 # Main function to send data per 'socket.emit()' to the dashboard.html
 def read_queue(logging_manager, stop_event):
+    sensor_status_queue = (
+        logging_manager.data_queues.get(
+            "sensor_status"
+        )
+    )
     tof_queue = logging_manager.data_queues.get("tof")
     rgb2_queue = logging_manager.data_queues.get("rgb2")
     rgb_queue = logging_manager.data_queues.get("rgb")
@@ -441,6 +462,11 @@ def read_queue(logging_manager, stop_event):
     rasante_fahrweise_model_queue = logging_manager.data_queues.get("rasante_fahrweise_model")
     shimmer_queue = logging_manager.data_queues.get("shimmer")
     gaze_queue = logging_manager.data_queues.get("gaze_distribution_model")
+    sensor_latency_queue = (
+        logging_manager.data_queues.get(
+            "sensor_latency"
+        )
+    )
 
     latest_sensor_data = {
         "rgb_frame": None,
@@ -454,6 +480,10 @@ def read_queue(logging_manager, stop_event):
         "shimmer": None,
         "gaze": None,
         "fahrweise": None,
+        "sensor_status": None,
+    "sensor_latency": {},
+
+
     }
 
     last_emit_time = 0.0
@@ -502,6 +532,40 @@ def read_queue(logging_manager, stop_event):
             except Exception as e:
                 printlog(f"Reading Eyetracker-Queue error: {e}", "debug")
 
+        if sensor_status_queue is not None:
+
+            try:
+
+                status = (
+                    sensor_status_queue.get_nowait()
+                )
+
+                print("STATUS:", status)
+
+                latest_sensor_data[
+                    "sensor_status"
+                ] = status
+
+            except Empty:
+                pass
+
+        if sensor_latency_queue is not None:
+
+            while True:
+
+                try:
+
+                    latency = sensor_latency_queue.get_nowait()
+
+                    sensor_key = latency.get("key")
+
+                    if sensor_key:
+                        latest_sensor_data[
+                            "sensor_latency"
+                        ][sensor_key] = latency
+
+                except Empty:
+                    break
         # Rasante-Fahrweise-Model Data-Queue
         if rasante_fahrweise_model_queue is not None:
             try:

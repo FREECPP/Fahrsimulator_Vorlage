@@ -83,6 +83,22 @@ class TiefenCamLogger(Logger):
         self.fps = fps
         self.mode = mode
         self.queues = queues or {}  # Für Kommunikation mit anderen Prozessen/Threads
+
+        self.sensor_status_queue = self.queues.get(
+            "sensor_status"
+        )
+
+        self.sensor_latency_queue = self.queues.get(
+            "sensor_latency"
+        )
+
+        print("TOF sensor_latency queue =  ", self.sensor_latency_queue)
+        self.sensor_key = "tof"
+        self.sensor_name = "TOF"
+
+
+        self.connection_started_at = None
+
         self.system = tof.System()
         self.cam_bin = Path(CAM_BIN_STR)
         self.camera = None
@@ -149,11 +165,35 @@ class TiefenCamLogger(Logger):
         Raises:
             Exception: If the camera connection or initialization fails.
         """
+        self.connection_started_at = time.time()
+        if self.sensor_status_queue:
+            self.sensor_status_queue.put({
+                "key": self.sensor_key,
+                "name": self.sensor_name,
+                "status": "loading",
+                "duration": 0,
+                "error": "",
+                "ready": False,
+                "started_at": self.connection_started_at
+
+            })
+
         if getattr(self, "camera", None) is not None:
             return
         try:
             self.connect_camera()
+
         except Exception as e:
+
+            if self.sensor_status_queue:
+                self.sensor_status_queue.put({
+                    "key": self.sensor_key,
+                    "name": self.sensor_name,
+                    "status": "error",
+                    "duration": (time.time() - self.connection_started_at),
+                    "error": str(e),
+                    "ready": False,
+                })
             print("TiefenCamLogger.start_sensor failed:", e)
             raise
         self.start_logging(stop_event,log_event)
@@ -201,6 +241,29 @@ class TiefenCamLogger(Logger):
         super().start_logging()
 
         self.get_latency(100)
+        if self.sensor_status_queue:
+            self.sensor_status_queue.put({
+                "key": self.sensor_key,
+                "name": self.sensor_name,
+                "status": "success",
+                "duration": (
+                        time.time() - self.connection_started_at
+                ),
+                "error": "",
+                "ready": True,
+            })
+
+            if self.sensor_latency_queue:
+                print("RGB latency put start")
+                self.sensor_latency_queue.put({
+                    "key": "tof_scelet",
+                    "latency_ms": round(
+                        self.mean_latency / 1e6,
+                        2
+                    )
+                })
+
+                print("RGB latency put end")
         self._video_file = Path(self.video_output_dir / "tof_recording.mp4")
         self._video_writer = imageio.get_writer(str(self._video_file), fps=self.fps, codec="libx264", quality=8)
         self._running = True
@@ -244,8 +307,30 @@ class TiefenCamLogger(Logger):
                         time.sleep(0.05)  # Dadurch gehen bewusst Frames verloren?
 
                 except Exception as e:
+                    if self.sensor_status_queue:
+                        self.sensor_status_queue.put({
+                            "key": self.sensor_key,
+                            "name": self.sensor_name,
+                            "status": "error",
+                            "duration": 0,
+                            "error": str(e),
+                            "ready": False,
+                        })
+
                     print("Frame processing error:", e)
                     time.sleep(0.005)
+        except Exception as e:
+            if self.sensor_status_queue:
+                self.sensor_status_queue.put({
+                    "key": self.sensor_key,
+                    "name": self.sensor_name,
+                    "status": "error",
+                    "duration": 0,
+                    "error": str(e),
+                    "ready": False,
+                })
+
+            raise
         finally:
             pass
 

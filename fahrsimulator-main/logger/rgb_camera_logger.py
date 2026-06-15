@@ -44,6 +44,9 @@ class RgbCameraLogger(Logger):
         self._cam: Optional[cv2.VideoCapture] = None
         self.writer: Optional[cv2.VideoWriter] = None
 
+        self.connection_started_at = None
+
+
         self.fps_time = None
         self.face_mesh: Optional[mp.solutions.FaceMesh] = None
         self.mp_face_mesh = None
@@ -68,22 +71,69 @@ class RgbCameraLogger(Logger):
         self.live_view = live_view
         self.queues = queues or {}
 
+        self.status_queue = self.queues.get("sensor_status")
+
+        self.sensor_latency_queue = self.queues.get("sensor_latency")
+
+        self.camera_key = (
+            "rgb_frame"
+            if camera_index == 0
+            else "rgb_frame2"
+        )
+
+        self.camera_name = (
+            "RGB Front"
+            if camera_index == 0
+            else "RGB Back"
+        )
         # Latenz Global in der Klasse bekannt machen (Wird gesetzt durch get_latency falls nicht standart 8ms)
         self.mean_latency = 8000000
         # Korrigierter Aufnahmezeitpunkt im time.time()-Format, wird pro Frame aktualisiert
         self.capture_time = None
 
     def start_sensor(self,stop_event, log_event):
+        print("RGB Camera Logger Started")
+        self.connection_started_at = time.time()
+        if self.status_queue:
+            self.status_queue.put({
+                "key": self.camera_key,
+                "name": self.camera_name,
+                "status": "loading",
+                "duration": 0,
+                "error": "",
+                "ready": False,
+                "started_at": self.connection_started_at
+            })
         super().start_sensor()
         self._running.set()
         self.video_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         self._cam = cv2.VideoCapture(self._camera_index)
-        print("Kamera: ", self._cam)
         if not self._cam.isOpened():
-            print(f"Kann Kamera {self._camera_index} nicht öffnen.")
+
+            if self.status_queue:
+                self.status_queue.put({
+                    "key": self.camera_key,
+                    "name": self.camera_name,
+                    "status": "error",
+                                        "duration": (time.time() - self.connection_started_at),
+
+                    "error": f"Kamera {self._camera_index} konnte nicht geöffnet werden",
+                    "ready": False,
+                })
+
             raise SystemExit(1)
 
+        if self.status_queue:
+            self.status_queue.put({
+                "key": self.camera_key,
+                "name": self.camera_name,
+                "status": "success",
+                 "duration": (time.time() - self.connection_started_at),
+
+                "error": "",
+                "ready": True,
+            })
         fps = self._cam.get(cv2.CAP_PROP_FPS) or 20.0
         width = int(self._cam.get(cv2.CAP_PROP_FRAME_WIDTH) or 640)
         height = int(self._cam.get(cv2.CAP_PROP_FRAME_HEIGHT) or 480)
@@ -102,6 +152,20 @@ class RgbCameraLogger(Logger):
             min_tracking_confidence=0.5
         )
         self.get_latency(100)
+
+        if self.sensor_latency_queue:
+            print("RGB latency put start")
+            self.sensor_latency_queue.put({
+                "key": (
+                    "rgb_frame"
+                    if self._camera_index == 0
+                    else "rgb_frame2"
+                ),
+                "latency_ms": round(self.mean_latency / 1e6,2)
+
+            })
+            print("RGB latency put end")
+
         self._run_loop(stop_event, log_event)
 
 
@@ -236,8 +300,16 @@ class RgbCameraLogger(Logger):
                     self.write_csv(frame_rgb)
 
                     self._frame_count += 1
-
         except Exception as e:
+            if self.status_queue:
+                self.status_queue.put({
+                    "key": self.camera_key,
+                    "name": self.camera_name,
+                    "status": "error",
+                    "duration": 0,
+                    "error": str(e),
+                    "ready": False,
+                })
             import traceback
             print(f"RgbCameraLogger error: {e}")
             traceback.print_exc()

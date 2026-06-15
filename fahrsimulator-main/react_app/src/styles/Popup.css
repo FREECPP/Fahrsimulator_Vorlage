@@ -1,0 +1,217 @@
+/* =========================
+Sensor Popup
+========================= */
+
+.SensorPopup {
+    width: 950px;
+    max-width: 95vw;
+    max-height: 88vh;
+
+    display: flex;
+    flex-direction: column;
+
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+/* =========================
+Body
+========================= */
+
+.popupBody {
+    flex: 1;
+    overflow-y: auto;
+
+    padding: 16px 20px;
+}
+
+.SensorList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* =========================
+Sensor Card
+========================= */
+
+.SensorCard {
+    padding: 14px 18px;
+
+    background: #fff;
+    border: 1px solid #e4e7ec;
+    border-radius: 12px;
+
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+}
+
+/* =========================
+Row Layout
+========================= */
+
+.SensorRow {
+    display: grid;
+
+    grid-template-columns:
+        56px
+        80px
+        100px
+        1fr
+        120px;
+
+    align-items: center;
+    column-gap: 20px;
+
+    width: 100%;
+}
+
+/* =========================
+Icon
+========================= */
+
+.SensorIcon {
+    width: 44px;
+    height: 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 24px;
+
+    color: #344054;
+    background: #f8fafc;
+
+    border: 1px solid #e4e7ec;
+    border-radius: 12px;
+}
+
+/* =========================
+Name
+========================= */
+
+.SensorName {
+    white-space: nowrap;
+
+    font-size: 16px;
+    font-weight: 600;
+    color: #344054;
+}
+
+/* =========================
+Latency
+========================= */
+
+.SensorLatency {
+    text-align: center;
+
+    font-size: 14px;
+    font-weight: 600;
+    color: #667085;
+
+    font-variant-numeric: tabular-nums;
+}
+
+/* =========================
+Status
+========================= */
+
+.SensorStatus {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
+    min-width: 0;
+
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.SensorStatus span {
+    white-space: nowrap;
+}
+
+/* =========================
+Restart
+========================= */
+
+.SensorRestart {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.SensorRestart button {
+    width: 100px;
+}
+
+/* =========================
+Status Icons
+========================= */
+
+.SensorStatusSuccess {
+    color: #4caf50;
+width: 20px;
+height: 20px;
+flex-shrink: 0;}
+
+.SensorStatusError {
+    color: #e5484d;
+    font-size: 18px;
+}
+
+/* =========================
+Spinner
+========================= */
+
+.SensorSpinner {
+    font-size: 18px;
+    color: #667085;
+
+    animation: popupSpin 1s linear infinite;
+}
+
+@keyframes popupSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================
+Footer
+========================= */
+
+.popupActions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+
+    padding: 16px 20px;
+
+    background: #fafafa;
+    border-top: 1px solid #e5e7eb;
+}
+
+/* =========================
+Responsive
+========================= */
+
+@media (max-width: 850px) {
+
+    .SensorRow {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .SensorStatus {
+        flex: 1 1 100%;
+    }
+
+    .SensorRestart {
+        margin-left: auto;
+    }
+}

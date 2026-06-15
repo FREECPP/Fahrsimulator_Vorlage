@@ -56,10 +56,21 @@ class ShimmerLogger(Logger):
             "rmssd": None,
             "sdnn": None,
         }
+
+        self.connection_started_at = None
         self._latest_gsr_raw = None
 
         self.queues = queues or {}
         self.shimmer_queue = self.queues.get("shimmer")
+
+        self.sensor_status_queue = self.queues.get(
+            "sensor_status"
+        )
+
+        self.sensor_latency_queue = self.queues.get("sensor_latency")
+
+        self.sensor_key = "shimmer"
+        self.sensor_name = "Shimmer"
 
         self.shimmer_addr = load_shimmer_addr()
 
@@ -82,17 +93,53 @@ class ShimmerLogger(Logger):
         self.log_event = None
         self.stop_event = None
 
-    def start_sensor(self,stop_event, log_event) -> None:
-        super().start_sensor()
-        self.log_event = log_event
-        self.stop_event = stop_event
-        self._shimmer_device = connect_to_shimmer(self.shimmer_addr)
-        self._shimmer_device.add_stream_callback(self.handler)
-        # Systemzeit festhalten bevor Streaming startet – dient als Referenz für die Latenzberechnung
-        self._stream_start_ns = time.time_ns()
-        self._shimmer_device.start_streaming()
-        while not stop_event.is_set():
-            time.sleep(0.05)
+    def start_sensor(self, stop_event, log_event) -> None:
+        self.connection_started_at = time.time()
+        if self.sensor_status_queue:
+            self.sensor_status_queue.put({
+                "key": self.sensor_key,
+                "name": self.sensor_name,
+                "status": "loading",
+                "duration": 0,
+                "error": "",
+                "ready": False,
+            })
+
+        try:
+
+            super().start_sensor()
+
+            self.log_event = log_event
+            self.stop_event = stop_event
+
+            self._shimmer_device = connect_to_shimmer(
+                self.shimmer_addr
+            )
+
+            self._shimmer_device.add_stream_callback(
+                self.handler
+            )
+
+            self._stream_start_ns = time.time_ns()
+
+            self._shimmer_device.start_streaming()
+
+            while not stop_event.is_set():
+                time.sleep(0.05)
+
+        except Exception as e:
+
+            if self.sensor_status_queue:
+                self.sensor_status_queue.put({
+                    "key": self.sensor_key,
+                    "name": self.sensor_name,
+                    "status": "error",
+                    "duration": 0,
+                    "error": str(e),
+                    "ready": False,
+                })
+
+            raise
 
     def start_logging(self) -> None:
         super().start_logging()
@@ -111,53 +158,66 @@ class ShimmerLogger(Logger):
         print("Shimmer logger stopped.")
 
     def handler(self, pkt: DataPacket) -> None:
-        # Empfangszeit so früh wie möglich messen um Verarbeitungszeit nicht einzurechnen
-        recv_ns = time.time_ns()
-        channel_mapping = {
-            EChannelType.TIMESTAMP: "shimmer_timestamp",
-            EChannelType.ACCEL_LN_X: "accel_ln_x",
-            EChannelType.ACCEL_LN_Y: "accel_ln_y",
-            EChannelType.ACCEL_LN_Z: "accel_ln_z",
-            EChannelType.INTERNAL_ADC_13: "internal_adc_13",
-            EChannelType.GSR_RAW: "gsr_raw"
-        }
+        try:
+            # Empfangszeit so früh wie möglich messen um Verarbeitungszeit nicht einzurechnen
+            recv_ns = time.time_ns()
+            channel_mapping = {
+                EChannelType.TIMESTAMP: "shimmer_timestamp",
+                EChannelType.ACCEL_LN_X: "accel_ln_x",
+                EChannelType.ACCEL_LN_Y: "accel_ln_y",
+                EChannelType.ACCEL_LN_Z: "accel_ln_z",
+                EChannelType.INTERNAL_ADC_13: "internal_adc_13",
+                EChannelType.GSR_RAW: "gsr_raw"
+            }
 
-        mapped_data = {}
-        for channel, value in pkt._values.items():
-            if channel in channel_mapping:
-                csv_field = channel_mapping[channel]
-                mapped_data[csv_field] = value
-        
-        shimmer_ts = mapped_data.get("shimmer_timestamp")
-        if shimmer_ts is not None:
-            self._update_latency(shimmer_ts, recv_ns)
+            mapped_data = {}
+            for channel, value in pkt._values.items():
+                if channel in channel_mapping:
+                    csv_field = channel_mapping[channel]
+                    mapped_data[csv_field] = value
 
-        gsr_value = mapped_data.get("gsr_raw")
-        if gsr_value is not None:
-            self._latest_gsr_raw = gsr_value
+            shimmer_ts = mapped_data.get("shimmer_timestamp")
+            if shimmer_ts is not None:
+                self._update_latency(shimmer_ts, recv_ns)
 
-        if self.shimmer_queue is not None:
-            payload = dict(mapped_data)
-            if self._latest_hrv.get("heart_rate") is not None:
-                payload["heart_rate"] = self._latest_hrv["heart_rate"]
-            if self._latest_hrv.get("rmssd") is not None:
-                payload["rmssd"] = self._latest_hrv["rmssd"]
-            if self._latest_hrv.get("sdnn") is not None:
-                payload["sdnn"] = self._latest_hrv["sdnn"]
-            if self._latest_gsr_raw is not None:
-                payload["skin_resistance"] = self._latest_gsr_raw
-            put_latest(self.shimmer_queue, payload)
+            gsr_value = mapped_data.get("gsr_raw")
+            if gsr_value is not None:
+                self._latest_gsr_raw = gsr_value
 
-        self.handle_hrv(mapped_data)
+            if self.shimmer_queue is not None:
+                payload = dict(mapped_data)
+                if self._latest_hrv.get("heart_rate") is not None:
+                    payload["heart_rate"] = self._latest_hrv["heart_rate"]
+                if self._latest_hrv.get("rmssd") is not None:
+                    payload["rmssd"] = self._latest_hrv["rmssd"]
+                if self._latest_hrv.get("sdnn") is not None:
+                    payload["sdnn"] = self._latest_hrv["sdnn"]
+                if self._latest_gsr_raw is not None:
+                    payload["skin_resistance"] = self._latest_gsr_raw
+                put_latest(self.shimmer_queue, payload)
 
-        if self.log_event.is_set():
-            if self.x == 0:
-                self.start_logging()
-                x = 1
-            if self.capture_time is not None:
-                mapped_data[LOG_TIME_KEY] = self.capture_time
-            self.write_row(mapped_data)
+            self.handle_hrv(mapped_data)
 
+            if self.log_event.is_set():
+                if self.x == 0:
+                    self.start_logging()
+                    x = 1
+                if self.capture_time is not None:
+                    mapped_data[LOG_TIME_KEY] = self.capture_time
+                self.write_row(mapped_data)
+        except Exception as e:
+
+            if self.sensor_status_queue:
+                self.sensor_status_queue.put({
+                    "key": self.sensor_key,
+                    "name": self.sensor_name,
+                    "status": "error",
+                    "duration": 0,
+                    "error": str(e),
+                    "ready": False,
+                })
+
+            raise
 
     def _update_latency(self, shimmer_ts: float, recv_ns: int) -> None:
         # Erstes Paket: Shimmer-Timestamp als Takt-Referenz speichern, noch keine Berechnung möglich
@@ -184,7 +244,27 @@ class ShimmerLogger(Logger):
                     # Mittlere Latenz einfrieren – wird für alle weiteren Pakete verwendet
                     self.mean_latency = sum(latency_samples) / len(latency_samples)
                     self._latency_cal_done = True
-                    printlog(f"Shimmer Latenz kalibriert: {self.mean_latency / 1e6:.2f} ms", "info")
+                    """if self.sensor_status_queue:
+                        self.sensor_status_queue.put({
+                            "key": self.sensor_key,
+                            "name": self.sensor_name,
+                            "status": "success",
+                            "duration": (
+                                    time.time() - self.connection_started_at
+                            ),
+                            "latency_ms": round(
+                                self.mean_latency / 1e6,
+                                2
+                            ),
+                            "error": "",
+                            "ready": True,
+                        })
+                    printlog(f"Shimmer Latenz kalibriert: {self.mean_latency / 1e6:.2f} ms", "info")"""
+                    if self.sensor_latency_queue:
+                        self.sensor_latency_queue.put({
+                            "key": "shimmer",
+                            "latency_ms": round(self.mean_latency / 1e6, 2),
+                                                    })
             return
 
         # Korrekter Aufnahmezeitpunkt: Empfangszeit minus eingefrorene Latenz, umgerechnet in Sekunden

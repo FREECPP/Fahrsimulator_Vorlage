@@ -3,9 +3,10 @@ from pathlib import Path
 import threading
 import csv
 import time
-from typing import Union, Optional, List, Dict  
+from typing import Union, Optional, List, Dict
 
 LOG_TIME_KEY = "log_time"
+
 
 class Logger(ABC):
     """Abstract Logger-Interface."""
@@ -47,11 +48,29 @@ class Logger(ABC):
         with self._lock:
             if not self.file_path.exists():
                 self.file_path.touch()
-            
-            with open(self.file_path, "a", encoding="utf-8", newline="") as f: 
+
+            with open(self.file_path, "a", encoding="utf-8", newline="") as f:
                 writer = csv.DictWriter(f, fieldnames=self.csv_fields)
                 if self.file_path.stat().st_size == 0:
                     writer.writeheader()
+
+    def publish_status(
+            self,
+            sensor,
+            status,
+            ready=False,
+            error=""
+    ):
+        if self.sensor_status_queue is None:
+            return
+
+        self.sensor_status_queue.put({
+            "sensor": sensor,
+            "status": status,
+            "ready": ready,
+            "error": error,
+            "timestamp": time.time()
+        })
 
     def write_row(self, row: Dict) -> None:
         """Thread-safe write a CSV row to the log file."""
@@ -61,5 +80,5 @@ class Logger(ABC):
                 row[LOG_TIME_KEY] = row.get(LOG_TIME_KEY) or time.time()
                 writer = csv.DictWriter(self._file_handle, fieldnames=self.csv_fields)
                 writer.writerow({k: row.get(k, "") for k in self.csv_fields})
-             
-         
+
+
