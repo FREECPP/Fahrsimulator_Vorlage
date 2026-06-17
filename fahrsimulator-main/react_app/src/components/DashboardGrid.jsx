@@ -243,8 +243,8 @@ function DashboardGrid({
                                                     view: nextView,
                                                     mode: nextMode,
                                                     title: getSensorTitle(nextView),
-                                                    w: Math.max(item.w, preferred.w),
-                                                    h: Math.max(item.h, preferred.h),
+                                                    w: preferred.w,
+                                                    h: preferred.h,
                                                 }
                                             })()
                                             : item,
@@ -260,8 +260,8 @@ function DashboardGrid({
                                         return {
                                             ...item,
                                             mode: nextMode,
-                                            w: Math.max(item.w, preferred.w),
-                                            h: Math.max(item.h, preferred.h),
+                                            w: preferred.w,
+                                            h: preferred.h,
                                         }
                                     }),
                                 )
