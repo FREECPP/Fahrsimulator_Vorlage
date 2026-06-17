@@ -266,6 +266,13 @@ function DashboardGrid({
                                     }),
                                 )
                             }}
+                            onUpdateWidget={(id, patch) => {
+                                setWidgets((items) =>
+                                    items.map((item) =>
+                                        item.i === id ? {...item, ...patch} : item,
+                                    ),
+                                )
+                            }}
                             sensorData={sensorData}
                             connected={connected}
                             running={running}

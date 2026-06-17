@@ -8,7 +8,7 @@ export const GRID_MARGIN = 4
 export function getPreferredWidgetSize(view, mode) {
   if (view === "silab") {
     if (mode === "cockpit") return { width: 600, height: 200 }
-    if (mode === "line") return { width: 740, height: 500 }
+    if (mode === "line") return { width: 740, height: 200 }
     return { width: 600, height: 200 }
   }
 

@@ -5,7 +5,7 @@ export const SENSOR_WIDGETS = [
     defaultMode: "cockpit",
     modes: [
       { value: "cockpit", label: "Cockpit" },
-      { value: "line", label: "Line chart" },
+      { value: "line", label: "Signal" },
       { value: "raw", label: "Raw" },
     ],
   },

@@ -1,17 +1,21 @@
 import { memo, Suspense, useEffect, useMemo, useRef } from "react"
 import SilabCockpit from "./SilabCockpit"
 import EyeTracker from "./EyeTracker"
-import SpeedChart from "./SpeedChart"
+import SilabSignalChart from "./SilabSignalChart"
+import SilabSignalText from "./SilabSignalText"
 import ShimmerChart from "./ShimmerChart";
 import {getModeOptions, getNormalizedMode, SENSOR_WIDGETS} from "./widgetConfig"
+import {SILAB_SIGNALS, getSilabSignal} from "./silabSignals"
 import {Trash2} from "lucide-react"
 
-function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, running }) {
+function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, onUpdateWidget, sensorData, running }) {
   const imageRef = useRef(null)
   const modeOptions = useMemo(() => getModeOptions(widget.view), [widget.view])
   const mode = getNormalizedMode(widget.view, widget.mode)
 
   const silab = sensorData?.silab
+  const signalKey = widget.signal ?? "speed"
+  const signalDisplay = widget.signalDisplay ?? "chart"
   const rgbFrame = sensorData?.rgb_frame
   const tofFrame = sensorData?.tof_scelet
   const rgbBackFrame = sensorData?.rgb_frame2
@@ -52,7 +56,10 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
     if (mode === "raw") {
       body = <pre className="raw-payload">{JSON.stringify(silab ?? {}, null, 2)}</pre>
     } else if (mode === "line") {
-      body = <SpeedChart silab={silab} />
+      const signal = getSilabSignal(signalKey)
+      body = signalDisplay === "text"
+        ? <SilabSignalText signal={signal} silab={silab} />
+        : <SilabSignalChart signal={signal} />
     } else {
       body = <SilabCockpit silab={silab} />
     }
@@ -121,6 +128,31 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
                         ))}
                     </select>
 
+                    {widget.view === "silab" && mode === "line" && (
+                        <>
+                            <select
+                                className="compact-control"
+                                value={signalKey}
+                                onChange={(event) => onUpdateWidget(widget.i, {signal: event.target.value})}
+                            >
+                                {SILAB_SIGNALS.map((signal) => (
+                                    <option key={signal.key} value={signal.key}>
+                                        {signal.label}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select
+                                className="compact-control"
+                                value={signalDisplay}
+                                onChange={(event) => onUpdateWidget(widget.i, {signalDisplay: event.target.value})}
+                            >
+                                <option value="chart">Chart</option>
+                                <option value="text">Text</option>
+                            </select>
+                        </>
+                    )}
+
                     <button
                         className="danger icon-button compact-control"
                         onClick={() => onDelete(widget.i)}
@@ -145,6 +177,8 @@ function hasSameWidgetIdentity(prevWidget, nextWidget) {
     prevWidget.i === nextWidget.i &&
     prevWidget.view === nextWidget.view &&
     prevWidget.mode === nextWidget.mode &&
+    prevWidget.signal === nextWidget.signal &&
+    prevWidget.signalDisplay === nextWidget.signalDisplay &&
     prevWidget.title === nextWidget.title &&
     prevWidget.x === nextWidget.x &&
     prevWidget.y === nextWidget.y &&
@@ -168,7 +202,11 @@ function areWidgetPropsEqual(prevProps, nextProps) {
 
   if (view === "silab") {
     if (mode === "line") {
-      return prevData.silab?.speed === nextData.silab?.speed && prevData.silab?.steering === nextData.silab?.steering
+      // Chart self-updates from the telemetry store; only text needs prop-driven
+      // re-renders, and only when its selected signal's value changes.
+      if ((nextProps.widget.signalDisplay ?? "chart") !== "text") return true
+      const signal = getSilabSignal(nextProps.widget.signal ?? "speed")
+      return signal.store(prevData.silab) === signal.store(nextData.silab)
     }
     if (mode === "cockpit" || mode === "pedals") {
       return (

@@ -12,6 +12,8 @@ import {
 } from "./widgetConfig"
 
 import {getPreferredWidgetGridSize, GRID_COLS} from "./widgetSizing"
+import {telemetryStore, THROTTLE_MS} from "../utils/telemetryStore"
+import {SILAB_SIGNALS} from "./silabSignals"
 
 import "./../styles/DashboardStyle.css"
 
@@ -93,6 +95,7 @@ function findFreePosition(items, w, h, cols) {
 function Dashboard() {
 
     const socketRef = useRef(null)
+    const lastTelemetryPushRef = useRef(0)
 
     const location = useLocation()
 
@@ -198,6 +201,24 @@ function Dashboard() {
                 console.log(payload.heartbeat)
 
                 console.log("LATENCIES", payload.sensor_latency)
+
+                // Single owner of SiLab telemetry ingestion: record one point with
+                // every signal so any number of signal widgets can read it without
+                // duplicating data.
+                const silab = payload?.silab
+                if (silab) {
+                    const now = Date.now()
+                    if (now - lastTelemetryPushRef.current >= THROTTLE_MS) {
+                        lastTelemetryPushRef.current = now
+                        const startTime = telemetryStore.initStartTime()
+                        const elapsedMs = now - startTime
+                        const point = {time: elapsedMs / 1000, elapsedMs}
+                        for (const signal of SILAB_SIGNALS) {
+                            point[signal.key] = signal.store(silab)
+                        }
+                        telemetryStore.addDataPoint(point)
+                    }
+                }
 
                 setSensorData(payload || {})
                 setLastPacketTime(new Date())

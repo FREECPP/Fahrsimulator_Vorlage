@@ -965,42 +965,53 @@ select option.foreign-layout {
 }
 
 .silab-line-chart {
+    position: relative;
     width: 100%;
     height: 100%;
     min-height: 0;
     display: grid;
-    grid-template-rows: 1fr auto;
-    gap: 8px;
+    grid-template-rows: 1fr;
 }
 
+/* Compact window control: a small pill in the chart's bottom-right that fades
+   in on hover (the header overlay occupies the top, so this stays clear of it). */
 .silab-line-chart-controls {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    z-index: 3;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #c7d4e1;
+    box-shadow: 0 2px 8px rgba(33, 59, 82, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
 }
 
-.silab-line-chart-controls select {
-    height: 32px;
-    padding: 0 10px;
-    border-radius: 8px;
-    border: 1px solid #c7d4e1;
-    background: #f3f8fd;
-    color: #173247;
+.widget-card:hover .silab-line-chart-controls {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .silab-line-chart-controls input {
-    height: 32px;
-    padding: 0 10px;
+    height: 30px;
+    width: 64px;
+    padding: 0 8px;
     border-radius: 8px;
     border: 1px solid #c7d4e1;
-    background: #f3f8fd;
+    background: #ffffff;
     color: #173247;
-    width: 72px;
+    font-size: 0.9rem;
 }
 
 .silab-line-chart-label {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 600;
     color: #425566;
 }
 
@@ -1014,16 +1025,51 @@ select option.foreign-layout {
 .silab-line-chart-section {
     display: grid;
     grid-template-rows: auto 1fr;
-    gap: 6px;
+    gap: 2px;
 }
 
 .silab-line-chart-title {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: baseline;
-    font-size: 0.82rem;
+    gap: 8px;
+    font-size: 0.8rem;
     font-weight: 600;
+    line-height: 1.1;
     color: #2b465c;
+}
+
+/* Single-signal text display: label on top, big value + unit below. */
+.silab-signal-text {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+}
+
+.silab-signal-text-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #5a6b7a;
+}
+
+.silab-signal-text-value {
+    font-size: clamp(0.9rem, 4vw, 1.7rem);
+    font-weight: 700;
+    line-height: 1;
+    color: #1f3346;
+}
+
+.silab-signal-text-unit {
+    margin-left: 6px;
+    font-size: 0.45em;
+    font-weight: 600;
+    color: #5a6b7a;
 }
 
 .silab-cockpit.pedals-only {
