@@ -522,7 +522,7 @@ class LogManager:
         self._sensor_processes = {}
 
         for writer_cls, kwargs, queues in self.file_writer:
-            p = Process(target=run_writer_process, args=(writer_cls, kwargs, self.stop_event, queues))
+            p = Process(target=run_writer_process, args=(writer_cls, kwargs, self.stop_event, queues, self.log_event))
             p.start()
             self._process.append(p)
             print(f"{writer_cls.__name__} process started")
@@ -610,7 +610,7 @@ class LogManager:
             print("\nFühre Sensor-Logs zusammen...")
 
             combined = merge_logs(
-                self.run_log_dir
+                self.run_log_dir, keep_incomplete=False
             )
 
             output_path = (
@@ -710,7 +710,8 @@ def run_writer_process(
     writer_cls,
     kwargs,
     stop_event,
-    queues
+    queues,
+    log_event=None
 ):
 
     if isinstance(queues, dict):
@@ -724,4 +725,4 @@ def run_writer_process(
         queues=qdict
     )
 
-    writer.run(stop_event)
+    writer.run(stop_event, log_event)

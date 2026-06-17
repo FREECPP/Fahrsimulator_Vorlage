@@ -25,8 +25,12 @@ class FileWriter:
         output_path = self.outdir / filename
         np.save(output_path, data)
     
-    def run(self, stop_event):
+    def run(self, stop_event, log_event=None):
         while not stop_event.is_set():
+            # So lange logevent nicht gesetzt ist werden auch keine .npy dateien auf die platte geschrieben
+            if log_event is not None and not log_event.is_set():
+                time.sleep(0.01)
+                continue
             if self.frame_queue is not None:
                 try:
                     item = self.frame_queue.get_nowait()
