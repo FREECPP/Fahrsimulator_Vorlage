@@ -1,11 +1,10 @@
-import { lazy, memo, Suspense, useEffect, useMemo, useRef } from "react"
+import { memo, Suspense, useEffect, useMemo, useRef } from "react"
 import SilabCockpit from "./SilabCockpit"
-import EyeTrackerSummary from "./EyeTrackerSummary"
+import EyeTracker from "./EyeTracker"
 import SpeedChart from "./SpeedChart"
+import ShimmerChart from "./ShimmerChart";
 import {getModeOptions, getNormalizedMode, SENSOR_WIDGETS} from "./widgetConfig"
 import {Trash2} from "lucide-react"
-
-const ShimmerChart = lazy(() => import("./ShimmerChart"))
 
 function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, running }) {
   const imageRef = useRef(null)
@@ -76,14 +75,14 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, sensorData, 
       mode === "raw" ? (
         <pre className="raw-payload">{JSON.stringify(eyetracker ?? {}, null, 2)}</pre>
       ) : (
-        <EyeTrackerSummary eyetracker={eyetracker} running={running} />
+        <EyeTracker eyetracker={eyetracker} running={running} />
       )
   }
 
   if (["tof", "rgb_front", "rgb_back"].includes(widget.view)) {
     body = selectedImage ? (
       <div className="widget-stack image-widget">
-        <img ref={imageRef} className="stream-image" alt="Live sensor stream" />
+        <img ref={imageRef} className="stream-image" alt="Live sensor stream" draggable={false} />
       </div>
     ) : (
       <div className="placeholder">No frame yet. Start recording to receive frames.</div>

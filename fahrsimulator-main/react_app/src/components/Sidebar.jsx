@@ -1,6 +1,6 @@
 import {useEffect, useState} from "react";
 import {getDefaultMode, getSensorTitle, SENSOR_WIDGETS} from "./widgetConfig";
-import {getPreferredWidgetSize} from "./widgetSizing.js";
+import {getPreferredWidgetGridSize} from "./widgetSizing.js";
 
 const API_URL = "http://localhost:9999";
 
@@ -41,12 +41,12 @@ function Sidebar({
             const mode = getDefaultMode(view)
 
             const preferredSize =
-                getPreferredWidgetSize(view, mode)
+                getPreferredWidgetGridSize(view, mode)
 
             return {
                 i: id,
                 x: 0,
-                y: Infinity,
+                y: 0,
                 w: preferredSize.w,
                 h: preferredSize.h,
                 view,

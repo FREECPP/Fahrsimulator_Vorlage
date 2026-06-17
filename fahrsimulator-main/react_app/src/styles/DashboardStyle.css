@@ -562,7 +562,6 @@ select option.foreign-layout {
 
     background: var(--color-header);
     color: #f7fdff;
-    cursor: move;
 
     /* Hover-Verhalten */
     opacity: 0;
@@ -654,6 +653,17 @@ select option.foreign-layout {
     padding: 12px;
     padding-top: 20px;
     overflow: auto;
+    cursor: move;
+    user-select: none;
+}
+
+/* Prevent the browser's native image/SVG drag so dragging the body only moves
+   the widget (via react-rnd), not the picture inside it. */
+.widget-body img,
+.widget-body svg,
+.widget-body canvas {
+    -webkit-user-drag: none;
+    user-select: none;
 }
 
 .widget-stack {

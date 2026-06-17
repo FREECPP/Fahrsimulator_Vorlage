@@ -21,9 +21,9 @@ export const SENSOR_WIDGETS = [
   {
     key: "eyetracker",
     label: "Eyetracker",
-    defaultMode: "summary",
+    defaultMode: "gaze",
     modes: [
-      { value: "summary", label: "Summary" },
+      { value: "gaze", label: "Gaze" },
       { value: "raw", label: "Raw" },
     ],
   },

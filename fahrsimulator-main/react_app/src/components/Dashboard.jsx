@@ -11,7 +11,7 @@ import {
     getSensorTitle
 } from "./widgetConfig"
 
-import {getPreferredWidgetSize} from "./widgetSizing"
+import {getPreferredWidgetGridSize} from "./widgetSizing"
 
 import "./../styles/DashboardStyle.css"
 
@@ -39,12 +39,12 @@ function createWidget(view) {
     const mode = getDefaultMode(view)
 
     const preferredSize =
-        getPreferredWidgetSize(view, mode)
+        getPreferredWidgetGridSize(view, mode)
 
     return {
         i: id,
         x: 0,
-        y: Infinity,
+        y: 0,
         w: preferredSize.w,
         h: preferredSize.h,
         view,
