@@ -42,6 +42,11 @@ class ShimmerLogger(Logger):
         "gsr_raw"
     ]
 
+    # Bitbreite des Shimmer-Hardware-Timestamps. Der Zähler läuft alle
+    # 2**24 / 32768 Hz ≈ 8,5 min um; bei Überlauf wird ein voller Umlauf addiert.
+    # (Falls dein Gerät eine andere Timestamp-Breite nutzt, hier anpassen.)
+    SHIMMER_TS_MODULO = 2 ** 24
+
     def __init__(
         self,
         file: Union[Path, str],
@@ -84,6 +89,10 @@ class ShimmerLogger(Logger):
         self._shimmer_ref_ts = None
         # Umrechnungsfaktor: wie viele Nanosekunden entsprechen einem Shimmer-Tick
         self._ns_per_tick = None
+        # Wrap-Handling des Hardware-Timestamps: akkumulierter Offset und letzter Rohwert,
+        # damit aus dem umlaufenden Geräte-Zähler ein monoton steigender Tick wird
+        self._ts_unwrap_offset = 0
+        self._prev_raw_ts = None
         # Rohdaten für die Kalibrierung: Liste von (shimmer_ts, recv_ns)-Tupeln
         self._latency_cal_samples = []
         # Wird True gesetzt sobald die Kalibrierung abgeschlossen ist
@@ -201,7 +210,7 @@ class ShimmerLogger(Logger):
             if self.log_event.is_set():
                 if self.x == 0:
                     self.start_logging()
-                    x = 1
+                    self.x = 1
                 if self.capture_time is not None:
                     mapped_data[LOG_TIME_KEY] = self.capture_time
                 self.write_row(mapped_data)
@@ -267,8 +276,29 @@ class ShimmerLogger(Logger):
                                                     })
             return
 
-        # Korrekter Aufnahmezeitpunkt: Empfangszeit minus eingefrorene Latenz, umgerechnet in Sekunden
-        self.capture_time = (recv_ns - self.mean_latency) / 1e9
+        # Korrekter Aufnahmezeitpunkt aus dem Geräte-Takt statt aus der Host-Empfangszeit:
+        # shimmer_ts zählt pro Sample eindeutig hoch. recv_ns dagegen kollidiert, weil
+        # Bluetooth die Samples gebündelt liefert und mehrere Pakete fast gleichzeitig
+        # ankommen -> sonst doppelte log_time bei unterschiedlichen shimmer_timestamps.
+        # Der entwrappte Tick wird über _ns_per_tick in die Systemzeit-Domäne abgebildet.
+        unwrapped_ts = self._unwrap_ts(shimmer_ts)
+        self.capture_time = (
+            self._stream_start_ns
+            + (unwrapped_ts - self._shimmer_ref_ts) * self._ns_per_tick
+        ) / 1e9
+
+    def _unwrap_ts(self, raw_ts: float) -> float:
+        """Macht aus dem umlaufenden Hardware-Timestamp einen monoton steigenden Wert.
+
+        Der Shimmer-Zähler springt nach SHIMMER_TS_MODULO Ticks zurück auf 0. Sinkt der
+        Rohwert gegenüber dem letzten Paket, ist ein Überlauf passiert und wir addieren
+        einen vollen Umlauf. Dadurch bleibt (unwrapped_ts - _shimmer_ref_ts) auch über
+        lange Aufnahmen streng steigend -> eindeutige, monotone log_time.
+        """
+        if self._prev_raw_ts is not None and raw_ts < self._prev_raw_ts:
+            self._ts_unwrap_offset += self.SHIMMER_TS_MODULO
+        self._prev_raw_ts = raw_ts
+        return raw_ts + self._ts_unwrap_offset
 
     def handle_hrv(self, data: dict):
         adc_value = data.get("internal_adc_13", None)
