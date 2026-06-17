@@ -11,7 +11,9 @@ import {
     getSensorTitle
 } from "./widgetConfig"
 
-import {getPreferredWidgetSize} from "./widgetSizing"
+import {getPreferredWidgetGridSize, GRID_COLS} from "./widgetSizing"
+import {telemetryStore, THROTTLE_MS} from "../utils/telemetryStore"
+import {SILAB_SIGNALS} from "./silabSignals"
 
 import "./../styles/DashboardStyle.css"
 
@@ -39,12 +41,12 @@ function createWidget(view) {
     const mode = getDefaultMode(view)
 
     const preferredSize =
-        getPreferredWidgetSize(view, mode)
+        getPreferredWidgetGridSize(view, mode)
 
     return {
         i: id,
         x: 0,
-        y: Infinity,
+        y: 0,
         w: preferredSize.w,
         h: preferredSize.h,
         view,
@@ -54,25 +56,46 @@ function createWidget(view) {
 }
 
 
-function getDefaultHorizontalPosition(
-    widgetCount,
-    widgetWidth = 4,
-    totalCols = 12
-) {
+// Find the first free spot (top-to-bottom, left-to-right) where a w×h widget
+// fits without overlapping existing widgets and stays within the columns.
+// Candidate anchors are the edges of existing widgets, so new widgets snap
+// next to neighbours and fill gaps instead of always stacking at the bottom.
+function findFreePosition(items, w, h, cols) {
 
-    const widgetsPerRow = Math.max(
-        1,
-        Math.floor(totalCols / widgetWidth)
-    )
+    const overlaps = (a, b) =>
+        a.x < b.x + b.w &&
+        a.x + a.w > b.x &&
+        a.y < b.y + b.h &&
+        a.y + a.h > b.y
 
-    const slot = widgetCount % widgetsPerRow
+    const xCandidates = [
+        ...new Set([0, ...items.flatMap((it) => [it.x, it.x + it.w])]),
+    ]
+        .filter((x) => x + w <= cols + 1e-6)
+        .sort((a, b) => a - b)
 
-    return slot * widgetWidth
+    const yCandidates = [
+        ...new Set([0, ...items.flatMap((it) => [it.y, it.y + it.h])]),
+    ].sort((a, b) => a - b)
+
+    for (const y of yCandidates) {
+        for (const x of xCandidates) {
+            const candidate = {x, y, w, h}
+            if (!items.some((it) => overlaps(candidate, it))) {
+                return {x, y}
+            }
+        }
+    }
+
+    // Nothing fits in a gap: drop it below everything.
+    const bottom = items.reduce((max, it) => Math.max(max, it.y + it.h), 0)
+    return {x: 0, y: bottom}
 }
 
 function Dashboard() {
 
     const socketRef = useRef(null)
+    const lastTelemetryPushRef = useRef(0)
 
     const location = useLocation()
 
@@ -178,6 +201,24 @@ function Dashboard() {
                 console.log(payload.heartbeat)
 
                 console.log("LATENCIES", payload.sensor_latency)
+
+                // Single owner of SiLab telemetry ingestion: record one point with
+                // every signal so any number of signal widgets can read it without
+                // duplicating data.
+                const silab = payload?.silab
+                if (silab) {
+                    const now = Date.now()
+                    if (now - lastTelemetryPushRef.current >= THROTTLE_MS) {
+                        lastTelemetryPushRef.current = now
+                        const startTime = telemetryStore.initStartTime()
+                        const elapsedMs = now - startTime
+                        const point = {time: elapsedMs / 1000, elapsedMs}
+                        for (const signal of SILAB_SIGNALS) {
+                            point[signal.key] = signal.store(silab)
+                        }
+                        telemetryStore.addDataPoint(point)
+                    }
+                }
 
                 setSensorData(payload || {})
                 setLastPacketTime(new Date())
@@ -444,25 +485,20 @@ function Dashboard() {
                         const nextWidget =
                             createWidget(view)
 
+                        const {x, y} =
+                            findFreePosition(
+                                items,
+                                nextWidget.w,
+                                nextWidget.h,
+                                GRID_COLS
+                            )
+
                         return [
                             ...items,
                             {
                                 ...nextWidget,
-
-                                x:
-                                    getDefaultHorizontalPosition(
-                                        items.length,
-                                        nextWidget.w
-                                    ),
-
-                                y:
-                                    Math.max(
-                                        ...items.map(
-                                            (item) =>
-                                                item.y + item.h
-                                        ),
-                                        0
-                                    ),
+                                x,
+                                y,
                             },
                         ]
                     })

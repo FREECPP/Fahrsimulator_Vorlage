@@ -69,6 +69,7 @@ function SilabCockpit({ silab }) {
                 src={wheelSrc}
                 alt="Steering wheel"
                 className="steering-wheel-asset"
+                draggable={false}
                 onError={() => {
                   if (hasMoreWheelSources) {
                     setWheelSourceIndex((current) => current + 1)

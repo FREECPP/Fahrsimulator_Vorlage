@@ -5,7 +5,7 @@ export const SENSOR_WIDGETS = [
     defaultMode: "cockpit",
     modes: [
       { value: "cockpit", label: "Cockpit" },
-      { value: "line", label: "Line chart" },
+      { value: "line", label: "Signal" },
       { value: "raw", label: "Raw" },
     ],
   },
@@ -21,9 +21,9 @@ export const SENSOR_WIDGETS = [
   {
     key: "eyetracker",
     label: "Eyetracker",
-    defaultMode: "summary",
+    defaultMode: "gaze",
     modes: [
-      { value: "summary", label: "Summary" },
+      { value: "gaze", label: "Gaze" },
       { value: "raw", label: "Raw" },
     ],
   },

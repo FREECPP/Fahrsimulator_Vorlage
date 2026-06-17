@@ -69,7 +69,7 @@ function getGazePoint(eyetracker) {
   })
 }
 
-function EyeTrackerSummary({ eyetracker, running }) {
+function EyeTracker({ eyetracker, running }) {
   const [trail, setTrail] = useState([])
   const [nowMs, setNowMs] = useState(() => Date.now())
   const gazePointRef = useRef({ x: null, y: null, valid: false })
@@ -150,4 +150,4 @@ function EyeTrackerSummary({ eyetracker, running }) {
   )
 }
 
-export default EyeTrackerSummary
+export default EyeTracker

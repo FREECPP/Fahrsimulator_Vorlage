@@ -1,6 +1,5 @@
 import {useEffect, useState} from "react";
-import {getDefaultMode, getSensorTitle, SENSOR_WIDGETS} from "./widgetConfig";
-import {getPreferredWidgetSize} from "./widgetSizing.js";
+import {SENSOR_WIDGETS} from "./widgetConfig";
 
 const API_URL = "http://localhost:9999";
 
@@ -20,53 +19,6 @@ function Sidebar({
                  }) {
     const [layouts, setLayouts] = useState([]);
     const [layoutName, setLayoutName] = useState("");
-
-    function createDefaultWidgets() {
-        const DEFAULT_WIDGET_LAYOUT = [
-            {view: "silab", x: 0, y: 0},
-            {view: "eyetracker", x: 6, y: 0},
-            {view: "tof", x: 0, y: 3},
-            {view: "rgb_front", x: 4, y: 3},
-            {view: "rgb_back", x: 8, y: 3},
-            {view: "shimmer", x: 0, y: 6},
-        ]
-
-
-// ===== Widget =====
-        function createWidget(view) {
-
-            const id =
-                `${Date.now()}-${Math.round(Math.random() * 10000)}`
-
-            const mode = getDefaultMode(view)
-
-            const preferredSize =
-                getPreferredWidgetSize(view, mode)
-
-            return {
-                i: id,
-                x: 0,
-                y: Infinity,
-                w: preferredSize.w,
-                h: preferredSize.h,
-                view,
-                mode,
-                title: getSensorTitle(view),
-            }
-        }
-
-        return DEFAULT_WIDGET_LAYOUT.map(
-            ({view, x, y}) => ({
-                ...createWidget(view),
-                x,
-                y,
-            })
-        )
-    }
-
-    const resetDashboardLayout = () => {
-        setWidgets(createDefaultWidgets())
-    }
 
     // 🔄 Layoutliste laden
     const fetchLayouts = async () => {
@@ -306,15 +258,6 @@ function Sidebar({
                                 Delete Layout
                             </button>
 
-                            <button
-                                className="control-btn reset"
-
-                                onClick={
-                                    resetDashboardLayout
-                                }
-                            >
-                                Reset Layout
-                            </button>
                         </div>
                     </div>
                 </>
