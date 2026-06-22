@@ -1,7 +1,7 @@
 import {useEffect, useMemo, useRef, useState} from "react"
 import {useLocation} from "react-router-dom"
 import {io} from "socket.io-client"
-import {FaPlay, FaStop} from "react-icons/fa"
+import {FaPlay, FaStop, FaSync} from "react-icons/fa"
 import DashboardGrid from "./DashboardGrid"
 import Sidebar from "./Sidebar"
 import StartSensorPopup from "./StartSensorPopup"
@@ -53,6 +53,43 @@ function createWidget(view) {
         mode,
         title: getSensorTitle(view),
     }
+}
+
+
+// Sensor-Statuspunkt im Header. Beim Hover erscheint ein Restart-Icon, das
+// denselben "restart_sensor"-Reconnect wie im StartSensorPopup ausloest:
+// nur dieser eine Sensor wird neu gestartet, der Writer laeuft weiter und
+// haengt an dieselbe Logdatei an (kein Ueberschreiben).
+function SensorStatusBadge({ label, active, onRestart }) {
+
+    const [hover, setHover] =
+        useState(false)
+
+    return (
+        <span
+            onMouseEnter={() => setHover(true)}
+            onMouseLeave={() => setHover(false)}
+            style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                color: active ? "limegreen" : "gray",
+            }}
+        >
+            ● {label}
+            <FaSync
+                title={`${label} neu starten`}
+                onClick={onRestart}
+                style={{
+                    cursor: "pointer",
+                    fontSize: "0.85em",
+                    color: "inherit",
+                    opacity: hover ? 0.85 : 0,
+                    transition: "opacity 0.15s ease",
+                }}
+            />
+        </span>
+    )
 }
 
 
@@ -638,16 +675,15 @@ function Dashboard() {
                             ["rgb_frame2", "RGB Back"],
                             ["tof_scelet", "TOF"],
                         ].map(([key, label]) => (
-                            <span
+                            <SensorStatusBadge
                                 key={key}
-                                style={{
-                                    color: (sensorData.heartbeat || {})[key]
-                                        ? "limegreen"
-                                        : "gray",
-                                }}
-                            >
-                                    ● {label}
-                                </span>
+                                label={label}
+                                active={!!(sensorData.heartbeat || {})[key]}
+                                onRestart={() =>
+                                    // Reconnect nur fuer diesen einen Sensor anstossen
+                                    socketRef.current?.emit("restart_sensor", { key })
+                                }
+                            />
                         ))}
                     </div>
                     <div className="drive-stats">
