@@ -966,11 +966,17 @@ select option.foreign-layout {
 
 .silab-line-chart {
     position: relative;
-    width: 100%;
-    height: 100%;
     min-height: 0;
     display: grid;
     grid-template-rows: 1fr;
+    /* Fill the whole card by countering the .widget-body padding. The box has an
+       explicit size, so negative margins alone can't grow it - they only shift
+       it, leaving gaps on the right/bottom. Growing width/height via calc fixes
+       that: +24px = 12px reclaimed on each side. Top keeps an 8px gap (padding-
+       top is 20px, we reclaim 12) since the header is an absolute hover overlay. */
+    width: calc(100% + 24px);
+    height: calc(100% + 24px);
+    margin: -12px;
 }
 
 /* Compact window control: a small pill in the chart's bottom-right that fades

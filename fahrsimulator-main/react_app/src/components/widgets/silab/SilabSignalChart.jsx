@@ -44,7 +44,9 @@ function windowedData(allData, windowMs) {
   }
 
   return {
-    data: downsampleData(allData.slice(startIndex), MAX_RENDER_POINTS),
+    // Pass the absolute start index so decimation stays phase-stable while the
+    // window slides (see downsampleData).
+    data: downsampleData(allData.slice(startIndex), MAX_RENDER_POINTS, startIndex),
     latest,
   }
 }
@@ -93,7 +95,7 @@ const SilabSignalChart = memo(function SilabSignalChart({ signal }) {
           </span>
         </div>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 10, right: 12, left: signal.leftMargin, bottom: 10 }}>
+          <LineChart data={data} margin={{ top: 4, right: 6, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#dbe5ef" />
             <XAxis
               dataKey="elapsedMs"
@@ -102,13 +104,14 @@ const SilabSignalChart = memo(function SilabSignalChart({ signal }) {
               allowDataOverflow
               stroke="#5a6b7a"
               tick={{ fontSize: 11 }}
+              height={18}
+              tickMargin={3}
               tickFormatter={(val) => formatElapsedSeconds(val / 1000)}
             />
             <YAxis
               stroke="#5a6b7a"
               tick={{ fontSize: 11 }}
               width={signal.yAxisWidth}
-              unit={signal.unit && !signal.tickFormatter ? signal.unit : undefined}
               domain={signal.domain}
               ticks={signal.ticks}
               interval={signal.ticks ? 0 : undefined}

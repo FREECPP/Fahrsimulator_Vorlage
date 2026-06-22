@@ -37,15 +37,23 @@ export function formatElapsedSeconds(value) {
   return `${minutes}:${secondsLabel}`
 }
 
-export function downsampleData(entries, maxPoints) {
+export function downsampleData(entries, maxPoints, absoluteStart = 0) {
   if (!Array.isArray(entries) || entries.length <= maxPoints) return entries
   const stride = Math.ceil(entries.length / maxPoints)
   const result = []
-  for (let i = 0; i < entries.length; i += stride) {
-    result.push(entries[i])
+  for (let i = 0; i < entries.length; i++) {
+    // Anchor the selection to the absolute buffer index, not the slice-local
+    // index. This keeps the chosen vertices stable as the window slides: a given
+    // point is always kept or dropped the same way regardless of where the
+    // window currently starts. Otherwise the sampling "phase" shifts every frame
+    // once the window scrolls, making the whole line visibly reshuffle.
+    if ((absoluteStart + i) % stride === 0) {
+      result.push(entries[i])
+    }
   }
-  if (result.length > 0 && result[result.length - 1] !== entries[entries.length - 1]) {
-    result.push(entries[entries.length - 1])
+  const last = entries[entries.length - 1]
+  if (result.length === 0 || result[result.length - 1] !== last) {
+    result.push(last)
   }
   return result
 }
@@ -63,8 +71,7 @@ export const SILAB_SIGNALS = [
     label: "Speed",
     unit: "km/h",
     color: "#1f8a46",
-    yAxisWidth: 52,
-    leftMargin: 6,
+    yAxisWidth: 30,
     store: (silab) => num(silab?.speed != null ? silab.speed * 3.6 : null),
     formatValue: (v) => (v == null ? "--" : v.toFixed(1)),
   },
@@ -73,8 +80,7 @@ export const SILAB_SIGNALS = [
     label: "Steering",
     unit: "rotations",
     color: "#225f7a",
-    yAxisWidth: 65,
-    leftMargin: 6,
+    yAxisWidth: 42,
     domain: [-MAX_STEERING_DEG, MAX_STEERING_DEG],
     ticks: [-360, 0, 360],
     tickFormatter: rotationTickFormatter,
@@ -86,8 +92,7 @@ export const SILAB_SIGNALS = [
     label: "Gas",
     unit: "",
     color: "#f59e0b",
-    yAxisWidth: 52,
-    leftMargin: 6,
+    yAxisWidth: 30,
     domain: [0, 1],
     ticks: [0, 0.5, 1],
     store: (silab) => num(silab?.acc_pedal),
@@ -98,8 +103,7 @@ export const SILAB_SIGNALS = [
     label: "Brake",
     unit: "",
     color: "#dc2626",
-    yAxisWidth: 52,
-    leftMargin: 6,
+    yAxisWidth: 30,
     domain: [0, 1],
     ticks: [0, 0.5, 1],
     store: (silab) => num(silab?.brake_pedal != null ? silab.brake_pedal / MAX_BRAKE_VALUE : null),
@@ -110,8 +114,7 @@ export const SILAB_SIGNALS = [
     label: "Clutch",
     unit: "",
     color: "#4f46e5",
-    yAxisWidth: 52,
-    leftMargin: 6,
+    yAxisWidth: 30,
     domain: [0, 1],
     ticks: [0, 0.5, 1],
     store: (silab) => num(silab?.clutch_pedal),
@@ -122,8 +125,9 @@ export const SILAB_SIGNALS = [
     label: "RPM",
     unit: "rpm",
     color: "#7c3aed",
-    yAxisWidth: 60,
-    leftMargin: 6,
+    yAxisWidth: 38,
+    domain: [0, 7000],
+    ticks: [0, 1000, 2000, 3000, 4000, 5000, 6000, 7000],
     store: (silab) => num(silab?.rpm),
     formatValue: (v) => (v == null ? "--" : v.toFixed(0)),
   },
@@ -132,8 +136,7 @@ export const SILAB_SIGNALS = [
     label: "Position X",
     unit: "m",
     color: "#0891b2",
-    yAxisWidth: 60,
-    leftMargin: 6,
+    yAxisWidth: 38,
     store: (silab) => num(silab?.x),
     formatValue: (v) => (v == null ? "--" : v.toFixed(1)),
   },
@@ -142,8 +145,7 @@ export const SILAB_SIGNALS = [
     label: "Position Y",
     unit: "m",
     color: "#0d9488",
-    yAxisWidth: 60,
-    leftMargin: 6,
+    yAxisWidth: 38,
     store: (silab) => num(silab?.y),
     formatValue: (v) => (v == null ? "--" : v.toFixed(1)),
   },
@@ -152,28 +154,29 @@ export const SILAB_SIGNALS = [
     label: "Position Z",
     unit: "m",
     color: "#65a30d",
-    yAxisWidth: 60,
-    leftMargin: 6,
+    yAxisWidth: 38,
     store: (silab) => num(silab?.z),
     formatValue: (v) => (v == null ? "--" : v.toFixed(1)),
   },
   {
     key: "pitch",
     label: "Pitch",
-    unit: "rad",
+    unit: "",
     color: "#c026d3",
-    yAxisWidth: 60,
-    leftMargin: 6,
+    yAxisWidth: 38,
+    domain: [-0.2, 0.2],
+    ticks: [-0.2, 0, 0.2],
     store: (silab) => num(silab?.pitch),
     formatValue: (v) => (v == null ? "--" : v.toFixed(3)),
   },
   {
     key: "roll",
     label: "Roll",
-    unit: "rad",
+    unit: "",
     color: "#ea580c",
-    yAxisWidth: 60,
-    leftMargin: 6,
+    yAxisWidth: 38,
+    domain: [-0.2, 0.2],
+    ticks: [-0.2, 0, 0.2],
     store: (silab) => num(silab?.roll),
     formatValue: (v) => (v == null ? "--" : v.toFixed(3)),
   },
