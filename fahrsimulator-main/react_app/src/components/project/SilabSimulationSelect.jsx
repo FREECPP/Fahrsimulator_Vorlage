@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 
-import "./../styles/ProjectTable.css";
+import "../../styles/ProjectTable.css";
 
 export default function SilabSimulationSelect({
     onChange,

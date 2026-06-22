@@ -1,11 +1,11 @@
 import { memo, Suspense, useEffect, useMemo, useRef } from "react"
-import SilabCockpit from "./SilabCockpit"
-import EyeTracker from "./EyeTracker"
-import SilabSignalChart from "./SilabSignalChart"
-import SilabSignalText from "./SilabSignalText"
-import ShimmerChart from "./ShimmerChart";
+import SilabCockpit from "../widgets/silab/SilabCockpit"
+import EyeTracker from "../widgets/EyeTracker"
+import SilabSignalChart from "../widgets/silab/SilabSignalChart"
+import SilabSignalText from "../widgets/silab/SilabSignalText"
+import ShimmerChart from "../widgets/ShimmerChart";
 import {getModeOptions, getNormalizedMode, SENSOR_WIDGETS} from "./widgetConfig"
-import {SILAB_SIGNALS, getSilabSignal} from "./silabSignals"
+import {SILAB_SIGNALS, getSilabSignal} from "../widgets/silab/silabSignals"
 import {Trash2} from "lucide-react"
 
 function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, onUpdateWidget, sensorData, running }) {

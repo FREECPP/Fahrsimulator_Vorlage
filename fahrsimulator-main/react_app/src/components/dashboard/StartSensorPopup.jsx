@@ -22,7 +22,7 @@ import {
     useState
 } from "react"
 
-import "./../styles/Popup.css"
+import "../../styles/Popup.css"
 
 function getSensorIcon(key) {
 

@@ -12,10 +12,10 @@ import {
 } from "./widgetConfig"
 
 import {getPreferredWidgetGridSize, GRID_COLS} from "./widgetSizing"
-import {telemetryStore, THROTTLE_MS} from "../utils/telemetryStore"
-import {SILAB_SIGNALS} from "./silabSignals"
+import {telemetryStore, THROTTLE_MS} from "../../utils/telemetryStore"
+import {SILAB_SIGNALS} from "../widgets/silab/silabSignals"
 
-import "./../styles/DashboardStyle.css"
+import "../../styles/DashboardStyle.css"
 
 const SOCKET_URL =
     import.meta.env.VITE_SOCKET_URL
