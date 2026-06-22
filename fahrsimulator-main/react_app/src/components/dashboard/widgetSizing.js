@@ -3,6 +3,16 @@ export const GRID_COLS = 12
 export const GRID_ROW_HEIGHT = 36
 export const GRID_MARGIN = 4
 
+// Native stream resolutions (aspect-ratio source) so image widgets start at the
+// right shape instead of letterboxing. RGB cameras are 640x480 (4:3, see
+// rgb_camera_logger.py); the ToF depth frame is square (tiefencamlogger.py).
+const STREAM_RESOLUTION = {
+  rgb_front: { w: 640, h: 500 },
+  rgb_back: { w: 640, h: 500 },
+  tof: { w: 512, h: 520 },
+}
+const IMAGE_BASE_WIDTH = 480
+
 // Preferred widget sizes in pixels. Use getPreferredWidgetGridSize to get the
 // equivalent grid units for the data model.
 export function getPreferredWidgetSize(view, mode) {
@@ -17,8 +27,13 @@ export function getPreferredWidgetSize(view, mode) {
     return { width: 660, height: 690 }
   }
 
-  if (view === "tof" || view === "rgb_front" || view === "rgb_back") {
-    return { width: 480, height: 300 }
+  const resolution = STREAM_RESOLUTION[view]
+  if (resolution) {
+    // Derive height from the stream's aspect ratio so the frame fills the widget.
+    return {
+      width: IMAGE_BASE_WIDTH,
+      height: Math.round((IMAGE_BASE_WIDTH * resolution.h) / resolution.w),
+    }
   }
 
   if (view === "eyetracker") {
