@@ -37,15 +37,23 @@ export function formatElapsedSeconds(value) {
   return `${minutes}:${secondsLabel}`
 }
 
-export function downsampleData(entries, maxPoints) {
+export function downsampleData(entries, maxPoints, absoluteStart = 0) {
   if (!Array.isArray(entries) || entries.length <= maxPoints) return entries
   const stride = Math.ceil(entries.length / maxPoints)
   const result = []
-  for (let i = 0; i < entries.length; i += stride) {
-    result.push(entries[i])
+  for (let i = 0; i < entries.length; i++) {
+    // Anchor the selection to the absolute buffer index, not the slice-local
+    // index. This keeps the chosen vertices stable as the window slides: a given
+    // point is always kept or dropped the same way regardless of where the
+    // window currently starts. Otherwise the sampling "phase" shifts every frame
+    // once the window scrolls, making the whole line visibly reshuffle.
+    if ((absoluteStart + i) % stride === 0) {
+      result.push(entries[i])
+    }
   }
-  if (result.length > 0 && result[result.length - 1] !== entries[entries.length - 1]) {
-    result.push(entries[entries.length - 1])
+  const last = entries[entries.length - 1]
+  if (result.length === 0 || result[result.length - 1] !== last) {
+    result.push(last)
   }
   return result
 }

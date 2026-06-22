@@ -44,7 +44,9 @@ function windowedData(allData, windowMs) {
   }
 
   return {
-    data: downsampleData(allData.slice(startIndex), MAX_RENDER_POINTS),
+    // Pass the absolute start index so decimation stays phase-stable while the
+    // window slides (see downsampleData).
+    data: downsampleData(allData.slice(startIndex), MAX_RENDER_POINTS, startIndex),
     latest,
   }
 }
