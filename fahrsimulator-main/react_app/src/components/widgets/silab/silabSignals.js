@@ -177,6 +177,14 @@ export const SILAB_SIGNALS = [
     store: (silab) => num(silab?.roll),
     formatValue: (v) => (v == null ? "--" : v.toFixed(3)),
   },
+  {
+    key: "gear",
+    label: "Gear",
+    color: "#f59e0b",
+    domain: [-1, 6],
+    store: (silab) => num(silab?.gearauto),
+    formatValue: (v) => (v == null ? "--" : v.toFixed(0)),
+  },
 ]
 
 const SILAB_SIGNAL_MAP = Object.fromEntries(SILAB_SIGNALS.map((s) => [s.key, s]))

@@ -1,8 +1,6 @@
 import time
 import math
 
-from open3d.cpu.pybind.core import undefined
-
 from logger.logger import Logger, LOG_TIME_KEY
 from pathlib import Path
 from typing import Optional, Union
@@ -25,7 +23,8 @@ class SilabLogger(Logger):
         "x", "y", "z",
         "pitch", "roll",
         "steering",
-        "acc_pedal", "brake_pedal", "clutch_pedal"
+        "acc_pedal", "brake_pedal", "clutch_pedal",
+        "gearauto"
     ]
 
     def __init__(
@@ -137,7 +136,7 @@ class SilabLogger(Logger):
             if self.sensor_latency_queue:
                 self.sensor_latency_queue.put({
                     "key": self.sensor_key,
-                    "latency_ms": undefined
+                    "latency_ms": None
                 })
 
             print(
