@@ -971,6 +971,10 @@ select option.foreign-layout {
     min-height: 0;
     display: grid;
     grid-template-rows: 1fr;
+    /* Reclaim the .widget-body padding (12px sides/bottom) so the chart spans
+       the full card width. Negative margins match the padding exactly, so the
+       chart reaches the inner edges without overflowing. */
+    margin: 0 -12px -12px -12px;
 }
 
 /* Compact window control: a small pill in the chart's bottom-right that fades
