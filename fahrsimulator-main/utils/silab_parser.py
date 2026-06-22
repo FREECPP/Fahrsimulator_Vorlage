@@ -8,7 +8,7 @@ def parse_silab_data(data: bytes) -> dict:
     Expected format (52 bytes):
     - TIME (double, 8 bytes)
     - SPEED (float, 4 bytes)
-    - RPM (long, 4 bytes)
+    - RPM (float, 4 bytes)
     - X, Y, Z (float, 4 bytes each) - position
     - PITCH, ROLL (float, 4 bytes each) - orientation
     - STWH (float, 4 bytes) - steering wheel
@@ -29,7 +29,7 @@ def parse_silab_data(data: bytes) -> dict:
 
         sim_time = unpacked[0]
         speed = unpacked[1]
-        rpm = unpacked[2]
+        rpm = int(unpacked[2])
         x, y, z = unpacked[3], unpacked[4], unpacked[5]
         pitch, roll = unpacked[6], unpacked[7]
         steering = unpacked[8]
