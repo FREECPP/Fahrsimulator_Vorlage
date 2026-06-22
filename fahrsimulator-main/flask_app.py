@@ -710,10 +710,20 @@ def mock_sensor_stream(stop_event):
                 "pupil_right": float(3.15 + 0.32 * math.sin(t * 0.56 + 0.2)),
             },
             "silab": {
+                "sim_time": float(t),
                 "speed": float(speed_ms),
+                "rpm": float(900.0 + speed_ms * 130.0 + 200.0 * math.sin(t * 1.3)),
+                # Position: drive forward along x, gentle lateral and height drift.
+                "x": float(speed_ms * t),
+                "y": float(5.0 * math.sin(t * 0.15)),
+                "z": float(0.02 + 0.5 * math.sin(t * 0.25)),
+                # Orientation (rad): small pitch/roll oscillations.
+                "pitch": float(0.03 * math.sin(t * 0.7)),
+                "roll": float(0.05 * math.sin(t * 0.9 + 0.4)),
                 "steering": float(6.5 * math.sin(t * 0.9)),
                 "acc_pedal": float(max(0.0, 0.6 + 0.35 * math.sin(t * 1.1))),
-                "brake_pedal": float(max(0.0, 0.3 * math.sin(t * 1.7 - 1.0))),
+                "brake_pedal": float(max(0.0, 3.5 * 0.3 * math.sin(t * 1.7 - 1.0))),
+                "clutch_pedal": float(max(0.0, math.sin(t * 0.5 - 1.2))),
             },
             "rgb_frame2": _mock_image_bytes("RGB Back", t + 1.0),
             "tof_scelet": _mock_image_bytes("TOF", t + 2.0),

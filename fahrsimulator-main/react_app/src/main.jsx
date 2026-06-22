@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 
 import App from './App.jsx' // 👉 deine Startseite
-import Dashboard from './components/Dashboard.jsx'
+import Dashboard from './components/dashboard/Dashboard.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

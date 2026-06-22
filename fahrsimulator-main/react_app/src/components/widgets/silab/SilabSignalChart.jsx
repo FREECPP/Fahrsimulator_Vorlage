@@ -9,7 +9,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts"
-import { telemetryStore } from "../utils/telemetryStore"
+import { telemetryStore } from "../../../utils/telemetryStore"
 import { downsampleData, formatElapsedSeconds } from "./silabSignals"
 
 const RENDER_THROTTLE_MS = 500
