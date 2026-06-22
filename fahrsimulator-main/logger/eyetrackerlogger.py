@@ -120,8 +120,11 @@ class EyetrackerLogger(Logger):
                     print(f"Eyetracker Latenz kalibriert: {self.mean_latency / 1e6:.2f} ms")
             return
 
-        # Korrekter Aufnahmezeitpunkt: Empfangszeit minus eingefrorene Latenz, umgerechnet in Sekunden
-        self.capture_time = (recv_ns - self.mean_latency) / 1e9
+        # Korrekter Aufnahmezeitpunkt aus dem Geräte-Takt
+        self.capture_time = (
+            self._stream_start_ns
+            + (device_ts - self._device_ref_ts) * self._ns_per_tick
+        ) / 1e9
 
     def process_data(self, data: Union[bytes, str, dict]) -> None:
         """Expects dict from SDK; writes CSV-Row."""

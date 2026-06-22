@@ -163,6 +163,25 @@ def merge_logs(session_dir: Path) -> pd.DataFrame:
         # Hilfsspalte wird nicht mehr benötigt
         combined.drop(columns=[last_ts_col], inplace=True)
 
+    # Mehrere Zeilen mit identischer log_time zu EINER Zeile pro Zeitstempel zusammenfassen.
+    # Das betrifft v.a. tof_camera und tiefenskelett: Das Skelett wird aus demselben
+    # TOF-Frame berechnet und übernimmt dessen Zeitstempel exakt -> derselbe log_time in
+    # beiden Logs. Da oben bereits ffill gelaufen ist, trägt die letzte Zeile eines
+    # Zeitstempels die jeweils aktuellsten Werte aller beteiligten Sensoren -> keep="last"
+    # übernimmt pro Zeitstempel genau diese aktuellsten Werte in eine einzige Zeile.
+    rows_before = len(combined)
+    # Herkunft erhalten: pro Zeitstempel alle beteiligten Sensoren sammeln (z.B. "skeleton+tof"),
+    # bevor die Zeilen kollabiert werden — sonst bliebe nur das Label des letzten Sensors übrig.
+    sensor_per_ts = combined.groupby(TIMESTAMP_COL)["sensor"].agg(
+        lambda s: "+".join(sorted(s.unique()))
+    )
+    combined = combined.drop_duplicates(subset=TIMESTAMP_COL, keep="last").reset_index(drop=True)
+    combined["sensor"] = combined[TIMESTAMP_COL].map(sensor_per_ts)
+    collapsed = rows_before - len(combined)
+    if collapsed:
+        print(f"Zusammengefasst: {collapsed} Zeilen mit gleichem log_time "
+              f"zu je einer Zeile pro Zeitstempel (aktuellste Werte übernommen)")
+
     print(f"Ergebnis: {len(combined)} Zeilen, {len(combined.columns)} Spalten")
     return combined
 
