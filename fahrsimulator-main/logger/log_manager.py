@@ -610,7 +610,7 @@ class LogManager:
             print("\nFühre Sensor-Logs zusammen...")
 
             combined = merge_logs(
-                self.run_log_dir, keep_incomplete=False
+                self.run_log_dir
             )
 
             output_path = (

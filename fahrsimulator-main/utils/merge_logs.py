@@ -15,13 +15,13 @@ Vorgehen:
     4. Forward-Fill: Da die Sensoren zu unterschiedlichen Zeitpunkten messen, sind
        in jeder Zeile die meisten Spalten leer. ffill() trägt den jeweils letzten
        bekannten Wert eines Sensors weiter bis ein neuer Wert kommt
-    5. Anfangszeilen entfernen bei denen noch nicht alle Sensoren mindestens einmal
-       geliefert haben (sonst stehen dort NaN-Werte)
-    6. Ergebnis als combined_log.csv im Session-Verzeichnis speichern
+    5. Ergebnis als combined_log.csv im Session-Verzeichnis speichern
+
+    Es werden alle Zeilen behalten: Das kombinierte Log beginnt beim frühesten
+    Zeitstempel aller Sensoren — genau wie die Einzel-Logs.
 
 Aufruf (manuell, alternativ zur automatischen Ausführung über LogManager):
     python utils/merge_logs.py --session-dir logfiles/2024-01-01_12-00-00
-    python utils/merge_logs.py --session-dir logfiles/2024-01-01_12-00-00 --keep-incomplete
 """
 
 import argparse
@@ -93,7 +93,7 @@ def load_sensor_logs(session_dir: Path) -> list[pd.DataFrame]:
     return frames
 
 
-def merge_logs(session_dir: Path, keep_incomplete: bool = False) -> pd.DataFrame:
+def merge_logs(session_dir: Path) -> pd.DataFrame:
     """
     Führt alle Sensor-Logs eines Session-Verzeichnisses zusammen.
 
@@ -101,10 +101,13 @@ def merge_logs(session_dir: Path, keep_incomplete: bool = False) -> pd.DataFrame
     Fehlende Werte werden per Forward-Fill aufgefüllt: Jeder Sensor trägt
     seinen letzten bekannten Wert weiter bis er einen neuen Messwert liefert.
 
+    Es werden ALLE Zeilen behalten — das kombinierte Log beginnt damit beim
+    frühesten Zeitstempel aller Sensoren, genau wie die Einzel-Logs. Am Anfang
+    können dadurch einzelne Spalten noch leer (NaN) sein, solange der zugehörige
+    Sensor seinen ersten Wert noch nicht geliefert hat.
+
     Args:
-        session_dir:      Pfad zum Session-Verzeichnis mit den Sensor-CSV-Dateien
-        keep_incomplete:  Falls True, bleiben Anfangszeilen mit NaN-Werten erhalten.
-                          Falls False (Standard), werden diese Zeilen entfernt.
+        session_dir:  Pfad zum Session-Verzeichnis mit den Sensor-CSV-Dateien
 
     Returns:
         Zusammengeführter DataFrame mit allen Sensordaten
@@ -160,20 +163,6 @@ def merge_logs(session_dir: Path, keep_incomplete: bool = False) -> pd.DataFrame
         # Hilfsspalte wird nicht mehr benötigt
         combined.drop(columns=[last_ts_col], inplace=True)
 
-    if not keep_incomplete:
-        # Am Anfang der Aufnahme haben noch nicht alle Sensoren ihren ersten Wert geliefert.
-        # Diese Zeilen haben nach dem Forward-Fill immer noch NaN-Werte und werden entfernt,
-        # da sie kein vollständiges Bild aller aktiven Sensoren darstellen.
-        # Wichtig: Nur Spalten von Sensoren prüfen die tatsächlich Daten geliefert haben.
-        # Sensoren mit 0 Zeilen haben überall NaN — würden sonst alle Zeilen löschen.
-        active_check_cols = [c for c in fill_cols if combined[c].notna().any()]
-        rows_before = len(combined)
-        combined.dropna(subset=active_check_cols, inplace=True)
-        combined.reset_index(drop=True, inplace=True)
-        dropped = rows_before - len(combined)
-        if dropped:
-            print(f"Entfernt: {dropped} unvollständige Anfangszeilen (--keep-incomplete um das zu ändern)")
-
     print(f"Ergebnis: {len(combined)} Zeilen, {len(combined.columns)} Spalten")
     return combined
 
@@ -190,11 +179,6 @@ def main():
         default=None,
         help="Ausgabedatei (Standard: <session-dir>/combined_log.csv)",
     )
-    parser.add_argument(
-        "--keep-incomplete",
-        action="store_true",
-        help="Anfangszeilen mit fehlenden Werten behalten (kein dropna)",
-    )
     args = parser.parse_args()
 
     session_dir = Path(args.session_dir)
@@ -202,7 +186,7 @@ def main():
         print(f"Fehler: Verzeichnis nicht gefunden: {session_dir}")
         return
 
-    combined = merge_logs(session_dir, keep_incomplete=args.keep_incomplete)
+    combined = merge_logs(session_dir)
 
     output_path = Path(args.output) if args.output else session_dir / "combined_log.csv"
     combined.to_csv(output_path, index=False)
