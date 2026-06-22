@@ -291,12 +291,16 @@ class TiefenCamLogger(Logger):
                             "ab": image_ab
                         }
 
-                        if q_tof is not None:
-                            put_latest(q_tof, (image, ts))
+                        # pose_queue IMMER befuellen -> Live-Vorschau/Skelett-Preview
+                        # im Dashboard laeuft auch vor "Start Logging".
                         if q_pose is not None:
                             put_latest(q_pose, data_packet)
 
                         if log_event.is_set():
+                            # tof-Queue nur waehrend des Loggings befuellen, damit der
+                            # FileWriter die .npy-Frames erst ab "Start Logging" speichert.
+                            if q_tof is not None:
+                                put_latest(q_tof, (image, ts))
                             frame_path = f"frames_tof/tof_frame_{ts}.npy"
                             self.write_row({
                                 LOG_TIME_KEY: ts,
