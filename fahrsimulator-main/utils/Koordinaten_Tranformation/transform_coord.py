@@ -101,14 +101,33 @@ def transform_depth_frame_to_global_space_keep_structure(
     depth_frame: npt.NDArray[np.float64], 
     matrix_name: str, 
     matrix_dict: Dict[str, npt.NDArray[np.float64]],
-    cx: float = 523.9361572265625, 
-    cy: float = 526.0283813476562, 
-    fx: float = 775.8900756835938, 
-    fy: float = 775.9134521484375
+    cx: float = 523.9361572265625, # Optischer Mittelpunkt X in Pixel (px) 
+    cy: float = 526.0283813476562, # Optischer Mittelpunkt Y in Pixel (px)
+    fx: float = 775.8900756835938, # Brennweite X in Pixel (px)
+    fy: float = 775.9134521484375  # Brennweite Y in Pixel (px)
 ) -> npt.NDArray[np.float64]:
     """
     Transformiert den Frame und behält die exakte Pixel-Reihenfolge bei.
     Ungültige Pixel werden als [NaN, NaN, NaN] markiert.
+
+    Hinweis zu den Einheiten:
+    Die intrinsischen Kameraparameter (cx, cy, fx, fy) sind standardmäßig in Pixeln (px)
+    angegeben. Da die Formel (u - cx) * z / fx das Verhältnis von Pixelabständen nutzt,
+    kürzen sich die Pixel-Einheiten (px/px) heraus. Die resultierenden X- und Y-Koordinaten
+    übernehmen daher automatisch die Einheit des Z-Wertes (Meter).
+
+    Parameter:
+    ----------
+    depth_frame : npt.NDArray[np.float64]
+        Der Eingabe-Tiefenframe (Werte in Metern).
+    matrix_name : str
+        Name des Sensors zur Auswahl der Transformationsmatrix.
+    matrix_dict : Dict[str, npt.NDArray[np.float64]]
+        Dictionary mit den 4x4 Extrinsics-Matrizen (basierend auf Metern).
+    cx, cy : float, optional
+        Optischer Mittelpunkt der Kamera in Pixeln (px).
+    fx, fy : float, optional
+        Brennweite der Kamera in Pixeln (px).
     
     Rückgabe-Form: (Breite * Höhe, 3) -> z.B. (262144, 3)
     """
@@ -158,30 +177,34 @@ def scale_raw_depth_to_meters(
     start_offset_m: float = 1.0
 ) -> Union[npt.NDArray[np.float64], List[float]]:
     """
-    Wandelt rohe Tiefenwerte generisch in Meter um, unter Berücksichtigung 
-    von Wertebereich, Werte-Spanne und einem Start-Offset.
-    
-    :param depth_data: Ein 2D-NumPy-Array (Frame) oder eine Liste [u, v, z_raw]
-    :param max_raw_value: Der maximale Sensorwert (z.B. 4778)
-    :param range_width_m: Der abgedeckte Bereich in Metern (z.B. 3.0 Meter)
-    :param start_offset_m: Die Mindestdistanz, ab der die Kamera misst (z.B. 1.0 Meter)
+    Wandelt rohe Tiefenwerte generisch in Meter um.
+    Ungültige Messwerte (0) bleiben geschützt und werden nicht verfälscht.
     """
     # Falls eine einzelne Pixel-Liste [u, v, z_raw] übergeben wird
     if isinstance(depth_data, list) and len(depth_data) == 3:
         u, v, z_raw = depth_data
-        # Lineare Skalierung + Offset addieren
+        if z_raw <= 0:
+            return [u, v, 0.0] # Ungültig bleibt ungültig
         z_m = (z_raw * (range_width_m / max_raw_value)) + start_offset_m
         return [u, v, z_m]
         
     # Falls ein ganzes NumPy-Array (der Frame) übergeben wird
     elif isinstance(depth_data, np.ndarray):
-        # Kopie erstellen und in Float wandeln für präzise Division
         frame_m = depth_data.astype(np.float64)
-        # Die mathematische Operation wird auf ALLE Pixel gleichzeitig angewendet
-        return (frame_m * (range_width_m / max_raw_value)) + start_offset_m
+        
+        # Maske erstellen: Wo hat die Kamera wirklich gemessen?
+        valid_mask = depth_data > 0
+        
+        # NUR die gültigen Pixel umrechnen
+        frame_m[valid_mask] = (frame_m[valid_mask] * (range_width_m / max_raw_value)) + start_offset_m
+        
+        # Die ungültigen Pixel setzen wir direkt auf NaN (oder 0.0)
+        frame_m[~valid_mask] = np.nan
+        
+        return frame_m
         
     else:
-        raise ValueError("Ungültiger Datentyp. Erwartet wird eine Liste [u,v,z] oder ein NumPy-Array.")
+        raise ValueError("Ungültiger Datentyp. Erwartet wird eine Liste [u,v,z] oder ein NumPy-Array.") 
     
 def create_constant_depth_frame(
     color_frame: npt.NDArray, 
@@ -215,39 +238,50 @@ if __name__ == "__main__":
     # 1. EINMALIG am Anfang des Programms die YAML laden
     all_matrices = lade_sensor_matrizen(pfad)
     
-    # 2. Beliebig oft Punkte transformieren, ohne die Datei neu zu öffnen
-    lokaler_punkt = [0.1, 0.2, 0.5] # Koordianten müssen in Meter angegeben werden
+    #------------------------------------------------------------------------------------------------
+    # Versuch A lokale Koordinate des Eyetrackers in globales System überführen
+    print("Versuch A lokale Koordinate des Eyetrackers in globales System überführen")
+    local_point_in_mm = [-8.802811622619629, 63.141273498535156, 741.1033935546875]
+    local_point_in_m = local_point_in_m = [coord / 1000.0 for coord in local_point_in_mm] 
+    print(f"Local_Point: {local_point_in_m}")
+    global_point = transform_lokal_coordinate_in_global_space(local_point_in_m,"tobii", all_matrices) 
+    print(f"Global_Point: {global_point}")
 
-    # Angenommen Pixelwerte sind (2,4, 666) => Der Wertebereich der Pixeltiefe ist 0 - 4778 und dieser Bereich deckt einen Bereich von 3m
-    # ab, startend ab 1m von der Kamera entfernt
-    pixel_coord = [2,4,666]
+    #------------------------------------------------------------------------------------------------
+    # Versuch B Tiefenframe in globales System überführen
+    print("Versuch B Tiefenframe in globales System überführen")
 
-    # tiefe in Meter umrechnen
-    pixel_coord[2] = pixel_coord[2] * (3 / 4778)
-    print(f"pixel_coord: {pixel_coord}")
-
-    # Pixelkoordinaten in Metrische umwandeln
-    local_coord_from_px = calc_local_coordinates_from_pixels(pixel_coord)     
-    print(f"local_coord_from_px: {local_coord_from_px}")
-
-    globaler_punkt = transform_lokal_coordinate_in_global_space(
-        coord=local_coord_from_px, 
-        matrix_name='tof', 
-        matrix_dict=all_matrices
-    )
-    
-    print("Globaler Punkt:", globaler_punkt)
-
+    # Laden des beispiel-Frames
     test_array: npt.NDArray = np.load("fahrsimulator-main/utils/tof_frame_1774261873.7449481(1).npy")
+
+    # Tiefenwerte die als Integer im Frame stehen in Meter umrechnen
     test_array_m = scale_raw_depth_to_meters(test_array)
+
+    # Gesammter Frame in Globale Koordinaten umgerechnet
     umgerechneter_frame = transform_depth_frame_to_global_space_keep_structure(test_array_m,"tof", all_matrices)
+
+    # Frame wieder in richtige Form bringen
     globale_punkt_matrix = umgerechneter_frame.reshape(512, 512, 3)
     print(globale_punkt_matrix)
 
-    """
-    TODO: 
-    Gegenrechen: 
-    - Punkte in einem tof-Frame umrechnen in Koordinaten manuell und dies mit der Funktion vergleichen
+    #------------------------------------------------------------------------------------------------
+    # Versuch C RGB-Kamera-Frame in globales System überführen
+    print("Versuch C RGB-Kamera-Frame in globales System überführen")
+    # 1. Angenommen, du hast ein RGB-Bild (z. B. 1024x1024)
+    color_frame = np.zeros((1024, 1024, 3), dtype=np.uint8) 
 
-    - Eyetracker-Gaze-Punkte manuell in globale Koordinaten umrechnen und mit Funktion vergleichen
-    """
+    # 2. Künstlichen Tiefen-Frame erstellen (z. B. alles 2.5 Meter entfernt)
+    künstliche_tiefe = create_constant_depth_frame(color_frame, constant_depth_m=2.5)
+
+    # 3. In den globalen 3D-Raum transformieren
+    # (matrix_name und matrix_dict müssen natürlich definiert sein)
+    punkte_3d_global = transform_depth_frame_to_global_space_keep_structure(
+        depth_frame=künstliche_tiefe,
+        matrix_name="cam1",
+        matrix_dict=all_matrices
+    )
+    print(punkte_3d_global)
+
+    # Das Ergebnis 'punkte_3d_global' hat nun die Form (1048576, 3) 
+    # und enthält die globalen X, Y, Z Koordinaten in Metern.
+
