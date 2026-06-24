@@ -3,6 +3,7 @@ export const SENSOR_WIDGETS = [
     key: "silab",
     label: "SiLab",
     defaultMode: "cockpit",
+    icon: "⏲",
     modes: [
       { value: "cockpit", label: "Cockpit" },
       { value: "line", label: "Signal" },
@@ -13,6 +14,7 @@ export const SENSOR_WIDGETS = [
     key: "shimmer",
     label: "Shimmer",
     defaultMode: "chart",
+    icon: "💓",
     modes: [
       { value: "chart", label: "Chart" },
       { value: "raw", label: "Raw" },
@@ -22,6 +24,7 @@ export const SENSOR_WIDGETS = [
     key: "eyetracker",
     label: "Eyetracker",
     defaultMode: "gaze",
+    icon: "👁️",
     modes: [
       { value: "gaze", label: "Gaze" },
       { value: "raw", label: "Raw" },
@@ -31,6 +34,7 @@ export const SENSOR_WIDGETS = [
     key: "tof",
     label: "ToF Camera",
     defaultMode: "image",
+    icon:"📷",
     modes: [
       { value: "image", label: "Image" },
     ],
@@ -39,6 +43,7 @@ export const SENSOR_WIDGETS = [
     key: "rgb_front",
     label: "RGB Front",
     defaultMode: "image",
+    icon:"📷",
     modes: [
       { value: "image", label: "Image" },
     ],
@@ -47,6 +52,7 @@ export const SENSOR_WIDGETS = [
     key: "rgb_back",
     label: "RGB Back",
     defaultMode: "image",
+    icon:"📷",
     modes: [
       { value: "image", label: "Image" },
     ],

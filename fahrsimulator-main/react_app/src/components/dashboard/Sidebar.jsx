@@ -1,5 +1,6 @@
 import {useEffect, useState} from "react";
 import {SENSOR_WIDGETS} from "./widgetConfig";
+import "../../styles/Sidebar.css"
 
 const API_URL = "http://localhost:9999";
 
@@ -33,6 +34,14 @@ function Sidebar({
             console.error("Fehler beim Laden der Layouts:", err);
         }
     };
+
+/*
+const resetDashboardLayout = () => {
+    setWidgets([])
+    setLayout([])
+}
+*/
+
 
     useEffect(() => {
         fetchLayouts();
@@ -111,9 +120,7 @@ function Sidebar({
             return;
         }
 
-        const confirmed = window.confirm(
-            `Delete layout "${layoutNameOnly}"?`
-        );
+        const confirmed = window.confirm(`Layout "${layoutNameOnly}" löschen?`);
         if (!confirmed) return;
 
         try {
@@ -164,106 +171,157 @@ function Sidebar({
 
 
     return (
-        <aside className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}>
+        <aside className={`Sidebar  ${sidebarCollapsed ? "SidebarCollapsed" : ""}`}>
             <button
-                className="sidebar-toggle"
+                className="SidebarToggle"
                 onClick={() => setSidebarCollapsed(prev => !prev)}
             >
                 {sidebarCollapsed ? ">" : "<"}
             </button>
             {!sidebarCollapsed && (
                 <>
-                    <h2>Sensoren</h2>
-                    <div className="sidebar-button-group">
+                <div className="SidebarSensorCard">
+                    <h2 className="SidebarTitle">
+                        Sensoren
+                    </h2>
 
-                        <div className="sidebar-actions">
-                            {SENSOR_WIDGETS.map((sensor) => (
-                                <button key={sensor.key} onClick={() => onAddWidget(sensor.key)}>
-                                    Add {sensor.label}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="sidebar-actions">
-                            <button className="danger" onClick={onClearWidgets}>
-                                Clear Dashboard
-                            </button>
-                        </div>
-                        <div className="sidebar-bottom">
-                            <h3>Layouts</h3>
+                {/* SENSOREN */}
+                <div className="SidebarActions">
 
-                            {/*<div className="layout-current">
+                    {SENSOR_WIDGETS.map((sensor) => (
+                        <button
+                            key={sensor.key}
+                            className="SidebarSensorCardBtn"
+                            onClick={() => onAddWidget(sensor.key)}
+                        >
+                            <div className="SidebarSensorLeft">
+                                <span className="SidebarSensorIcon">
+                                    {sensor.icon}
+                                </span>
+
+                                <span className="SidebarSensorLabel">
+                                    {sensor.label}
+                                </span>
+                            </div>
+
+                        </button>
+                    ))}
+
+                        </div>
+                        <button
+                            className="SidebarDashboardClearBtn"
+                            onClick={onClearWidgets}
+                        >
+                            🗑 Dashboard leeren
+                        </button>
+                    </div>
+
+                    <div className="SidebarDivider"/>
+
+                    {/* LAYOUT CARD */}
+
+                    <div className="SidebarLayoutCard">
+
+                        <h3 className="SidebarLayoutCardTitle">
+                            Layouts
+                        </h3>
+                        {isForeignLayout && (
+                            <div className="SidebarForeignLayoutWarning">
+                                Dieses Layout gehört zu einem anderen Projekt.
+                                Du kannst es nur unter neuem Namen speichern.
+                            </div>
+                        )}
+
+                        {/*<div className="layout-current">
                                 Current layout: {currentLayoutName || "-"}
                             </div>*/}
+                        <label className="SidebarInputLabel">
+                            Layout auswählen
+                        </label>
+                        <select
+                            value={currentLayoutName || ""}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setCurrentLayoutName(value);
 
-                            {/* 🔥 Hinweis */}
-                            {isForeignLayout && (
-                                <div style={{color: "orange", fontSize: "0.9em", margin: "12px 0"}}>
-                                    Dieses Layout gehört zu einem anderen Projekt. Du kannst es unter einem anderen
-                                    Namen speichern
-                                </div>
-                            )}
-                            <select
-                                value={currentLayoutName || ""}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setCurrentLayoutName(value);
+                                if (!value) return;
 
-                                    if (!value) return;
+                                const [projectName, layoutNameOnly] = value.split("::");
 
-                                    const [projectName, layoutNameOnly] = value.split("::");
+                                loadLayout(projectName, layoutNameOnly);
+                            }}
+                        >
+                            <option value="">Layout auswählen</option>
+                            {sortedLayouts.map((l) => (
+                                <option
+                                    key={l.id}
+                                    value={`${l.project_name}::${l.name}`}
+                                    className={
+                                        l.project_name === project
+                                            ? "SidebarOwnLayout"
+                                            : "SidebarForeignLayout"
 
-                                    loadLayout(projectName, layoutNameOnly);
-                                }}
-                            >
-                                <option value="">Layout auswählen</option>
-                                {sortedLayouts.map((l) => (
-                                    <option
-                                        key={l.id}
-                                        value={`${l.project_name}::${l.name}`}
-                                        className={
-                                            l.project_name === project
-                                                ? "own-layout"
-                                                : "foreign-layout"
-                                        }
-                                    >
-                                        {l.name} ({l.project_name})
-                                    </option>
-                                ))}
-                            </select>
-                            <input
-                                type="text"
-                                placeholder="Layout name"
-                                className="layoutName"
-                                value={layoutName}
-                                onChange={(e) => setLayoutName(e.target.value)}
-                            />
-
-                            <button
-                                className="save-layout-button"
-                                onClick={saveLayoutAs}
-                                disabled={
-                                    !layoutName.trim() ||
-                                    (isForeignLayout && isSameNameAsLoaded)
-                                }
-                            >
-                                {isForeignLayout ? "Save as new layout" : "Save Layout"}
-                            </button>
+                                    }
+                                >
+                                    {l.name} ({l.project_name})
+                                </option>
+                            ))}
+                        </select>
 
 
-                            <button
-                                className="delete-layout-button"
-                                onClick={deleteSelectedLayout}
-                                disabled={!currentLayoutName || isForeignLayout}
-                            >
-                                Delete Layout
-                            </button>
+                        <label className="SidebarInputLabel">
+                            Layoutname
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="z.B. Labor Setup 1"
+                            className="SidebarLayoutName"
+                            value={layoutName}
+                            onChange={(e) =>
+                                setLayoutName(e.target.value)
+                            }
+                        />
 
-                        </div>
+                        <button
+                            className="SidebarSaveLayoutButton"
+                            onClick={saveLayoutAs}
+                            disabled={
+                                !layoutName.trim() ||
+                                (isForeignLayout && isSameNameAsLoaded)
+                            }
+                        > 💾 {
+                            isForeignLayout
+                                ? "Als neues Layout speichern"
+                                : "Layout speichern"
+                        }
+                        </button>
+
+{/*
+                        <button
+                            className="SidebarResetLayoutButton"
+                            onClick={resetDashboardLayout}
+                        >
+                            ↻ Layout zurücksetzen
+                        </button>
+*/}
+
+                        <button
+                            className="SidebarDeleteLayoutButton"
+                            onClick={deleteSelectedLayout}
+                            disabled={
+                                !currentLayoutName ||
+                                isForeignLayout
+                            }
+                        >
+                            🗑 Layout löschen
+                        </button>
+
                     </div>
-                </>
-            )}
-        </aside>
-    );
-}
 
-export default Sidebar;
+                </>
+                )}
+                </aside>
+
+            );
+            }
+            export default Sidebar;

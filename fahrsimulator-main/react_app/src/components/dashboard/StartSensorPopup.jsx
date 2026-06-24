@@ -83,17 +83,12 @@ function StartSensorPopup({
                               heartbeat = {},
                               sensorLatency = {},
                               onRestartSensor
-                          }){
+                          }) {
 
     const [startTimes, setStartTimes] =
         useState({})
 
     const [connectedTimes, setConnectedTimes] =
-        useState({})
-
-    // Pro Sensor: Zeitpunkt, bis zu dem nach einem Reconnect der noch alte
-    // Heartbeat ignoriert wird (ueberbrueckt das ~2s Heartbeat-Timeout-Fenster).
-    const [ignoreHeartbeatUntil, setIgnoreHeartbeatUntil] =
         useState({})
 
     const [now, setNow] =
@@ -104,7 +99,6 @@ function StartSensorPopup({
         if (!open) {
             setStartTimes({})
             setConnectedTimes({})
-            setIgnoreHeartbeatUntil({})
             return
         }
 
@@ -157,16 +151,10 @@ function StartSensorPopup({
                 const alreadyConnected =
                     updated[sensor.key] !== undefined
 
-                // Direkt nach einem Reconnect den noch alten Heartbeat ignorieren,
-                // bis der alte Prozess wirklich tot ist (Heartbeat-Timeout).
-                const ignoreHeartbeat =
-                    ignoreHeartbeatUntil[sensor.key] > Date.now()
-
                 if (
                     hasHeartbeat &&
                     !alreadyConnected &&
-                    startTimes[sensor.key] &&
-                    !ignoreHeartbeat
+                    startTimes[sensor.key]
                 ) {
 
                     updated[sensor.key] =
@@ -182,7 +170,7 @@ function StartSensorPopup({
                 : prev
         })
 
-    }, [heartbeat, startTimes, open, ignoreHeartbeatUntil])
+    }, [heartbeat, startTimes, open])
 
     if (!open) {
         return null
@@ -251,87 +239,68 @@ function StartSensorPopup({
                                 ).toFixed(1)
 
                             return (
-<div
-    key={sensor.key}
-    className="SensorCard"
->
-    <div className="SensorRow">
+                                <div
+                                    key={sensor.key}
+                                    className="SensorCard"
+                                >
+                                    <div className="SensorRow">
 
-        <div className="SensorIcon">
-            {getSensorIcon(sensor.key)}
-        </div>
+                                        <div className="SensorIcon">
+                                            {getSensorIcon(sensor.key)}
+                                        </div>
 
-        <div className="SensorName">
-            {sensor.name}
-        </div>
+                                        <div className="SensorName">
+                                            {sensor.name}
+                                        </div>
 
-        <div className="SensorLatency">
-            {latency !== undefined
-                ? `${latency} ms`
-                : "N/A"}
-        </div>
+                                        <div className="SensorLatency">
+                                            {latency !== undefined
+                                                ? `${latency} ms`
+                                                : "N/A"}
+                                        </div>
 
-        <div className="SensorStatus">
+                                        <div className="SensorStatus">
 
-            {available ? (
-                <>
-                    <FaCheckCircle
-                    size={20}
-                        className="SensorStatusSuccess"
-                    />
+                                            {available ? (
+                                                <>
+                                                    <FaCheckCircle
+                                                        size={20}
+                                                        className="SensorStatusSuccess"
+                                                    />
 
-                    <span>
+                                                    <span>
                         Verbunden ({elapsed}s)
                     </span>
-                </>
-            ) : (
-                <>
-                    <FaSpinner
-                        className="SensorSpinner"
-                    />
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaSpinner
+                                                        className="SensorSpinner"
+                                                    />
 
-                    <span>
+                                                    <span>
                         Suche... ({elapsed}s)
                     </span>
-                </>
-            )}
+                                                </>
+                                            )}
 
-        </div>
+                                        </div>
 
-        <div className="SensorRestart">
+                                        <div className="SensorRestart">
 
-            <button
-                className="popupBtn"
-                onClick={() => {
-                    // Sensor als "nicht verbunden" markieren, damit wieder
-                    // der Spinner ("Suche...") statt "Verbunden" angezeigt wird
-                    setConnectedTimes(prev => {
-                        const u = { ...prev }
-                        delete u[sensor.key]
-                        return u
-                    })
-                    // Startzeit zuruecksetzen, damit der Timer neu zaehlt
-                    setStartTimes(prev => ({
-                        ...prev,
-                        [sensor.key]: Date.now()
-                    }))
-                    // Noch alten Heartbeat 2,2s ignorieren (> Heartbeat-Timeout),
-                    // damit nicht sofort wieder "Verbunden (0s)" erscheint
-                    setIgnoreHeartbeatUntil(prev => ({
-                        ...prev,
-                        [sensor.key]: Date.now() + 2200
-                    }))
-                    // Reconnect im Backend ausloesen
-                    onRestartSensor?.(sensor.key)
-                }}
-            >
-                Restart
-            </button>
+                                            <button
+                                                className="popupBtn"
+                                                onClick={() =>
+                                                    onRestartSensor?.(sensor.key)
+                                                }
+                                            >
+                                                Restart
+                                            </button>
 
-        </div>
+                                        </div>
 
-    </div>
-</div>
+                                    </div>
+                                </div>
                             )
                         })}
 

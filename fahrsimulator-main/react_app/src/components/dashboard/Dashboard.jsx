@@ -23,14 +23,6 @@ const SOCKET_URL =
 
 const API_URL = "http://localhost:9999"
 
-const DEFAULT_WIDGET_LAYOUT = [
-    {view: "silab", x: 0, y: 0},
-    {view: "eyetracker", x: 6, y: 0},
-    {view: "tof", x: 0, y: 3},
-    {view: "rgb_front", x: 4, y: 3},
-    {view: "rgb_back", x: 8, y: 3},
-    {view: "shimmer", x: 0, y: 6},
-]
 
 // ===== Widget =====
 function createWidget(view) {
@@ -54,6 +46,7 @@ function createWidget(view) {
         title: getSensorTitle(view),
     }
 }
+
 
 
 // Sensor-Statuspunkt im Header. Beim Hover erscheint ein Restart-Icon, das
@@ -130,6 +123,11 @@ function findFreePosition(items, w, h, cols) {
 }
 
 function Dashboard() {
+
+    const [simStarted, setSimStarted] = useState(false);
+    const [sensorStarted, setSensorStarted] = useState(false);
+    const [loggingStarted, setLoggingStarted] = useState(false);
+
 
     const socketRef = useRef(null)
     const lastTelemetryPushRef = useRef(0)
@@ -296,11 +294,11 @@ function Dashboard() {
 
                 const data = await res.json()
 
-                setWidgets(
-                    data.widgets?.length
-                        ? data.widgets
-                        : createDefaultWidgets()
-                )
+setWidgets(
+    data.widgets?.length
+        ? data.widgets
+        : []
+)
 
                 setLayout(
                     data.layout?.length
@@ -317,8 +315,7 @@ function Dashboard() {
                     err
                 )
 
-                setWidgets(createDefaultWidgets())
-
+setWidgets([])
             } finally {
 
                 setLayoutReady(true)
@@ -486,6 +483,7 @@ function Dashboard() {
 
 
     return (
+
         <div
             className={`app-shell ${
                 sidebarCollapsed
@@ -547,126 +545,95 @@ function Dashboard() {
             />
 
             <main className="dashboard-area">
-
                 <header className="topbar">
 
+                    <div className="header-card controls-card">
 
-                    <div className="simulation-controls">
-
-                        <button
-                            className="control-btn start"
-
-                            onClick={handleStart}
-
-                            disabled={
-                                !connected
-                                || running
-                            }
-                        >
-                            <FaPlay style={{marginRight: "6px"}}/>
-                            Sim
-                        </button>
-
-                        <button
-                            className="control-btn stop"
-
-                            onClick={handleStop}
-
-                            disabled={
-                                !connected
-                                || !running
-                            }
-                        >
-                            <FaStop style={{marginRight: "6px"}}/>
-                            Sim
-                        </button>
-
-                        <button
-                            className="start sensor"
-
-                            onClick={handleStartSensor}
-
-                            disabled={
-                                !connected
-                                || running
-                            }
-                        >
-                            Start Sensor
-                        </button>
-
-                        <button
-                            className="start logging"
-
-                            onClick={handleStartLogging}
-
-                            disabled={
-                                !connected
-                                || !running
-                            }
-                        >
-                            Start logging
-                        </button>
-
-                        <button
-                            className="start PC"
-
-                            onClick={handleStartPC}
-                        >
-                            Start PC
-                        </button>
-
-                        <button
-                            className="start Simulation"
-
-                            onClick={
-                                handleStartSimulation
-                            }
-                        >
-                            Start Sim on PC2
-                        </button>
-
-                    </div>
-
-                    <div className="badges">
-
-                            <span
-                                className={
-                                    connected
-                                        ? "badge ok"
-                                        : "badge bad"
-                                }
+                        <div className="simulation-controls">
+                            {/*
+                            <button
+                                className="header-btn"
+                                onClick={handleStartPC}
                             >
-                                {
-                                    connected
-                                        ? "Socket connected"
-                                        : "Socket disconnected"
-                                }
-                            </span>
+                                Start PC2
+                            </button>
+                                */}
+                            <button
+                                className="header-btn"
+                                onClick={handleStartSimulation}
+                            >
+                                 Start Sim
+                            </button>
 
-                        <span
-                            className={
-                                running
-                                    ? "badge ok"
-                                    : "badge idle"
-                            }
-                        >
-                                {
-                                    running
-                                        ? "Recording running"
-                                        : "Recording stopped"
-                                }
-                            </span>
+                            <button
+                                className="header-btn"
+                                onClick={handleStartSensor}
+                                disabled={!connected || running}
+                            >
+                                Start Sensor
+                            </button>
 
-                        <span className="badge">
-                                Last packet: {packetLabel}
-                            </span>
+                            <button
+                                className="header-btn"
+                                onClick={handleStartLogging}
+                                disabled={!connected || !running}
+                            >
+                                Start Logging
+                            </button>
+
+                            <button
+                                className="control-btn stop"
+                                onClick={handleStop}
+                                disabled={!connected || !running}
+                            >
+                                <FaStop/>
+                                <span>Stop</span>
+                            </button>
+
+
+                        </div>
 
                     </div>
 
-                    <div
-                        className="badges"
-                        style={{display: "flex", gap: "12px", flexWrap: "wrap"}}
-                    >
+                                        <div className="header-card stats-card">
+
+                        <div>
+                            <strong>Strecke:</strong>{" "}
+                            {sensorData?.silab?.distance_km?.toFixed(2) ?? "0.00"} km
+                        </div>
+
+                        <div>
+                            <strong>Zeit:</strong>{" "}
+                            {sensorData?.silab?.drive_time ?? "--:--"}
+                        </div>
+
+                    </div>
+
+
+
+                    <div className="header-card status-card">
+
+        <span className={connected ? "badge ok" : "badge bad"}>
+            {connected
+                ? "Socket connected"
+                : "Socket disconnected"}
+        </span>
+
+                        {/*
+                        <span className={running ? "badge warn" : "badge idle"}>
+            {running
+                ? "Recording running"
+                : "Recording stopped"}
+        </span> */}
+
+                        <span className="badge info">
+            Last packet: {packetLabel}
+        </span>
+
+                    </div>
+
+                    <div className="header-card sensor-card">
+
                         {[
                             ["silab", "SiLab"],
                             ["shimmer", "Shimmer"],
@@ -676,29 +643,18 @@ function Dashboard() {
                             ["tof_scelet", "TOF"],
                         ].map(([key, label]) => (
                             <SensorStatusBadge
-                                key={key}
+    key={key}
                                 label={label}
                                 active={!!(sensorData.heartbeat || {})[key]}
                                 onRestart={() =>
                                     // Reconnect nur fuer diesen einen Sensor anstossen
                                     socketRef.current?.emit("restart_sensor", { key })
-                                }
-                            />
+        }
+    />
                         ))}
                     </div>
-                    <div className="drive-stats">
-                        <div>
-                            Strecke:{" "}
-                            {sensorData?.silab?.distance_km?.toFixed(2) ?? "0.00"} km
-                        </div>
 
-                        <div>
-                            Zeit:{" "}
-                            {sensorData?.silab?.drive_time ?? "--:--"}
-                        </div>
-                    </div>
                 </header>
-
                 <DashboardGrid
                     sidebarCollapsed={sidebarCollapsed}
                     layout={layout}
@@ -735,16 +691,13 @@ function Dashboard() {
                 heartbeat={
                     sensorData.heartbeat || {}
                 }
-                    sensorLatency={
-        sensorData.sensor_latency || {}
-    }
-                onRestartSensor={(key) =>
-                    // Reconnect nur fuer diesen einen Sensor anstossen
-                    socketRef.current?.emit("restart_sensor", { key })
+                sensorLatency={
+                    sensorData.sensor_latency || {}
                 }
             />
         </div>
     )
 }
 
-export default Dashboard
+
+export default Dashboard;

@@ -132,6 +132,7 @@ const handleCreateParticipant = () => {
         );
 };
 
+/* //Nur zum Testen für Entwickler
     // Dashboard öffnen
     const openDashboard = () => {
         if (!selectedParticipant) {
@@ -151,6 +152,7 @@ const handleCreateParticipant = () => {
             }
         });
     };
+*/
 
     // Render
     return (
@@ -270,15 +272,15 @@ const handleCreateParticipant = () => {
                             className="btn primary"
                             onClick={() => setShowModal(true)}
                         >
-                            + Add Participant
+                            + Proband Hinzufügen
                         </button>
 
-                        <button
+{/*                        <button
                             className="btn primary"
                             onClick={openDashboard}
                         >
                             Dashboard öffnen
-                        </button>
+                        </button>*/}
                     </div>
 
                     {/* Modal */}
