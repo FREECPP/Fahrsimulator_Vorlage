@@ -100,7 +100,7 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, onUpdateWidg
         <article className="widget-card">
             <header className="widget-header">
 
-                <div className="widget-title-group">
+{/*                <div className="widget-title-group">
                     <select //Select1
                         className="compact-control"
                         value={widget.view}
@@ -112,7 +112,7 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, onUpdateWidg
                             </option>
                         ))}
                     </select>
-                </div>
+                </div>*/}
 
                 <div className="widget-actions">
 

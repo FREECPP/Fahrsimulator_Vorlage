@@ -5,7 +5,7 @@
 :root {
     --color-sidebar: #1c222b;
     --color-dashboard: #cccccc;
-    --color-header: #454545;
+    --color-header: rgb(185 205 191);
     --sidebar-border: rgba(255,255,255,0.08);
     --sidebar-surface: rgba(255,255,255,0.04);
     --sidebar-surface-hover: rgba(255,255,255,0.08);
@@ -25,7 +25,7 @@
 
     min-height: 100vh;
     background-color: #ffffff;
-overflow: visible;
+    overflow: visible;
     /*background: var(--color-dashboard);*/
 }
 
@@ -38,8 +38,7 @@ overflow: visible;
     padding: 20px;
     min-width: 0;
     overflow-x: hidden;
-    position: relative;
-    z-index: 1;
+
 }
 
 .app-shell.sidebar-is-collapsed {
@@ -49,6 +48,7 @@ overflow: visible;
 .app-shell.sidebar-is-collapsed .topbar {
     padding-left: 32px;
 }
+
 .topbar {
     display: flex;
     align-items: center; /* statt stretch */
@@ -143,6 +143,7 @@ background: transparent;
     width: fit-content;
 }
 
+
 .control-btn,
 .header-btn {
     width: 56px;
@@ -192,20 +193,25 @@ background: transparent;
     cursor: not-allowed;
 }
 
-.restart-btn {
-    width: auto;
-    min-width: unset;
-    min-height: unset;
-    height: 22px;
-
-    padding: 0 6px;
-
-    font-size: 0.68rem;
-    font-weight: 500;
-
-    border-radius: 4px;
+.header-btn:disabled,
+.control-btn:disabled {
+    background: #b5b5b5;
+    color: #9F9F9FFF;
+    opacity: 1;
+    cursor: not-allowed;
 }
 
+.header-btn:disabled:hover,
+.control-btn:disabled:hover {
+    background: #b5b5b5;
+}
+.header-btn:disabled,
+.control-btn:disabled {
+    background: #d4d4d4;
+    color: #9f9f9f;
+    border: 1px solid #c0c0c0;
+    cursor: not-allowed;
+}
 
 .badges {
     display: flex;
@@ -279,6 +285,7 @@ background: transparent;
     display: flex;
     align-items: center;
 }
+
 .badge {
     border-radius: 999px;
     padding: 8px 14px;
@@ -307,40 +314,12 @@ background: transparent;
     color: #a87300;
 }
 
-.badge.info {
-    background: #eef3ff;
-    color: #5670a5;
-}
 .badge.idle {
     background: #f6f0e4;
     color: #6a5317;
     border-color: #e4cea1;
 }
-.sensor-icon {
-    margin-right: 14px;
-    font-size: 1.3rem;
-}
-.sensor-indicator {
-    display: flex;
-    align-items: center;
-    gap: 4px;
 
-    color: #000;
-    font-size: 0.78rem;
-    white-space: nowrap;
-
-}
-.dot {
-    width: 10px;
-    height: 10px;
-
-    border-radius: 50%;
-    background: #9c9c9c;
-}
-
-.dot.active {
-    background: #67c15e;
-}
 /* =========================
    Widget Card
 ========================= */
@@ -375,7 +354,6 @@ background: transparent;
 
     background: var(--color-header);
     color: #f7fdff;
-    cursor: move;
 
     /* Hover-Verhalten */
     opacity: 0;
@@ -467,6 +445,17 @@ background: transparent;
     padding: 12px;
     padding-top: 20px;
     overflow: auto;
+    cursor: move;
+    user-select: none;
+}
+
+/* Prevent the browser's native image/SVG drag so dragging the body only moves
+   the widget (via react-rnd), not the picture inside it. */
+.widget-body img,
+.widget-body svg,
+.widget-body canvas {
+    -webkit-user-drag: none;
+    user-select: none;
 }
 
 .widget-stack {
@@ -768,32 +757,59 @@ background: transparent;
 }
 
 .silab-line-chart {
-    width: 100%;
-    height: 100%;
+    position: relative;
     min-height: 0;
     display: grid;
-    grid-template-rows: 1fr auto;
-    gap: 8px;
+    grid-template-rows: 1fr;
+    /* Fill the whole card by countering the .widget-body padding. The box has an
+       explicit size, so negative margins alone can't grow it - they only shift
+       it, leaving gaps on the right/bottom. Growing width/height via calc fixes
+       that: +24px = 12px reclaimed on each side. Top keeps an 8px gap (padding-
+       top is 20px, we reclaim 12) since the header is an absolute hover overlay. */
+    width: calc(100% + 24px);
+    height: calc(100% + 24px);
+    margin: -12px;
 }
 
+/* Compact window control: a small pill in the chart's bottom-right that fades
+   in on hover (the header overlay occupies the top, so this stays clear of it). */
 .silab-line-chart-controls {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    z-index: 3;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #c7d4e1;
+    box-shadow: 0 2px 8px rgba(33, 59, 82, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
 }
 
-.silab-line-chart-controls select {
-    height: 32px;
-    padding: 0 10px;
+.widget-card:hover .silab-line-chart-controls {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.silab-line-chart-controls input {
+    height: 30px;
+    width: 64px;
+    padding: 0 8px;
     border-radius: 8px;
     border: 1px solid #c7d4e1;
-    background: #f3f8fd;
+    background: #ffffff;
     color: #173247;
+    font-size: 0.9rem;
 }
 
 .silab-line-chart-label {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
+    font-weight: 600;
     color: #425566;
 }
 
@@ -807,13 +823,51 @@ background: transparent;
 .silab-line-chart-section {
     display: grid;
     grid-template-rows: auto 1fr;
-    gap: 6px;
+    gap: 2px;
 }
 
 .silab-line-chart-title {
-    font-size: 0.82rem;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 0.8rem;
     font-weight: 600;
+    line-height: 1.1;
     color: #2b465c;
+}
+
+/* Single-signal text display: label on top, big value + unit below. */
+.silab-signal-text {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-align: center;
+}
+
+.silab-signal-text-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #5a6b7a;
+}
+
+.silab-signal-text-value {
+    font-size: clamp(0.9rem, 4vw, 1.7rem);
+    font-weight: 700;
+    line-height: 1;
+    color: #1f3346;
+}
+
+.silab-signal-text-unit {
+    margin-left: 6px;
+    font-size: 0.45em;
+    font-weight: 600;
+    color: #5a6b7a;
 }
 
 .silab-cockpit.pedals-only {
@@ -1026,3 +1080,4 @@ background: transparent;
     }
 
 }
+    

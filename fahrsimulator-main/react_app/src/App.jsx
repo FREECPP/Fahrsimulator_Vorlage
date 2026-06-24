@@ -9,7 +9,7 @@ import SilabSimulationSelect from "./components/project/SilabSimulationSelect.js
 
 export default function ProjectManager() {
     const navigate = useNavigate();
-
+    const [loadingParticipants, setLoadingParticipants] = useState(false);
     const [participants, setParticipants] = useState([]);
     const [_selectedProject, setSelectedProject] = useState("");
     const [confirmedProject, setConfirmedProject] = useState(null);
@@ -19,24 +19,29 @@ export default function ProjectManager() {
     const [selectedSimulation, setSelectedSimulation] =
     useState(null);
     // Teilnehmer laden
-    const loadParticipants = async (projectId) => {
-        const url = `http://localhost:9999/api/participants/${projectId}`;
+const loadParticipants = async (projectId) => {
+    const url = `http://localhost:9999/api/participants/${projectId}`;
 
-        try {
-            const res = await fetch(url);
+    setLoadingParticipants(true);
 
-            if (!res.ok) {
-                console.error("Participants Request Fehler:", res.status);
-                return;
-            }
+    try {
+        const res = await fetch(url);
 
-            const data = await res.json();
-            setParticipants(data);
-        } catch (err) {
-            console.error("Participants Fetch Fehler:", err);
+        if (!res.ok) {
+            console.error("Participants Request Fehler:", res.status);
+            return;
         }
-    };
 
+        const data = await res.json();
+        setParticipants(data);
+
+    } catch (err) {
+        console.error("Participants Fetch Fehler:", err);
+
+    } finally {
+        setLoadingParticipants(false);
+    }
+};
     // Projekt geändert
     useEffect(() => {
         if (!confirmedProject?.id) {
@@ -162,20 +167,29 @@ const handleCreateParticipant = () => {
                     onChange={setSelectedProject}
                     onConfirm={(proj) => setConfirmedProject(proj)}
                 />
-
+{confirmedProject && (
                 <section>
                     <div className="header">
                         <div className="center">
                             <h2>Probanden</h2>
-
-                            <p className="sub">
+                        {/*Zum Prüfen welches Projekt ausgewählt wurde*/}
+{/*                            <p className="sub">
                                 {confirmedProject?.name || "Kein Projekt ausgewählt"}
-                            </p>
+                            </p>*/}
                         </div>
                     </div>
 
                     {/* Tabelle */}
                     <div className="card">
+
+                            {loadingParticipants ? (
+
+                        <div className="loading-container">
+                            <div className="spinner"></div>
+                            <p>Probanden werden geladen...</p>
+                        </div>
+
+                    ) : (
                         <table>
                             <thead>
                             <tr>
@@ -257,6 +271,8 @@ const handleCreateParticipant = () => {
                             )}
                             </tbody>
                         </table>
+
+    )}
                     </div>
 
                     {/* Buttons */}
@@ -381,6 +397,7 @@ const handleCreateParticipant = () => {
     </div>
 )}
                 </section>
+    )}
             </div>
 
             <ToastContainer position="bottom-center"/>
