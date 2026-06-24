@@ -48,12 +48,11 @@ function createWidget(view) {
 }
 
 
-
 // Sensor-Statuspunkt im Header. Beim Hover erscheint ein Restart-Icon, das
 // denselben "restart_sensor"-Reconnect wie im StartSensorPopup ausloest:
 // nur dieser eine Sensor wird neu gestartet, der Writer laeuft weiter und
 // haengt an dieselbe Logdatei an (kein Ueberschreiben).
-function SensorStatusBadge({ label, active, onRestart }) {
+function SensorStatusBadge({label, active, onRestart}) {
 
     const [hover, setHover] =
         useState(false)
@@ -76,8 +75,8 @@ function SensorStatusBadge({ label, active, onRestart }) {
                 style={{
                     cursor: "pointer",
                     fontSize: "0.85em",
-                    color: "inherit",
-                    opacity: hover ? 0.85 : 0,
+                    color: !active ? "#df2b2b" : "inherit",
+                    opacity: hover || !active ? 1 : 0,
                     transition: "opacity 0.15s ease",
                 }}
             />
@@ -294,11 +293,11 @@ function Dashboard() {
 
                 const data = await res.json()
 
-setWidgets(
-    data.widgets?.length
-        ? data.widgets
-        : []
-)
+                setWidgets(
+                    data.widgets?.length
+                        ? data.widgets
+                        : []
+                )
 
                 setLayout(
                     data.layout?.length
@@ -315,7 +314,7 @@ setWidgets(
                     err
                 )
 
-setWidgets([])
+                setWidgets([])
             } finally {
 
                 setLayoutReady(true)
@@ -427,8 +426,8 @@ setWidgets([])
 
     const handleConfirmStartSensor = () => {
 
-        console.log("CONFIRM CLICK POPUP")
 
+        setSensorStarted(true)
         setSensorPopupOpen(false)
     }
 
@@ -469,6 +468,7 @@ setWidgets([])
                 participant.simulation_path
             }
         )
+        setSimStarted(true)
     }
 
     const packetLabel = useMemo(() => {
@@ -562,13 +562,13 @@ setWidgets([])
                                 className="header-btn"
                                 onClick={handleStartSimulation}
                             >
-                                 Start Sim
+                                Start Sim
                             </button>
 
                             <button
                                 className="header-btn"
                                 onClick={handleStartSensor}
-                                disabled={!connected || running}
+                                disabled={!connected || running || !simStarted}
                             >
                                 Start Sensor
                             </button>
@@ -576,8 +576,7 @@ setWidgets([])
                             <button
                                 className="header-btn"
                                 onClick={handleStartLogging}
-                                disabled={!connected || !running}
-                            >
+                                disabled={!connected || !running || !sensorStarted}>
                                 Start Logging
                             </button>
 
@@ -595,7 +594,7 @@ setWidgets([])
 
                     </div>
 
-                                        <div className="header-card stats-card">
+                    <div className="header-card stats-card">
 
                         <div>
                             <strong>Strecke:</strong>{" "}
@@ -608,7 +607,6 @@ setWidgets([])
                         </div>
 
                     </div>
-
 
 
                     <div className="header-card status-card">
@@ -643,14 +641,14 @@ setWidgets([])
                             ["tof_scelet", "TOF"],
                         ].map(([key, label]) => (
                             <SensorStatusBadge
-    key={key}
+                                key={key}
                                 label={label}
                                 active={!!(sensorData.heartbeat || {})[key]}
                                 onRestart={() =>
                                     // Reconnect nur fuer diesen einen Sensor anstossen
-                                    socketRef.current?.emit("restart_sensor", { key })
-        }
-    />
+                                    socketRef.current?.emit("restart_sensor", {key})
+                                }
+                            />
                         ))}
                     </div>
 

@@ -3,6 +3,28 @@ import {toast} from "react-toastify";
 
 import "../../styles/ProjectTable.css";
 
+
+function validateProjectName(name) {
+    const reservedNames = [
+        "CON", "PRN", "AUX", "NUL",
+        "COM1", "COM2", "COM3", "COM4", "COM5",
+        "COM6", "COM7", "COM8", "COM9",
+        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5",
+        "LPT6", "LPT7", "LPT8", "LPT9"
+    ];
+
+    return {
+        minLength: name.length >= 4,
+        noInvalidChars: !/[<>:"/\\|?*]/.test(name),
+        noSpecialChars: !/[.,!#@()\[\]]/.test(name),
+        noSpaces: !/\s/.test(name),
+        noTrailingDotOrSpace: !/[ .]$/.test(name),
+        notReserved: !reservedNames.includes(
+            name.toUpperCase()
+        ),
+        maxLength: name.length <= 255
+    };
+}
 export default function ProjectTable({onChange, onConfirm}) {
 
     const [ProjectName, setProjectName] = useState("");
@@ -13,6 +35,17 @@ export default function ProjectTable({onChange, onConfirm}) {
 
     const containerRef = useRef(null);
 
+
+const rules = validateProjectName(ProjectName);
+
+const isValidProjectName =
+    rules.minLength &&
+    rules.noInvalidChars &&
+    rules.noSpecialChars &&
+    rules.noSpaces &&
+    rules.noTrailingDotOrSpace &&
+    rules.notReserved &&
+    rules.maxLength;
     // ===== Load Projects =====
     async function fetchProjects() {
         try {
@@ -132,195 +165,226 @@ export default function ProjectTable({onChange, onConfirm}) {
         });
 
     // ===== Render =====
-    return (
-        <div
-            className="project-dropdown"
-            ref={containerRef}
-        >
-            <h2> Projekte </h2>
+// ===== Render =====
+return (
+    <div
+        className="project-dropdown"
+        ref={containerRef}
+    >
 
-            <div className="input-wrapper">
+        {
+            ProjectName.trim().length > 0 &&
+            !selectedOption && (
+                <div className="validation-box floating-validation">
 
-                <input
-                    type="text"
-                    placeholder="Wählen oder erstellen Sie ein Projekt..."
-                    value={ProjectName}
-                    className="input"
-                        /* title={`
-                        - Maximal 255 Zeichen
-                        - Verbotene Zeichen: < > : " / \\ | ? *
-                        - Nicht mit Leerzeichen oder Punkt enden
-                        - Reservierte Namen wie CON, PRN, AUX sind verboten
-                        `} */
+                    <div className={rules.minLength ? "valid" : "invalid"}>
+                        {rules.minLength ? "✔" : "✖"} Mindestens 4 Zeichen
+                    </div>
 
+                    <div className={rules.maxLength ? "valid" : "invalid"}>
+                        {rules.maxLength ? "✔" : "✖"} Maximal 255 Zeichen
+                    </div>
 
+                    <div className={rules.noInvalidChars ? "valid" : "invalid"}>
+                        {rules.noInvalidChars ? "✔" : "✖"} Keine Zeichen: &lt; &gt; : " / \ | ? *
+                    </div>
 
-                    onFocus={() => {
-                        setShowAll(false);
-                        setIsOpen(true);
-                    }}
+                    <div className={rules.noSpecialChars ? "valid" : "invalid"}>
+                        {rules.noSpecialChars ? "✔" : "✖"} Keine Zeichen: . , ! # @ ( ) [ ]
+                    </div>
 
-                    onChange={(e) => {
-                        const val = e.target.value;
+                    <div className={rules.noSpaces ? "valid" : "invalid"}>
+                        {rules.noSpaces ? "✔" : "✖"} Keine Leerzeichen
+                    </div>
 
-                        setShowAll(false);
+                    <div className={rules.noTrailingDotOrSpace ? "valid" : "invalid"}>
+                        {rules.noTrailingDotOrSpace ? "✔" : "✖"} Nicht mit Leerzeichen oder Punkt enden
+                    </div>
 
-                        setProjectName(val);
-                        setSelectedOption(null);
-                        setIsOpen(true);
+                    <div className={rules.notReserved ? "valid" : "invalid"}>
+                        {rules.notReserved ? "✔" : "✖"} Kein reservierter Windows-Name
+                    </div>
 
-                        onChange?.({name: val});
-                    }}
-                />
+                </div>
+            )
+        }
 
+        <h2>Projekte</h2>
 
+        <div className="input-wrapper">
 
-                <button
-                    type="button"
-                    className="dropdown-toggle"
+            <input
+                type="text"
+                placeholder="Wählen oder erstellen Sie ein Projekt..."
+                value={ProjectName}
+                className="input"
 
-                    onClick={() => {
-                        setShowAll(true);
-                        setIsOpen(true);
-                    }}
-                >
-                    ▼
-                </button>
+                onFocus={() => {
+                    setShowAll(false);
+                    setIsOpen(true);
+                }}
 
-            </div>
+                onChange={(e) => {
+                    const val = e.target.value;
 
-            {isOpen && (
-                <ul className="dropdown">
+                    setShowAll(false);
 
-                    {filteredOptions.map((opt) => (
+                    setProjectName(val);
+                    setSelectedOption(null);
+                    setIsOpen(true);
 
-                        <li
-                            key={opt.id}
-                            className={
-                                !opt.available
-                                    ? "disabled"
-                                    : ""
+                    onChange?.({name: val});
+                }}
+            />
+
+            <button
+                type="button"
+                className="dropdown-toggle"
+
+                onClick={() => {
+                    setShowAll(true);
+                    setIsOpen(true);
+                }}
+            >
+                ▼
+            </button>
+
+        </div>
+
+        {isOpen && (
+            <ul className="dropdown">
+
+                {filteredOptions.map((opt) => (
+
+                    <li
+                        key={opt.id}
+                        className={
+                            !opt.available
+                                ? "disabled"
+                                : ""
+                        }
+
+                        onClick={() => {
+
+                            if (!opt.available) {
+                                toast.error(
+                                    "Projekt ist nicht verfügbar ❌"
+                                );
+
+                                return;
                             }
 
-                            onClick={() => {
+                            setProjectName(opt.name);
+                            setSelectedOption(opt);
+                            setIsOpen(false);
 
-                                if (!opt.available) {
-                                    toast.error(
-                                        "Projekt ist nicht verfügbar ❌"
-                                    );
+                            onChange?.(opt);
+                            onConfirm?.(opt);
+                        }}
+                    >
+                        <div className="row">
 
-                                    return;
-                                }
+                            <div className="left">
+                                <span className="name">
+                                    {opt.name}
+                                </span>
+                            </div>
 
-                                setProjectName(opt.name);
-                                setSelectedOption(opt);
-                                setIsOpen(false);
+                            <div className="right-section">
 
-                                onChange?.(opt);
-                                onConfirm?.(opt);
-                            }}
-                        >
-                            <div className="row">
-
-                                <div className="left">
-                                    <span className="name">
-                                        {opt.name}
+                                <div className="right">
+                                    <span className="projectPath">
+                                        {opt.path}
                                     </span>
                                 </div>
 
-                                <div className="right-section">
+                                <div className="status">
 
-                                    <div className="right">
-                                        <span className="projectPath">
-                                            {opt.path}
-                                        </span>
-                                    </div>
+                                    <div
+                                        className="status-dot"
 
-                                    <div className="status">
-
-                                        <div
-                                            className="status-dot"
-
-                                            style={{
-                                                backgroundColor:
-                                                    opt.available
-                                                        ? "green"
-                                                        : "red"
-                                            }}
-                                        />
-
-                                        <span className="status-text">
-                                            {
+                                        style={{
+                                            backgroundColor:
                                                 opt.available
-                                                    ? "Verfügbar"
-                                                    : "Nicht verfügbar"
-                                            }
-                                        </span>
+                                                    ? "green"
+                                                    : "red"
+                                        }}
+                                    />
 
-                                    </div>
+                                    <span className="status-text">
+                                        {
+                                            opt.available
+                                                ? "Verfügbar"
+                                                : "Nicht verfügbar"
+                                        }
+                                    </span>
 
                                 </div>
 
                             </div>
 
-                        </li>
+                        </div>
 
-                    ))}
+                    </li>
 
-                </ul>
-            )}
+                ))}
 
-       
-<button
-    className="continue-button"
+            </ul>
+        )}
 
-    disabled={
-        !ProjectName
-        || (
-            selectedOption
-            && !selectedOption.available
-        )
-    }
+        <button
+            className="continue-button"
 
-    onClick={async () => {
-
-        const finalValue =
-            selectedOption?.name
-            || ProjectName;
-
-        let projectToConfirm =
-            selectedOption;
-
-        if (!selectedOption) {
-
-            const newProject =
-                await createDirectory(finalValue);
-
-            if (!newProject) {
-                return;
+            disabled={
+                !ProjectName
+                || (
+                    !selectedOption &&
+                    !isValidProjectName
+                )
+                || (
+                    selectedOption &&
+                    !selectedOption.available
+                )
             }
 
-            projectToConfirm = {
-                id: newProject.id,
-                name: newProject.name,
-                path: newProject.path,
-                creator: newProject.creator,
-                available: newProject.available
-            };
-        }
+            onClick={async () => {
 
-        console.log(
-            "✅ CONFIRM PROJECT:",
-            projectToConfirm
-        );
+                const finalValue =
+                    selectedOption?.name
+                    || ProjectName;
 
-        onConfirm?.(projectToConfirm);
-    }}
->
-    Weiter
-</button>
+                let projectToConfirm =
+                    selectedOption;
 
+                if (!selectedOption) {
 
-        </div>
-    );
+                    const newProject =
+                        await createDirectory(finalValue);
+
+                    if (!newProject) {
+                        return;
+                    }
+
+                    projectToConfirm = {
+                        id: newProject.id,
+                        name: newProject.name,
+                        path: newProject.path,
+                        creator: newProject.creator,
+                        available: newProject.available
+                    };
+                }
+
+                console.log(
+                    "✅ CONFIRM PROJECT:",
+                    projectToConfirm
+                );
+
+                onConfirm?.(projectToConfirm);
+            }}
+        >
+            Weiter
+        </button>
+
+    </div>
+);
 }
