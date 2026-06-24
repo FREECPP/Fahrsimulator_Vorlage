@@ -1,0 +1,350 @@
+/* =========================================================
+   SIDEBAR VARIABLES
+========================================================= */
+
+:root {
+    --sidebar-width: 240px;
+
+    /* Main Colors */
+    --sidebar-background: #ffffff;
+    --sidebar-surface: #ffffff;
+    --sidebar-surface-hover: #f3f7f3;
+    --sidebar-sensor-buttons: #ffffff;
+
+    /* Borders */
+    --sidebar-border: #e8ebf5;
+
+    /* Typography */
+    --text-primary: #1f2937;
+    --text-secondary: #7b8395;
+
+    /* Accent (Sage) */
+    --primary: #7a9b84;
+    --primary-hover: #698a73;
+
+    /* Danger */
+    --danger: #ff5c5c;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 8px rgba(15,23,42,0.04);
+    --shadow-md: 0 6px 24px rgba(15,23,42,0.06);
+}
+
+/* =========================================================
+   SIDEBAR CONTAINER
+========================================================= */
+
+.Sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: visible;
+    scrollbar-gutter: stable;
+    background: var(--sidebar-background);
+    border-right: 1px solid #eef1f7;
+    width: var(--sidebar-width);
+    min-width: var(--sidebar-width);
+    max-width: var(--sidebar-width);
+    padding: 20px 14px;
+    display: flex;
+    flex-direction: column;
+    color: var(--text-primary);
+    z-index: 10;
+    transition:
+        width .35s ease,
+        padding .35s ease,
+        background .35s ease;
+}
+
+.Sidebar.SidebarCollapsed {
+    width: 64px;
+    min-width: 64px;
+    padding: 24px 10px;
+    overflow: visible;
+    background: transparent;
+    border-right: none;
+}
+
+.Sidebar.SidebarCollapsed .SidebarTitle,
+.Sidebar.SidebarCollapsed .SidebarActions,
+.Sidebar.SidebarCollapsed .SidebarLayoutCard,
+.Sidebar.SidebarCollapsed .SidebarDivider,
+.Sidebar.SidebarCollapsed .SidebarDashboardClearBtn {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
+}
+
+.SidebarTitle,
+.SidebarActions,
+.SidebarLayoutCard,
+.SidebarDivider,
+.SidebarDashboardClearBtn {
+    transition:
+        opacity .2s ease,
+        transform .25s ease;
+}
+
+/* =========================================================
+   TOGGLE BUTTON
+========================================================= */
+
+.SidebarToggle {
+    background: #ffffff;
+    border: 1px solid #eef1f7;
+    box-shadow: 0 4px 14px rgba(15,23,42,.08);
+    position: absolute;
+    top: 35px;
+    right: 20px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 9999;
+
+}
+
+.Sidebar.SidebarCollapsed .SidebarToggle {
+    right: 12px;
+    top: 30px;
+}
+
+/* =========================================================
+   TITLES
+========================================================= */
+
+.SidebarTitle {
+    margin: 0 0 14px;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.SidebarLayoutCardTitle {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* =========================================================
+   SENSOR BUTTONS
+========================================================= */
+
+.SidebarActions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.SidebarSensorCardBtn {
+    background: var(--sidebar-sensor-buttons);
+    border: 1px solid #edf1f7;
+    box-shadow: var(--shadow-sm);
+    border-radius: 16px;
+    transition: all .2s ease;
+    color: var(--text-primary);
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    cursor: pointer;
+}
+
+.SidebarSensorCardBtn.active {
+    background: #eef5ef;
+    border-color: #c7d8cb;
+    color: var(--primary);
+}
+
+.SidebarSensorCardBtn:hover {
+    background: var(--sidebar-surface-hover);
+    border-color: #d6e2d8;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(122,155,132,.12);
+}
+
+.SidebarSensorLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.SidebarSensorIcon {
+    font-size: 1rem;
+}
+
+.SidebarSensorLabel {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* =========================================================
+   CLEAR DASHBOARD
+========================================================= */
+
+.SidebarDashboardClearBtn {
+    background: #fff5f5;
+    border: 1px solid #ffcaca;
+    color: var(--danger);
+    margin-top: 16px;
+    width: 100%;
+    height: 42px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+.SidebarDivider {
+    width: 100%;
+    height: 1px;
+    margin: 4px 0;
+    background: var(--sidebar-border);
+}
+
+/* =========================================================
+   LAYOUT CARD
+========================================================= */
+
+.SidebarLayoutCard {
+    background: rgb(185 205 191 / 0.47);
+    border: 1px solid #edf1f7;
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.SidebarSensorCard {
+    background: rgb(185 205 191 / 0.47);
+    border: 1px solid #dbe3ee;
+    border-radius: 20px;
+    box-shadow: var(--shadow-sm);
+    padding: 18px;
+    margin-bottom: 16px;
+}
+
+
+/* =========================================================
+   FOREIGN LAYOUT WARNING
+========================================================= */
+
+.SidebarForeignLayoutWarning {
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgb(255 216 153);
+    border: 1px solid rgba(255,165,0,.3);
+    color: #cf5416;
+    font-size: .85rem;
+}
+
+/* =========================================================
+   FORM ELEMENTS
+========================================================= */
+
+.SidebarInputLabel {
+    font-size: .9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.SidebarLayoutName,
+.SidebarLayoutCard select {
+    background: white;
+    border: 1px solid #e7ebf5;
+    border-radius: 14px;
+    height: 48px;
+    width: 100%;
+    padding: 0 12px;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    box-sizing: border-box;
+}
+
+.SidebarLayoutName::placeholder {
+    color: var(--text-secondary);
+}
+
+.SidebarLayoutName:focus,
+.SidebarLayoutCard select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(122,155,132,.15);
+    outline: none;
+}
+
+.SidebarLayoutCard select option {
+    color: var(--text-primary);
+}
+
+select option.SidebarOwnLayout {
+    font-weight: 700;
+    color: black;
+}
+
+select option.SidebarForeignLayout {
+    color: #ff8132;
+}
+
+/* =========================================================
+   LAYOUT BUTTONS
+========================================================= */
+
+.SidebarSaveLayoutButton,
+.SidebarResetLayoutButton,
+.SidebarDeleteLayoutButton {
+    width: 100%;
+    height: 40px;
+    font-size: 0.95rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.SidebarSaveLayoutButton {
+    background: linear-gradient(
+        135deg,
+        #77b168 0%,
+        #7a9b84 100%
+    );
+    border: none;
+    box-shadow: 0 10px 24px rgba(122,155,132,.25);
+    height: 48px;
+    border-radius: 14px;
+}
+
+.SidebarSaveLayoutButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 28px rgba(122,155,132,.35);
+}
+
+.SidebarResetLayoutButton {
+    background: white;
+    border: 1px solid #e8ebf5;
+    box-shadow: var(--shadow-sm);
+    color: var(--text-primary);
+}
+
+.SidebarDeleteLayoutButton {
+    background: #fff7f7;
+    border: 1px solid #ffd8d8;
+    color: #ff5c5c;
+}
+
+.SidebarSaveLayoutButton:disabled,
+.SidebarResetLayoutButton:disabled,
+.SidebarDeleteLayoutButton:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
