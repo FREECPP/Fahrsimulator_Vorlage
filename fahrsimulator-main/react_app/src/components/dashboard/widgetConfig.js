@@ -12,9 +12,9 @@ export const SENSOR_WIDGETS = [
   {
     key: "shimmer",
     label: "Shimmer",
-    defaultMode: "chart",
+    defaultMode: "line",
     modes: [
-      { value: "chart", label: "Chart" },
+      { value: "line", label: "Signal" },
       { value: "raw", label: "Raw" },
     ],
   },

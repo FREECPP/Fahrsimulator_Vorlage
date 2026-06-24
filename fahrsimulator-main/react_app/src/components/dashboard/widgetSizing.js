@@ -23,8 +23,8 @@ export function getPreferredWidgetSize(view, mode) {
   }
 
   if (view === "shimmer") {
-    if (mode === "chart") return { width: 660, height: 690 }
-    return { width: 660, height: 690 }
+    if (mode === "line") return { width: 740, height: 200 }
+    return { width: 600, height: 200 }
   }
 
   const resolution = STREAM_RESOLUTION[view]
