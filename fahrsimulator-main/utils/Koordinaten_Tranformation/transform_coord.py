@@ -6,7 +6,7 @@ import numpy.typing as npt
 
 
 
-def lade_sensor_matrizen(yaml_pfad):
+def lade_sensor_matrizen(yaml_pfad = r"C:\Users\SILAB.SILAB1\Documents\fahrsimulator_24-01-2026_1\utils\Koordinaten_Tranformation\master_extrinsics_to_global.yaml"):
     """
     Liest die Extrinsik-YAML-Datei ein und speichert die Transformationsmatrizen
     (T_global_from_sensor) der Sensoren in einem Dictionary.
@@ -233,7 +233,7 @@ def create_constant_depth_frame(
 
 # Der Main-Block: Wird NUR ausgeführt, wenn du diese Datei direkt startest
 if __name__ == "__main__":
-    pfad = 'fahrsimulator-main/utils/master_extrinsics_to_global.yaml'
+    pfad = 'utils/master_extrinsics_to_global.yaml'
     
     # 1. EINMALIG am Anfang des Programms die YAML laden
     all_matrices = lade_sensor_matrizen(pfad)
@@ -252,7 +252,7 @@ if __name__ == "__main__":
     print("Versuch B Tiefenframe in globales System überführen")
 
     # Laden des beispiel-Frames
-    test_array: npt.NDArray = np.load("fahrsimulator-main/utils/tof_frame_1774261873.7449481(1).npy")
+    test_array: npt.NDArray = np.load("utils/tof_frame_1774261873.7449481(1).npy")
 
     # Tiefenwerte die als Integer im Frame stehen in Meter umrechnen
     test_array_m = scale_raw_depth_to_meters(test_array)

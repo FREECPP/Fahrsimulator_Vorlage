@@ -8,6 +8,7 @@ import time
 import queue as _queue
 import json
 from multiprocessing import Event
+import utils.Koordinaten_Tranformation.transform_coord as tc
 
 from utils.queue_utils import put_latest
 
@@ -23,7 +24,9 @@ class EyetrackerLogger(Logger):
         "left_gaze_point_in_user_coordinate_system",
         "right_gaze_point_in_user_coordinate_system",
         "left_pupil_diameter",
-        "right_pupil_diameter"
+        "right_pupil_diameter",
+        "left_gaze_origin_in_global_coordinate_system",
+        "right_gaze_origin_in_global_coordinate_system"
     ]
 
     def __init__(
@@ -58,6 +61,7 @@ class EyetrackerLogger(Logger):
         self._latency_cal_done = False
         self.log_event = None
         self.x = 0
+        self.transformations_matrizen = tc.lade_sensor_matrizen()
 
     def _gaze_callback(self, gaze_data):
         # Empfangszeit so früh wie möglich messen um Verarbeitungszeit nicht einzurechnen
@@ -131,6 +135,17 @@ class EyetrackerLogger(Logger):
         if isinstance(data, dict):
             if self.capture_time is not None:
                 data[LOG_TIME_KEY] = self.capture_time
+
+                # aus globalen Koordinaten lokale erstellen
+                local_left_eye_coord = data.get("left_gaze_origin_in_user_coordinate_system")
+                local_right_eye_coord = data.get("right_gaze_origin_in_user_coordinate_system")
+                if local_left_eye_coord is not None and local_right_eye_coord is not None:
+                    local_point_right_in_m = [coord / 1000.0 for coord in local_right_eye_coord]
+                    local_point_left_in_m = [coord / 1000.0 for coord in local_left_eye_coord]
+                    global_right_eye_point = tc.transform_lokal_coordinate_in_global_space(local_point_right_in_m, "tobii", self.transformations_matrizen)
+                    global_left_eye_point = tc.transform_lokal_coordinate_in_global_space(local_point_left_in_m, "tobii", self.transformations_matrizen)
+                    data["left_gaze_origin_in_global_coordinate_system"] = global_left_eye_point
+                    data["right_gaze_origin_in_global_coordinate_system"] = global_right_eye_point
             self.write_row(data)
             return
 

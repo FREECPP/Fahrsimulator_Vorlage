@@ -47,17 +47,17 @@ def find_pixel_on_frame(frame: np.ndarray):
 
 if __name__ == "__main__":
     # =========================================================================
-    # KONFIGURATION (Hier stellst du ein, was du testen willst)
+    # KONFIGURATION 
     # =========================================================================
     # Erlaubte Modi: "TOF" oder "RGB"
-    MODUS = "RGB" 
+    MODUS = "RGB"
     
     # Pfad zur Kalibrierungsdatei
-    yaml_pfad = "fahrsimulator-main/utils/Koordinaten_Tranformation/master_extrinsics_to_global.yaml"
+    yaml_pfad = r"C:\Users\SILAB.SILAB1\Documents\fahrsimulator_24-01-2026_1\utils\Koordinaten_Tranformation\master_extrinsics_to_global.yaml"
     
     if MODUS == "TOF":
         # Konfiguration für den Time-of-Flight Sensor
-        bild_pfad = "fahrsimulator-main/utils/Koordinaten_Tranformation/tof_frame_1782120911.1058943.npy"
+        bild_pfad = r"C:\Users\SILAB.SILAB1\Documents\fahrsimulator_24-01-2026_1\utils\Koordinaten_Tranformation\tof_frame_1782120911.1058943.npy"
         matrix_name = "tof"
         
         # Abgelesene Pixelkoordinaten aus dem ToF-Bild
@@ -66,12 +66,12 @@ if __name__ == "__main__":
         
     elif MODUS == "RGB":
         # Konfiguration für die RGB-Kamera
-        bild_pfad = "fahrsimulator-main/utils/Koordinaten_Tranformation/rgb_camera_0_frame_1782133141.080288.npy"
+        bild_pfad = r"C:\Users\SILAB.SILAB1\Documents\fahrsimulator_24-01-2026_1\utils\Koordinaten_Tranformation\rgb_camera_0_frame_1782133141.080288.npy"
         matrix_name = "cam0"  # "cam0" für Front, "cam1" für Rechts (laut yaml)
         
         # Abgelesene Pixelkoordinaten aus dem RGB-Bild
-        u_ziel = 288.5
-        v_ziel = 215.1
+        u_ziel = 290
+        v_ziel = 217
         
         # Da RGB-Kameras keine echte Tiefe messen, definieren wir hier 
         # die konstante Test-Entfernung in Metern für das Zielobjekt

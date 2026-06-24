@@ -24,6 +24,7 @@ CAM_BIN_STR = str(Path(__file__).resolve().parent.parent / "timeOfFlightCam" / "
 os.environ["PATH"] = CAM_BIN_STR + os.pathsep + os.environ.get("PATH", "")
 sys.path.insert(0, CAM_BIN_STR)
 import aditofpython as tof
+import utils.Koordinaten_Tranformation.transform_coord as tc
 
 """
 Command for Executing first_Frame.py to get first depth frame from TiefenCam:
@@ -36,7 +37,8 @@ import queue as _queue
 class TiefenCamLogger(Logger):
     CSV_FIELDS = [
         "timestamp",
-        "frame_path"
+        "frame_path_local",
+        "frame_path_global"
     ]
 
     PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -115,10 +117,15 @@ class TiefenCamLogger(Logger):
 
         self.frames_dir = Path(self.video_output_dir) / "frames_tof"
         self.frames_dir.mkdir(parents=True, exist_ok=True)
+        self.global_coords_dir = self.frames_dir / "global_frames_tof"
+        self.global_coords_dir.mkdir(parents=True, exist_ok=True)
         self.data = []
 
         # Latenz Global in der Klasse bekannt machen (Wird gesetzt durch get_latency falls nicht standart 8ms)
         self.mean_latency = 8000000
+
+        # Yaml-File mit allen Transformationsmatrizen laden
+        self.transformations_matrizen = tc.lade_sensor_matrizen()
 
     def connect_camera(self) -> None:
         """
@@ -284,6 +291,10 @@ class TiefenCamLogger(Logger):
                         q_tof = self.queues.get("tof") # Vermutlich nicht gebraucht
                         q_pose = self.queues.get("pose_queue") # Geht an merged_skelett... und wird damit wahrscheinlich mit dem Model verarbeitet
 
+                        depth_m = tc.scale_raw_depth_to_meters(image, max_raw_value=65535.0, range_width_m=3.0)
+                        umgerechneter_frame = tc.transform_depth_frame_to_global_space_keep_structure(depth_m, "tof", self.transformations_matrizen)
+                        globale_punkt_matrix = umgerechneter_frame.reshape(512, 512, 3)
+
                         # Daten werden in dict abgelegt
                         data_packet = {
                             "ts": ts,
@@ -300,12 +311,15 @@ class TiefenCamLogger(Logger):
                             # tof-Queue nur waehrend des Loggings befuellen, damit der
                             # FileWriter die .npy-Frames erst ab "Start Logging" speichert.
                             if q_tof is not None:
-                                put_latest(q_tof, (image, ts))
+                                put_latest(q_tof, (image, ts, globale_punkt_matrix))
                             frame_path = f"frames_tof/tof_frame_{ts}.npy"
+                            frame_path_global = f"frames_tof/global_frames_tof/global_tof_frame_{ts}.npy"
+
                             self.write_row({
                                 LOG_TIME_KEY: ts,
                                 "timestamp": ts,
-                                "frame_path": frame_path
+                                "frame_path_local": frame_path,
+                                "frame_path_global": frame_path_global,
                             })
 
                         time.sleep(0.05)  # Dadurch gehen bewusst Frames verloren?

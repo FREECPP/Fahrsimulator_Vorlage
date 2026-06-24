@@ -13,6 +13,7 @@ from queue import Empty
 
 from utils.queue_utils import put_latest
 from multiprocessing import Event
+import utils.Koordinaten_Tranformation.transform_coord as tc
 
 
 class RgbCameraLogger(Logger):
@@ -55,8 +56,6 @@ class RgbCameraLogger(Logger):
         self.back_camera = back_camera
         self._frame_count = 0
         self.directory = directory
-        # Eindeutiger Dateiname pro Kamera, sonst schreiben beide Logger-Instanzen
-        # (Index 0 und 1) in dieselbe Datei und die Frames werden verschachtelt.
         self.video_file_path = Path(
             directory / "video" / "rgb_camera_recordings" / f"logitech_camera_{camera_index}.avi")  # AVI Format
 
@@ -92,6 +91,9 @@ class RgbCameraLogger(Logger):
         self.mean_latency = 8000000
         # Korrigierter Aufnahmezeitpunkt im time.time()-Format, wird pro Frame aktualisiert
         self.capture_time = None
+
+        # Yaml-File mit allen Transformationsmatrizen laden
+        self.transformations_matrizen = tc.lade_sensor_matrizen()
 
     def start_sensor(self,stop_event, log_event):
         print("RGB Camera Logger Started")
@@ -240,12 +242,29 @@ class RgbCameraLogger(Logger):
                 read_successful, frame = self._cam.read()
                 # Aufnahmezeitpunkt berechnen: Empfangszeit minus gemessene Latenz
                 self.capture_time = time.time() - self.mean_latency / 1e9
-
+                matrix_name = "cam1"
                 if (not read_successful) or frame is None or frame.size == 0:
                     time.sleep(0.01)
                     continue
                 if (self._camera_index == 0):
                     frame = cv2.rotate(frame, cv2.ROTATE_180)
+                    matrix_name = "cam0"
+                frame_with_depth = tc.create_constant_depth_frame(frame,constant_depth_m=0.76)
+
+                # Hier wird jeder Pixel über die Transformationsmatrix in eine Koordinate im Globalen System gewandelt -> Output ist eine Liste mit allen Pixeln
+                if (self._camera_index == 0):
+                    global_depth_frame = tc.transform_depth_frame_to_global_space_keep_structure(frame_with_depth, matrix_name, self.transformations_matrizen,cx=961.3847857440388,cy= 572.6589144153174, fx= 1157.0876874557007, fy= 1157.9528047921906)
+                else:
+                    global_depth_frame = tc.transform_depth_frame_to_global_space_keep_structure(frame_with_depth,
+                                                                                                 matrix_name,
+                                                                                                 self.transformations_matrizen,
+                                                                                                 cx=976.8712463198201,
+                                                                                                 cy= 530.1763560309095,
+                                                                                                 fx= 1392.0999015576701,
+                                                                                                 fy=1393.2269168449425)
+
+                # Pixel die vorher als Liste vorliegen (für jeden Pixel die globale Koordinate) wird nun wieder das Bildformat angenommen                                                                                fy= 1393.2269168449425)
+                globale_punkt_matrix = global_depth_frame.reshape(480,640, 3)
 
                 if not read_successful:
                     self.stop_logging()
@@ -273,12 +292,17 @@ class RgbCameraLogger(Logger):
                         x = 1
 
                     file = f"rgb_camera_{self._camera_index}_frame_{self.capture_time}.npy"
+                    file2 = f"rgb_camera_{self._camera_index}_global_frame_{self.capture_time}.npy"
                     if self._camera_index == 0:
                         path = self.directory / "rgb_frames" / "rgb_camera_1_frames"
+                        path2 = self.directory / "rgb_frames" / "rgb_camera_1_global_frames"
                     elif self._camera_index == 1:
                         path = self.directory / "rgb_frames" / "rgb_camera_2_frames"
+                        path2 = self.directory / "rgb_frames" / "rgb_camera_2_global_frames"
                     path.mkdir(parents=True, exist_ok=True)
+                    path2.mkdir(parents=True, exist_ok=True)
                     np.save(path / file, frame)
+                    np.save(path2 / file2, globale_punkt_matrix.astype(np.float32))
 
                     if self.writer.isOpened():
                         self.writer.write(frame)
@@ -287,7 +311,7 @@ class RgbCameraLogger(Logger):
                     results = self.face_mesh.process(frame_rgb)
                     self.create_mediapipe_image(results, self.fps_time, self._frame_count, frame,
                                                 camera_index=self._camera_index)
-
+                    
                     # Live-Vorschau
                     if self.live_view:
                         cv2.imshow("Live", frame)
