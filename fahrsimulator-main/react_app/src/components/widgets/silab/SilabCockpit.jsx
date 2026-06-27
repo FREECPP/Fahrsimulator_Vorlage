@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 const MAX_SPEED_KMH = 240
 const GAS_RAW_MAX = 1.0
@@ -43,18 +43,26 @@ function SilabCockpit({ silab }) {
   const brakePercent = toPercent(silab?.brake_pedal, BRAKE_RAW_MAX)
   const speedRatio = clamp(displaySpeedKmh / MAX_SPEED_KMH, 0, 1)
 
+  // Hold the latest target in a ref so the easing interval can stay stable
+  // instead of being torn down and recreated on every incoming packet.
+  const targetSpeedRef = useRef(speedKmh)
+  useEffect(() => {
+    targetSpeedRef.current = speedKmh
+  }, [speedKmh])
+
   useEffect(() => {
     const intervalId = window.setInterval(() => {
       setDisplaySpeedKmh((current) => {
-        const delta = speedKmh - current
-        if (Math.abs(delta) < 0.08) return speedKmh
+        const target = targetSpeedRef.current
+        const delta = target - current
+        if (Math.abs(delta) < 0.08) return target
         // Exponential easing gives a more natural instrument response.
         return current + delta * 0.22
       })
     }, 33)
 
     return () => window.clearInterval(intervalId)
-  }, [speedKmh])
+  }, [])
 
   const wheelSrc = wheelSources[wheelSourceIndex]
   const hasMoreWheelSources = wheelSourceIndex < wheelSources.length - 1

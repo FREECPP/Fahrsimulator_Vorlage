@@ -232,10 +232,6 @@ function Dashboard() {
         socket.on(
             "sensor_update",
             (payload) => {
-                console.log(payload.heartbeat)
-
-                console.log("LATENCIES", payload.sensor_latency)
-
                 // Single owner of SiLab telemetry ingestion: record one point with
                 // every signal so any number of signal widgets can read it without
                 // duplicating data.
