@@ -420,13 +420,10 @@ function Dashboard() {
     }
 
     const handleStartSensor = () => {
-        if (
-            !socketRef.current
-            || !connected
-            || running
-        ) {
+        if (!socketRef.current) {
             return
         }
+        setSensorStarted(true)
         setSensorPopupOpen(true)
         socketRef.current.emit(
             "start_sensor",
@@ -582,7 +579,6 @@ function Dashboard() {
                             <button
                                 className="header-btn"
                                 onClick={handleStartSensor}
-                                disabled={!connected || running || !simStarted}
                             >
                                 Start Sensor
                             </button>
@@ -590,7 +586,7 @@ function Dashboard() {
                             <button
                                 className="header-btn"
                                 onClick={handleStartLogging}
-                                disabled={!connected || !running || !sensorStarted}>
+                                disabled={!sensorStarted}>
                                 Start Logging
                             </button>
 
