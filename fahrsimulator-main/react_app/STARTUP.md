@@ -38,13 +38,13 @@ From the frontend folder:
 
     cd ~/fahrsimulator-main/react_app
     npm run build
-    npm run dev
+    npm run preview
 
 Keep this terminal running.
 
 ## 4) Open the app
 
-Open the Vite URL shown in Terminal 2 (typically http://localhost:5173).
+Open the Vite URL shown in Terminal 2 (typically http://localhost:4173).
 
 ## Notes
 
