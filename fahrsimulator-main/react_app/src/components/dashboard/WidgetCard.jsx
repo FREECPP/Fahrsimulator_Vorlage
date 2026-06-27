@@ -1,11 +1,13 @@
-import { memo, Suspense, useEffect, useMemo, useRef } from "react"
+import { memo, useEffect, useMemo, useRef } from "react"
 import SilabCockpit from "../widgets/silab/SilabCockpit"
 import EyeTracker from "../widgets/EyeTracker"
 import SilabSignalChart from "../widgets/silab/SilabSignalChart"
 import SilabSignalText from "../widgets/silab/SilabSignalText"
-import ShimmerChart from "../widgets/ShimmerChart";
+import ShimmerSignalChart from "../widgets/shimmer/ShimmerSignalChart"
+import ShimmerSignalText from "../widgets/shimmer/ShimmerSignalText"
 import {getModeOptions, getNormalizedMode, SENSOR_WIDGETS} from "./widgetConfig"
 import {SILAB_SIGNALS, getSilabSignal} from "../widgets/silab/silabSignals"
+import {SHIMMER_SIGNALS, getShimmerSignal, getShimmerValue} from "../widgets/shimmer/shimmerSignals"
 import {Trash2} from "lucide-react"
 
 function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, onUpdateWidget, sensorData, running }) {
@@ -16,6 +18,7 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, onUpdateWidg
   const silab = sensorData?.silab
   const signalKey = widget.signal ?? "speed"
   const signalDisplay = widget.signalDisplay ?? "chart"
+  const shimmerSignal = getShimmerSignal(widget.signal)
   const rgbFrame = sensorData?.rgb_frame
   const tofFrame = sensorData?.tof_scelet
   const rgbBackFrame = sensorData?.rgb_frame2
@@ -69,11 +72,9 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, onUpdateWidg
     if (mode === "raw") {
       body = <pre className="raw-payload">{JSON.stringify(shimmer ?? {}, null, 2)}</pre>
     } else {
-      body = (
-        <Suspense fallback={<div className="placeholder">Loading chart...</div>}>
-          <ShimmerChart shimmer={shimmer} running={running} />
-        </Suspense>
-      )
+      body = signalDisplay === "text"
+        ? <ShimmerSignalText signal={shimmerSignal} shimmer={shimmer} />
+        : <ShimmerSignalChart signal={shimmerSignal} />
     }
   }
 
@@ -136,6 +137,31 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, onUpdateWidg
                                 onChange={(event) => onUpdateWidget(widget.i, {signal: event.target.value})}
                             >
                                 {SILAB_SIGNALS.map((signal) => (
+                                    <option key={signal.key} value={signal.key}>
+                                        {signal.label}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select
+                                className="compact-control"
+                                value={signalDisplay}
+                                onChange={(event) => onUpdateWidget(widget.i, {signalDisplay: event.target.value})}
+                            >
+                                <option value="chart">Chart</option>
+                                <option value="text">Text</option>
+                            </select>
+                        </>
+                    )}
+
+                    {widget.view === "shimmer" && mode === "line" && (
+                        <>
+                            <select
+                                className="compact-control"
+                                value={shimmerSignal.key}
+                                onChange={(event) => onUpdateWidget(widget.i, {signal: event.target.value})}
+                            >
+                                {SHIMMER_SIGNALS.map((signal) => (
                                     <option key={signal.key} value={signal.key}>
                                         {signal.label}
                                     </option>
@@ -220,6 +246,13 @@ function areWidgetPropsEqual(prevProps, nextProps) {
   }
 
   if (view === "shimmer") {
+    if (mode === "line") {
+      // Chart self-updates from the shimmer store; only text needs prop-driven
+      // re-renders, and only when its selected signal's value changes.
+      if ((nextProps.widget.signalDisplay ?? "chart") !== "text") return true
+      const signal = getShimmerSignal(nextProps.widget.signal)
+      return getShimmerValue(prevData.shimmer, signal) === getShimmerValue(nextData.shimmer, signal)
+    }
     return prevData.shimmer === nextData.shimmer
   }
 

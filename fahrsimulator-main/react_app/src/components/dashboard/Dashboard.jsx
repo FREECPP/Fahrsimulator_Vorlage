@@ -13,7 +13,9 @@ import {
 
 import {getPreferredWidgetGridSize, GRID_COLS} from "./widgetSizing"
 import {telemetryStore, THROTTLE_MS} from "../../utils/telemetryStore"
+import {shimmerStore, THROTTLE_MS as SHIMMER_THROTTLE_MS} from "../../utils/shimmerStore"
 import {SILAB_SIGNALS} from "../widgets/silab/silabSignals"
+import {buildShimmerPoint} from "../widgets/shimmer/shimmerSignals"
 
 import "../../styles/DashboardStyle.css"
 
@@ -130,6 +132,7 @@ function Dashboard() {
 
     const socketRef = useRef(null)
     const lastTelemetryPushRef = useRef(0)
+    const lastShimmerPushRef = useRef(0)
 
     const location = useLocation()
 
@@ -247,6 +250,21 @@ function Dashboard() {
                             point[signal.key] = signal.store(silab)
                         }
                         telemetryStore.addDataPoint(point)
+                    }
+                }
+
+                // Single owner of Shimmer telemetry ingestion: same pattern as
+                // SiLab so any number of ShimmerChart widgets read from the
+                // shared rolling buffer instead of keeping their own history.
+                const shimmer = payload?.shimmer
+                if (shimmer) {
+                    const now = Date.now()
+                    if (now - lastShimmerPushRef.current >= SHIMMER_THROTTLE_MS) {
+                        lastShimmerPushRef.current = now
+                        const startTime = shimmerStore.initStartTime()
+                        const elapsedMs = now - startTime
+                        const point = buildShimmerPoint(shimmer, elapsedMs)
+                        if (point) shimmerStore.addDataPoint(point)
                     }
                 }
 
