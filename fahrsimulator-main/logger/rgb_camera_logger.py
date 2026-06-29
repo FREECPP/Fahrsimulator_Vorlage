@@ -95,6 +95,13 @@ class RgbCameraLogger(Logger):
         # Yaml-File mit allen Transformationsmatrizen laden
         self.transformations_matrizen = tc.lade_sensor_matrizen()
 
+        # Transformer erstellen
+        self.transformer_cam_1 = tc.FastCoordinateTransformer(width=480, height=640 ,cx=961.3847857440388,cy= 572.6589144153174, fx= 1157.0876874557007, fy= 1157.9528047921906)
+        self.transformer_cam_2 = tc.FastCoordinateTransformer(width=480, height=640 ,cx=976.8712463198201,
+                                                                                                 cy= 530.1763560309095,
+                                                                                                 fx= 1392.0999015576701,
+                                                                                                 fy=1393.2269168449425)
+
     def start_sensor(self,stop_event, log_event):
         print("RGB Camera Logger Started")
         self.connection_started_at = time.time()
@@ -253,16 +260,10 @@ class RgbCameraLogger(Logger):
 
                 # Hier wird jeder Pixel über die Transformationsmatrix in eine Koordinate im Globalen System gewandelt -> Output ist eine Liste mit allen Pixeln
                 if (self._camera_index == 0):
-                    global_depth_frame = tc.transform_depth_frame_to_global_space_keep_structure(frame_with_depth, matrix_name, self.transformations_matrizen,cx=961.3847857440388,cy= 572.6589144153174, fx= 1157.0876874557007, fy= 1157.9528047921906)
+                    global_depth_frame = self.transformer_cam_1.transform_frame(frame_with_depth, self.transformations_matrizen["cam0"])
                 else:
-                    global_depth_frame = tc.transform_depth_frame_to_global_space_keep_structure(frame_with_depth,
-                                                                                                 matrix_name,
-                                                                                                 self.transformations_matrizen,
-                                                                                                 cx=976.8712463198201,
-                                                                                                 cy= 530.1763560309095,
-                                                                                                 fx= 1392.0999015576701,
-                                                                                                 fy=1393.2269168449425)
 
+                    global_depth_frame = self.transformer_cam_2.transform_frame(frame_with_depth, self.transformations_matrizen["cam1"])
                 # Pixel die vorher als Liste vorliegen (für jeden Pixel die globale Koordinate) wird nun wieder das Bildformat angenommen                                                                                fy= 1393.2269168449425)
                 globale_punkt_matrix = global_depth_frame.reshape(480,640, 3)
 

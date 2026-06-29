@@ -127,6 +127,9 @@ class TiefenCamLogger(Logger):
         # Yaml-File mit allen Transformationsmatrizen laden
         self.transformations_matrizen = tc.lade_sensor_matrizen()
 
+        # Transformer einmalig erstellen
+        self.transformer = tc.FastCoordinateTransformer()
+
     def connect_camera(self) -> None:
         """
         Connects to the ToF camera and initializes it with the specified configuration.
@@ -292,7 +295,7 @@ class TiefenCamLogger(Logger):
                         q_pose = self.queues.get("pose_queue") # Geht an merged_skelett... und wird damit wahrscheinlich mit dem Model verarbeitet
 
                         depth_m = tc.scale_raw_depth_to_meters(image, max_raw_value=65535.0, range_width_m=3.0)
-                        umgerechneter_frame = tc.transform_depth_frame_to_global_space_keep_structure(depth_m, "tof", self.transformations_matrizen)
+                        umgerechneter_frame = self.transformer.transform_frame(depth_m, self.transformations_matrizen["tof"])
                         globale_punkt_matrix = umgerechneter_frame.reshape(512, 512, 3)
 
                         # Daten werden in dict abgelegt

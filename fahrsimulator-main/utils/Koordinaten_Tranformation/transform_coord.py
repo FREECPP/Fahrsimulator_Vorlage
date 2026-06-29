@@ -5,6 +5,50 @@ from typing import Dict
 import numpy.typing as npt
 
 
+class FastCoordinateTransformer:
+    def __init__(self, width=512, height=512, cx=523.9361572265625, cy=526.0283813476562, fx=775.8900756835938,
+                 fy=775.9134521484375):
+        """
+        Wird NUR EINMALIG beim Programmstart aufgerufen.
+        Berechnet die konstanten Richtungsstrahlen (Lookup-Table).
+        """
+        # 1. Das Gitter einmalig erstellen
+        u, v = np.meshgrid(np.arange(width), np.arange(height))
+
+        # 2. Die konstanten Faktoren (Richtungsstrahlen) berechnen und flachdrücken
+        self.x_factor = (u.flatten() - cx) / fx
+        self.y_factor = (v.flatten() - cy) / fy
+
+    def transform_frame(self, depth_frame, T_global_from_sensor):
+        """
+        Wird FÜR JEDEN FRAME aufgerufen. Extrem schnell, da keine Schleifen
+        und kaum Speicherallokationen stattfinden.
+        """
+        # Tiefenwerte flachdrücken (262144,)
+        z_flat = depth_frame.flatten()
+
+        # Nur noch eine simple Element-für-Element Multiplikation
+        x_local = self.x_factor * z_flat
+        y_local = self.y_factor * z_flat
+
+        # Lokale 3D-Punkte stacken -> Form (262144, 3)
+        points_local = np.vstack((x_local, y_local, z_flat)).T
+
+        # Extrinsics-Matrix in Rotation (3x3) und Translation (3,) zerlegen
+        R = T_global_from_sensor[:3, :3]
+        t = T_global_from_sensor[:3, 3]
+
+        # Globale Koordinaten berechnen: Matrixmultiplikation + Vektor-Addition
+        points_global = points_local @ R.T + t
+
+        # Ungültige Pixel (Tiefe zu gering oder NaN aus der Vorberechnung) maskieren
+        # z_flat <= 0.1 erwischt auch bereits existierende NaNs, da Vergleiche mit NaN False ergeben,
+        # wir fügen eine dedizierte Maske hinzu, falls gewünscht:
+        invalid_mask = (z_flat <= 0.1) | np.isnan(z_flat)
+        points_global[invalid_mask] = np.nan
+
+        return points_global
+
 
 def lade_sensor_matrizen(yaml_pfad = r"C:\Users\SILAB.SILAB1\Documents\fahrsimulator_24-01-2026_1\utils\Koordinaten_Tranformation\master_extrinsics_to_global.yaml"):
     """
