@@ -82,7 +82,8 @@ function DashboardGrid({
 
             if (!dashboard) return
 
-            setGridWidth(dashboard.clientWidth - 32)
+            // 40 = .dashboard-area horizontal padding (20px each side).
+            setGridWidth(dashboard.clientWidth - 40)
         }
 
         updateGridWidth()
@@ -120,6 +121,12 @@ function DashboardGrid({
         a.y < b.y + b.h &&
         a.y + a.h > b.y
 
+    // A placement is only valid if it stays inside the grid. Without this, a
+    // widget pushed off the right edge inflates the container's scroll width,
+    // which lets bounds="parent" creep ever further right ("infinite" edge).
+    const withinGrid = (r) =>
+        r.x >= -1e-6 && r.y >= -1e-6 && r.x + r.w <= COLS + 1e-6
+
     // Slide the candidate out of any widget it overlaps, along the axis of
     // least penetration, so it comes to rest flush against the neighbour
     // instead of resetting to its original spot. Returns null if it cannot be
@@ -129,7 +136,7 @@ function DashboardGrid({
 
         for (let iteration = 0; iteration < 20; iteration++) {
             const hit = others.find((widget) => overlaps(resolved, widget))
-            if (!hit) return resolved
+            if (!hit) return withinGrid(resolved) ? resolved : null
 
             const overlapX =
                 Math.min(resolved.x + resolved.w, hit.x + hit.w) - Math.max(resolved.x, hit.x)
@@ -154,7 +161,59 @@ function DashboardGrid({
             }
         }
 
-        return others.some((widget) => overlaps(resolved, widget)) ? null : resolved
+        if (others.some((widget) => overlaps(resolved, widget))) return null
+        return withinGrid(resolved) ? resolved : null
+    }
+
+    // Shrink the candidate into the free gap around where it was dropped,
+    // keeping it in place instead of moving it elsewhere. The drop anchor is
+    // the candidate's centre; neighbours bound that gap on all four sides, so a
+    // too-big widget dropped *between* two others shrinks to span the gap
+    // (clamped on both the left and right) rather than resetting. Returns null
+    // if the anchor lands on a widget or the resulting gap is smaller than 1x1.
+    const fitToFreeSpace = (candidate, others) => {
+        const cx = candidate.x + candidate.w / 2
+        const cy = candidate.y + candidate.h / 2
+
+        // The drop anchor sits inside a neighbour: there is no gap here.
+        if (
+            others.some(
+                (o) => o.x <= cx && cx <= o.x + o.w && o.y <= cy && cy <= o.y + o.h
+            )
+        ) {
+            return null
+        }
+
+        // Walls of the free gap that contains the anchor.
+        let left = 0
+        let right = COLS
+        let top = 0
+        let bottom = Infinity
+
+        for (const other of others) {
+            const verticallyOverlaps =
+                candidate.y < other.y + other.h && candidate.y + candidate.h > other.y
+            if (verticallyOverlaps) {
+                if (other.x + other.w <= cx) left = Math.max(left, other.x + other.w)
+                if (other.x >= cx) right = Math.min(right, other.x)
+            }
+
+            const horizontallyOverlaps =
+                candidate.x < other.x + other.w && candidate.x + candidate.w > other.x
+            if (horizontallyOverlaps) {
+                if (other.y + other.h <= cy) top = Math.max(top, other.y + other.h)
+                if (other.y >= cy) bottom = Math.min(bottom, other.y)
+            }
+        }
+
+        const x = Math.max(left, Math.min(candidate.x, right))
+        const y = Math.max(top, Math.min(candidate.y, bottom))
+        const w = Math.min(candidate.w, right - x)
+        const h = Math.min(candidate.h, bottom - y)
+        if (w < 1 || h < 1) return null
+
+        const shrunk = {...candidate, x, y, w, h}
+        return others.some((widget) => overlaps(shrunk, widget)) ? null : shrunk
     }
 
     const commitWidget = (id, geometry) => {
@@ -163,8 +222,11 @@ function DashboardGrid({
             const candidate = {...current, ...toGrid(geometry)}
             const others = currentWidgets.filter((widget) => widget.i !== id)
 
-            // Snap flush against neighbours; only reset if it cannot be placed.
-            const resolved = resolveCollisions(candidate, others)
+            // Snap flush against neighbours; if boxed in, shrink to fit the gap
+            // at the drop spot. Only reset if even a 1x1 won't fit there.
+            const resolved =
+                resolveCollisions(candidate, others)
+                ?? fitToFreeSpace(candidate, others)
             if (!resolved) {
                 return [...currentWidgets]
             }

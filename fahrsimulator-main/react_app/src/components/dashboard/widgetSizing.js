@@ -48,7 +48,8 @@ export function getPreferredWidgetSize(view, mode) {
 function currentColWidth() {
   const dashboard =
     typeof document !== "undefined" ? document.querySelector(".dashboard-area") : null
-  const gridWidth = (dashboard?.clientWidth ?? window.innerWidth) - 32
+  // 40 = .dashboard-area horizontal padding (20px each side); matches DashboardGrid.
+  const gridWidth = (dashboard?.clientWidth ?? window.innerWidth) - 40
   return (gridWidth - GRID_MARGIN * (GRID_COLS + 1)) / GRID_COLS
 }
 

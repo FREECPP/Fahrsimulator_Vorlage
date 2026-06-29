@@ -93,7 +93,7 @@ function WidgetCard({ widget, onDelete, onChangeView, onChangeMode, onUpdateWidg
         <img ref={imageRef} className="stream-image" alt="Live sensor stream" draggable={false} />
       </div>
     ) : (
-      <div className="placeholder">No frame yet. Start recording to receive frames.</div>
+      <div className="placeholder">No frame yet. Start sensor to receive frames.</div>
     )
   }
 
