@@ -457,6 +457,8 @@ function Dashboard() {
                 participant: participant,
                 project: projectName,
             })
+
+        setLoggingStarted(true)
     }
 
     const handleStartPC = () => {
@@ -579,6 +581,7 @@ function Dashboard() {
                             <button
                                 className="header-btn"
                                 onClick={handleStartSensor}
+                                disabled={sensorStarted}
                             >
                                 Start Sensor
                             </button>
@@ -586,7 +589,7 @@ function Dashboard() {
                             <button
                                 className="header-btn"
                                 onClick={handleStartLogging}
-                                disabled={!sensorStarted}>
+                                disabled={!sensorStarted || loggingStarted}>
                                 Start Logging
                             </button>
 
