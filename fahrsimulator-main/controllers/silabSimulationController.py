@@ -11,8 +11,15 @@ silab_bp = Blueprint(
 
 CORS(silab_bp)
 
-#SIMULATION_DIR = r"A:\SILAB\Simulationen" #TODO
-SIMULATION_DIR = r"D:\SILAB\Projects\SILABDemo"
+# Default points to the real SILAB simulations directory on the simulator PC.
+# For local work (e.g. adding a participant without the simulator), temporarily
+# override it via the SIMULATION_DIR environment variable to point at the
+# bundled demo, e.g.:
+#   macOS/Linux:  export SIMULATION_DIR="SILAB/Projects/SILABDemo"
+#   Windows cmd:  set SIMULATION_DIR=SILAB\Projects\SILABDemo
+#   PowerShell:   $env:SIMULATION_DIR = "SILAB\Projects\SILABDemo"
+
+SIMULATION_DIR = os.getenv("SIMULATION_DIR", r"D:\SILAB\Projects\SILABDemo")
 
 @silab_bp.route(
     "/simulations",

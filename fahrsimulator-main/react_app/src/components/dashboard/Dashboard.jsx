@@ -592,6 +592,19 @@ function Dashboard() {
                                 disabled={!sensorStarted || loggingStarted}>
                                 Start Logging
                             </button>
+                            
+                            {/* Mock-Start: nur im lokalen Dev-Setup (npm run dev),
+                                nicht am Simulator */}
+                            {import.meta.env.DEV && (
+                                <button
+                                    className="control-btn start"
+                                    onClick={handleStart}
+                                    disabled={!connected || running}
+                                >
+                                    <FaPlay/>
+                                    <span>Start mock</span>
+                                </button>
+                            )}
 
                             <button
                                 className="control-btn stop"
