@@ -106,14 +106,21 @@ class EyetrackerLogger(Logger):
                 if ts_delta > 0:
                     # Umrechnungsfaktor: Nanosekunden pro device_time_stamp-Tick (empirisch abgeleitet)
                     self._ns_per_tick = sys_delta / ts_delta
-                    latency_samples = []
+
+                    #offsets_i = Empfangszeit - verstrichene Gerätezeit = C_ref + Latenz
+                    offsets = []
                     for d_ts, r_ns in self._latency_cal_samples:
                         # Erwartete Systemzeit dieses Pakets basierend auf device-Takt
                         sensor_elapsed_ns = (d_ts - self._device_ref_ts) * self._ns_per_tick
                         # Latenz = tatsächliche Empfangszeit minus erwartete Empfangszeit
-                        latency_samples.append(r_ns - (self._stream_start_ns + sensor_elapsed_ns))
+                        offsets.append(r_ns - sensor_elapsed_ns)
+
+                    # kleinster offset = schnellstes Paket = beste Annäherung für die echte 
+                    # Unix-Aufnahmezeit des Referenzpakets (C_ref)
+                    self._capture_offset_ns = min(offsets)
+
                     # Mittlere Latenz einfrieren – wird für alle weiteren Pakete verwendet
-                    self.mean_latency = sum(latency_samples) / len(latency_samples)
+                    self.mean_latency = sum(offsets) / len(offsets) - self._capture_offset_ns
                     self._latency_cal_done = True
                     if self.sensor_latency_queue:
                         self.sensor_latency_queue.put({
@@ -126,7 +133,7 @@ class EyetrackerLogger(Logger):
 
         # Korrekter Aufnahmezeitpunkt aus dem Geräte-Takt
         self.capture_time = (
-            self._stream_start_ns
+            self._capture_offset_ns
             + (device_ts - self._device_ref_ts) * self._ns_per_tick
         ) / 1e9
 
