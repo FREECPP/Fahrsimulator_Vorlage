@@ -244,14 +244,21 @@ class ShimmerLogger(Logger):
                 if ts_delta > 0:
                     # Umrechnungsfaktor: Nanosekunden pro Shimmer-Tick (empirisch abgeleitet)
                     self._ns_per_tick = sys_delta / ts_delta
-                    latency_samples = []
+
+                    #offsets_i = Empfangszeit - verstrichene Gerätezeit = C_ref + Latenz
+                    offsets = []
                     for ts, recv in self._latency_cal_samples:
                         # Erwartete Systemzeit dieses Pakets basierend auf Shimmer-Takt
                         sensor_elapsed_ns = (ts - self._shimmer_ref_ts) * self._ns_per_tick
                         # Latenz = tatsächliche Empfangszeit minus erwartete Empfangszeit
-                        latency_samples.append(recv - (self._stream_start_ns + sensor_elapsed_ns))
+                        offsets.append(recv - sensor_elapsed_ns)
+
+                    # kleinster offset = schnellstes Paket = beste Annäherung für die echte 
+                    # Unix-Aufnahmezeit des Referenzpakets (C_ref)
+                    self._capture_offset_ns = min(offsets)
+
                     # Mittlere Latenz einfrieren – wird für alle weiteren Pakete verwendet
-                    self.mean_latency = sum(latency_samples) / len(latency_samples)
+                    self.mean_latency = sum(offsets) / len(offsets) - self._capture_offset_ns
                     self._latency_cal_done = True
                     """if self.sensor_status_queue:
                         self.sensor_status_queue.put({
@@ -283,7 +290,7 @@ class ShimmerLogger(Logger):
         # Der entwrappte Tick wird über _ns_per_tick in die Systemzeit-Domäne abgebildet.
         unwrapped_ts = self._unwrap_ts(shimmer_ts)
         self.capture_time = (
-            self._stream_start_ns
+            self._capture_offset_ns
             + (unwrapped_ts - self._shimmer_ref_ts) * self._ns_per_tick
         ) / 1e9
 
