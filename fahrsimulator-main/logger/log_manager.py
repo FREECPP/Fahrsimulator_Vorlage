@@ -1,3 +1,5 @@
+import os
+
 from pathlib import Path
 
 from multiprocessing import (
@@ -633,6 +635,14 @@ class LogManager:
             print(
                 f"Fehler beim Zusammenführen "
                 f"der Logs: {e}"
+            )
+
+        # Log-Verzeichnis nach dem Stop automatisch im Windows-Explorer oeffnen.
+        try:
+            os.startfile(self.run_log_dir)
+        except Exception as e:
+            print(
+                f"Konnte Log-Verzeichnis nicht öffnen: {e}"
             )
 
 # ===== Logger Process =====
